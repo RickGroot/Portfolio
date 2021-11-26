@@ -6,10 +6,6 @@
     grid-row-gap: 20px;
 }
 
-.homegrid {
-    /* grid-template-rows: repeat(2, 45vh); */
-}
-
 .projects h2 {
     margin-top: 0;
     text-align: center;
@@ -61,7 +57,6 @@
 .projects a:nth-child(7) {
     background-image: url(../img/profile2.jpg);
 }
-
 
 .projects a .info {
     position: absolute;
@@ -125,19 +120,19 @@ a.more {
     height: 200%;
     opacity: 0;
     transform: rotate(30deg);
-    
+
     background: rgba(255, 255, 255, 0.13);
     background: linear-gradient(
-      to right, 
-      rgba(255, 255, 255, 0.0) 0%,
-      rgba(255, 255, 255, 0.13) 77%,
-      rgba(255, 255, 255, 0.5) 92%,
-      rgba(255, 255, 255, 0.0) 100%
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.13) 77%,
+        rgba(255, 255, 255, 0.5) 92%,
+        rgba(255, 255, 255, 0) 100%
     );
     cursor: pointer;
-  }
-  
-  .projects a:hover:after {
+}
+
+.projects a:hover:after {
     opacity: 1;
     top: -30%;
     left: -30%;
@@ -145,14 +140,14 @@ a.more {
     transition-duration: 0.7s, 0.7s, 0.15s;
     transition-timing-function: ease;
     cursor: pointer;
-  }
-  
-  .projects a:active:after {
-    opacity: 0;
-  }
-  /* ---------------------------------------------------------------------------------------------------- */
+}
 
-@media (min-width:1000px) {
+.projects a:active:after {
+    opacity: 0;
+}
+/* ---------------------------------------------------------------------------------------------------- */
+
+@media (min-width: 1000px) {
     .projects {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -160,29 +155,29 @@ a.more {
     .projects a:nth-child(1) {
         grid-area: 1 / 1 / 2 / 3;
     }
-    
+
     .projects a:nth-child(2) {
         grid-area: 1 / 3 / 3 / 4;
     }
-    
+
     .projects a:nth-child(3) {
         grid-area: 2 / 1 / 3 / 2;
     }
-    
+
     .projects a:nth-child(4) {
         grid-area: 2 / 2 / 3 / 3;
     }
-    
+
     .projects a:nth-child(5) {
         grid-area: 3 / 1 / 4 / 3;
     }
-    
+
     .projects a:nth-child(6) {
         grid-area: 3 / 3 / 4 / 4;
     }
-    
+
     .projects a:nth-child(7) {
-        grid-area: 4 / 1 / 5 / 4 ;
+        grid-area: 4 / 1 / 5 / 4;
     }
 
     .projects a .info .tags {
@@ -195,7 +190,7 @@ a.more {
     }
 }
 
-@media (min-width:550px) and (max-width: 1000px) {
+@media (min-width: 550px) and (max-width: 1000px) {
     .projects {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -203,28 +198,28 @@ a.more {
     .projects a:nth-child(1) {
         grid-area: 1 / 1 / 3 / 2;
     }
-    
+
     .projects a:nth-child(2) {
         grid-area: 1 / 2 / 3 / 3;
     }
-    
+
     .projects a:nth-child(3) {
         grid-area: 3 / 1 / 4 / 2;
     }
-    
+
     .projects a:nth-child(4) {
         grid-area: 3 / 2 / 4 / 3;
     }
-    
+
     .projects a:nth-child(5) {
         grid-area: 4 / 1 / 5 / 2;
     }
-    
+
     .projects a:nth-child(6) {
         grid-area: 4 / 2 / 6 / 3;
     }
-    
+
     .projects a:nth-child(7) {
-        grid-area: 5 / 1 / 6 / 2 ;
+        grid-area: 5 / 1 / 6 / 2;
     }
 }
