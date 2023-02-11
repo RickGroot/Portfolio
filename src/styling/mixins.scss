@@ -1,0 +1,15 @@
+@mixin tablet {
+	@media (min-width: 480px) {
+		@content;
+	}
+}
+
+@mixin removeButton {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+}
