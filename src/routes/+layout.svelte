@@ -20,6 +20,8 @@
 </div>
 
 <style lang="scss">
+	@import '../styling/base.scss';
+
 	.app {
 		display: flex;
 		flex-direction: column;
@@ -40,6 +42,11 @@
 
 	main {
 		position: relative;
+		margin: 5rem 0 auto;
+
+		@include tablet {
+			margin: 0;
+		}
 	}
 
 	footer {
