@@ -11,7 +11,6 @@
 	class:hovered
 	on:mouseenter={() => dispatch('hover', true)}
 	on:mouseleave={() => dispatch('hover', false)}
-	on:click={() => dispatch('hover', !hovered)}
 >
 	<div class="image-container">
 		<img src="/rick-1.jpg" alt="Rick Groot" class="image" />
