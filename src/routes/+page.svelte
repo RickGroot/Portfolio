@@ -10,8 +10,8 @@
 </script>
 
 <svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
+	<title>Rick Groot</title>
+	<meta name="description" content="Rick Groot's portfolio website" />
 </svelte:head>
 
 {#if hovered}
