@@ -1,12 +1,5 @@
 <script lang="ts">
-	import BottomCard from '../components/BottomCard.svelte';
-	import TopCard from '../components/TopCard.svelte';
-
-	let hovered: boolean = false;
-
-	const handleHover = (e: CustomEvent) => {
-		hovered = e.detail;
-	};
+	import RowContainer from '../components/CardRow/RowContainer.svelte';
 </script>
 
 <svelte:head>
@@ -14,10 +7,7 @@
 	<meta name="description" content="Rick Groot's portfolio website" />
 </svelte:head>
 
-{#if hovered}
-	<BottomCard on:hover={handleHover} {hovered} />
-{/if}
-<TopCard on:hover={handleHover} {hovered} />
+<RowContainer />
 
 <style lang="scss">
 	@import '../styling/base.scss';
