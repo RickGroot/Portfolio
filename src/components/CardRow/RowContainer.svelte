@@ -43,7 +43,7 @@
 		justify-content: flex-start;
 		overflow: scroll;
 		scroll-snap-type: x mandatory;
-		scroll-snap-align: start;
+		scroll-snap-align: center;
 		scroll-padding: $padding;
 		padding: $padding;
 	}
