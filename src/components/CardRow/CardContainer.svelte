@@ -22,7 +22,7 @@
 		position: relative;
 		height: $size * 5.6;
 		width: $size * 3.5;
-		scroll-snap-align: start;
+		scroll-snap-align: center;
 		flex: 0 0 auto;
 		background-color: #462102;
 		color: white;
