@@ -44,7 +44,6 @@
 		overflow: scroll;
 		scroll-snap-type: x mandatory;
 		scroll-snap-align: center;
-		scroll-padding: $padding;
 		padding: $padding;
 	}
 
