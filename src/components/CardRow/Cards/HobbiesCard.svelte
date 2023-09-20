@@ -73,17 +73,5 @@
 		font-family: 'Lato';
 		margin: 0;
 		padding-bottom: 10px;
-
-		// &::after {
-		// 	$height: 2px;
-		// 	content: '';
-		// 	position: absolute;
-		// 	top: 100%;
-		// 	left: -$margin-left;
-		// 	width: calc(100% + #{$margin-left});
-		// 	height: $height;
-		// 	border-radius: $height / 2;
-		// 	background-color: white;
-		// }
 	}
 </style>

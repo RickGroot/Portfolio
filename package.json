@@ -36,6 +36,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"firebase": "^9.15.0"
+		"firebase": "^9.15.0",
+		"vanilla-tilt": "^1.8.1"
 	}
 }
