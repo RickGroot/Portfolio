@@ -1,8 +1,23 @@
 <script lang="ts">
+	import VanillaTilt from 'vanilla-tilt';
+
 	export let outline = false;
 	export let blur = false;
 	export let id: number;
 	export let zoom: number | null = null;
+
+	let element: HTMLElement;
+
+	$: animateFallback = !element;
+	$: if (element)
+		VanillaTilt.init(element, {
+			glare: true,
+			gyroscope: false,
+			max: 10,
+			reverse: true,
+			scale: 1.03,
+			'max-glare': 0.2
+		});
 
 	const style = `
 	background-image: url('/images/card-background-${id}.jpg');
@@ -10,8 +25,8 @@
 	`;
 </script>
 
-<article class="card" class:outline class:blur {style}>
-	<div class="shine" />
+<article class="card" class:outline class:blur {style} bind:this={element}>
+	<div class="shine" class:animate={animateFallback} />
 	<slot />
 </article>
 
@@ -73,12 +88,15 @@
 		border-radius: 16px;
 		overflow: hidden;
 
+		&.animate::before {
+			display: block;
+		}
+
 		&::before {
 			background: linear-gradient(to right, fade_out(#fff, 1) 0%, fade_out(#fff, 0.7) 100%);
 			content: '';
-			display: block;
+			display: none;
 			height: 100%;
-			// left: -95%;
 			position: absolute;
 			top: 0;
 			transform: skewX(-25deg) translate(-180%);
@@ -89,14 +107,7 @@
 		:hover &,
 		:focus & {
 			&::before {
-				// animation: shine 0.85s;
 				transform: skewX(-25deg) translate(190%);
-			}
-		}
-
-		@keyframes shine {
-			100% {
-				left: 80%;
 			}
 		}
 	}
