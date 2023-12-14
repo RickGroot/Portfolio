@@ -1,15 +1,17 @@
 <script lang="ts">
+	import Footer from '../components/footer/Footer.svelte';
+	import Header from '../components/header/Header.svelte';
 	import '../styling/normalize.css';
 </script>
 
 <div class="app">
-	<header />
+	<Header />
 
 	<main class="main">
 		<slot />
 	</main>
 
-	<footer />
+	<Footer />
 </div>
 
 <style lang="scss">
@@ -17,11 +19,7 @@
 
 	.app {
 		min-height: 100vh;
-		min-width: 100vw;
 		opacity: 1;
-	}
-
-	.main {
 		position: relative;
 	}
 </style>

@@ -30,9 +30,9 @@
 	$padding: 50px;
 
 	.container {
-		width: calc(100vw - 2 * $padding);
+		max-width: calc(100vw - 2 * $padding);
 		height: calc(100vh - 2 * $padding);
-		background-color: rgb(175, 175, 175);
+		background-color: rgb(78, 78, 78);
 		background-image: url('/images/sand.jpg');
 		background-size: cover;
 		background-position: center center;
@@ -41,7 +41,7 @@
 		flex-direction: row;
 		align-items: center;
 		justify-content: flex-start;
-		overflow: scroll;
+		overflow-x: scroll;
 		scroll-snap-type: x mandatory;
 		scroll-snap-align: center;
 		padding: $padding;
