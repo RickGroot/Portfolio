@@ -3,3 +3,6 @@ $card-width-mobile: min(90vw - $card-padding * 2, 20rem);
 $card-height-mobile: min(132.5vw - $card-padding * 2, 35rem);
 $card-width-desktop: min(70vw, 35rem);
 $card-height-desktop: min(40vw, 20rem);
+
+$z-wave: 1;
+$z-portrait: 2;

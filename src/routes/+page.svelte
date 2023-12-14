@@ -1,5 +1,6 @@
 <script lang="ts">
-	import RowContainer from '../components/CardRow/RowContainer.svelte';
+	import CardRow from '../components/CardRow/CardRow.svelte';
+	import WorkList from '../components/work-list/WorkList.svelte';
 </script>
 
 <svelte:head>
@@ -7,7 +8,8 @@
 	<meta name="description" content="Rick Groot's portfolio website" />
 </svelte:head>
 
-<RowContainer />
+<WorkList />
+<CardRow />
 
 <style lang="scss">
 	@import '../styling/base.scss';

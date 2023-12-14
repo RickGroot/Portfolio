@@ -1,5 +1,5 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Users\rickg\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add vanilla-tilt
+  C:\Program Files\nodejs\node.exe C:\Users\rickg\AppData\Roaming\npm\node_modules\yarn\bin\yarn.js add svelte-particles
 
 PATH: 
   C:\Program Files (x86)\Razer Chroma SDK\bin;C:\Program Files\Razer Chroma SDK\bin;C:\Program Files (x86)\Razer\ChromaBroadcast\bin;C:\Program Files\Razer\ChromaBroadcast\bin;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\Program Files\Oculus\Support\oculus-runtime;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files\nodejs\;C:\Program Files\Git\cmd;C:\Windows\system32\config\systemprofile\AppData\Local\Microsoft\WindowsApps;C:\Users\rickg\AppData\Local\Microsoft\WindowsApps;C:\Users\rickg\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\rickg\AppData\Roaming\npm;C:\Program Files\dotnet\;C:\Users\rickg\AppData\Local\Microsoft\WindowsApps;;C:\Users\rickg\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\rickg\AppData\Roaming\npm
@@ -55,7 +55,8 @@ npm manifest:
   	},
   	"type": "module",
   	"dependencies": {
-  		"firebase": "^9.15.0"
+  		"firebase": "^9.15.0",
+  		"vanilla-tilt": "^1.8.1"
   	}
   }
 
