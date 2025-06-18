@@ -20,12 +20,14 @@
 <style lang="scss">
 	@import '../../../styling/base.scss';
 
+	$padding: 20px;
+
 	.shape {
 		position: absolute;
-		top: 20px;
-		bottom: 20px;
+		top: $padding;
+		bottom: $padding;
 		left: 0;
-		right: 20px;
+		right: $padding;
 		border-right: 3px solid white;
 		border-bottom: 3px solid white;
 		border-bottom-right-radius: 10px;
@@ -38,7 +40,7 @@
 		font-family: 'Lato';
 		text-transform: uppercase;
 		position: absolute;
-		top: calc(20px - #{$height});
+		top: calc($padding - #{$height});
 		right: calc(80px - #{$width});
 		margin: 0;
 		width: $width;
@@ -56,7 +58,7 @@
 	.tags {
 		position: absolute;
 		bottom: 23px;
-		left: 50px;
+		left: $padding;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-start;
@@ -64,7 +66,6 @@
 	}
 
 	.tag {
-		$margin-left: 50px;
 		position: relative;
 		font: 900 16px 'Lato';
 		font-family: 'Lato';
@@ -77,8 +78,8 @@
 			content: '';
 			position: absolute;
 			top: 100%;
-			left: -$margin-left;
-			width: 160px;
+			left: -$padding;
+			width: calc(100% + #{$padding * 2});
 			height: $height;
 			border-top-right-radius: calc($height / 2);
 			border-bottom-right-radius: calc($height / 2);
