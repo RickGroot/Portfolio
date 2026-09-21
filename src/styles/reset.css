@@ -72,6 +72,24 @@ ol[class] {
 	border-radius: 2px;
 }
 
+/*
+ * ...except the skip link's destination.
+ *
+ * <main> carries tabindex="-1" purely so "Skip to content" has somewhere to
+ * send focus. It is a destination, not a control. Ringing it draws a 2px box
+ * around the entire page -- thousands of pixels tall, and visibly broken
+ * wherever a full-bleed child overflows it -- which tells a keyboard user
+ * nothing they did not already know from having just pressed the skip link.
+ *
+ * Focus still MOVES: the tab order continues from here and screen readers
+ * announce the landmark. Only the box is suppressed, and only on this one
+ * element. Never do this to an actual control.
+ */
+main[tabindex='-1']:focus,
+main[tabindex='-1']:focus-visible {
+	outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,

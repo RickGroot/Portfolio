@@ -35,7 +35,16 @@
 	transition: transform var(--speed) var(--ease);
 }
 
-.skip-link:focus-visible {
+/*
+ * :focus, not :focus-visible.
+ *
+ * The skip link is the first tab stop and is offscreen otherwise, so it is only
+ * ever reachable by keyboard -- there is no mouse-click case to guard against.
+ * Relying on :focus-visible meant it could hold focus while staying translated
+ * off the top of the page, which makes it useless to the one person it exists
+ * for. Tested: focus alone must bring it on screen.
+ */
+.skip-link:focus {
 	transform: translateY(0);
 }
 

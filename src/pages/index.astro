@@ -53,7 +53,6 @@ const featured = await getFeaturedWork();
 		/* The field is absolutely positioned inside and bleeds past the wrap, */
 		/* so the hero owns the full width of the viewport. */
 		margin-inline: calc(50% - 50vw);
-		padding-inline: var(--gutter);
 	}
 
 	/* Scrim so the heading stays legible over the field. A static gradient, */
@@ -74,14 +73,22 @@ const featured = await getFeaturedWork();
 			linear-gradient(to bottom, var(--c-bg), transparent 18%, transparent 82%, var(--c-bg));
 	}
 
+	/* The hero bleeds full width, so the copy has to re-establish the page */
+	/* column itself -- same formula as .wrap, so its left edge lines up with */
+	/* every heading below it. --measure goes on the CHILDREN: putting it on */
+	/* this box would shrink it and margin-inline:auto would then centre the */
+	/* short box in the viewport instead of aligning it to the column. */
 	.hero__copy {
 		position: relative;
 		z-index: 2;
 		display: grid;
 		gap: var(--s-6);
-		max-width: var(--measure);
 		width: min(100% - var(--gutter) * 2, var(--wrap));
 		margin-inline: auto;
+	}
+
+	.hero__copy > * {
+		max-width: var(--measure);
 	}
 
 	.hero__copy h1 {
