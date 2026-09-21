@@ -374,9 +374,17 @@ const href = `/work/${entry.id}`;
 	   and tighten the detail around it. If a section then exceeds the viewport,
 	   the advance script lets it scroll normally before advancing, which is
 	   already covered by tests. */
+	/* Tags are the first thing to go when height is short: the summary and the
+	   link carry the meaning, the tags repeat what the case study says. */
+	@media (max-width: 59.99rem) and (max-height: 720px) {
+		.panel__detail :global(.tags) {
+			display: none;
+		}
+	}
+
 	@media (max-width: 59.99rem) {
 		.panel__media {
-			min-block-size: 42svh;
+			min-block-size: min(40svh, 300px);
 		}
 
 		.panel__body {

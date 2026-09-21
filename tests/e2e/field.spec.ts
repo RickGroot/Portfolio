@@ -20,6 +20,32 @@ async function instrument(page: Page): Promise<void> {
 	});
 }
 
+/**
+ * Record every `data-resolve` the field publishes, from before any page script
+ * runs. Sampling the attribute at a fixed instant cannot express "decodes from
+ * noise" -- it asks "was it noisy at t=1000ms", which is a question about the
+ * test runner's scheduling, and it failed roughly one run in five under load.
+ * The trajectory answers the real question and does not care when we look.
+ */
+async function recordResolve(page: Page): Promise<void> {
+	await page.addInitScript(() => {
+		const w = window as unknown as { __resolve: number[] };
+		w.__resolve = [];
+		// A poll, not a MutationObserver: an init script runs before the document
+		// has a documentElement, so there is nothing to observe yet and setting
+		// the observer up throws. The field publishes in 0.05 steps at 30fps, so
+		// 25ms cannot miss a step.
+		let last = '';
+		setInterval(() => {
+			const v = document.querySelector('[data-character-field]')?.getAttribute('data-resolve');
+			if (typeof v === 'string' && v !== last) {
+				last = v;
+				w.__resolve.push(Number(v));
+			}
+		}, 25);
+	});
+}
+
 const layers = (page: Page) =>
 	page.evaluate(() => {
 		const a = document.querySelector('[data-layer="a"]')?.textContent ?? '';
@@ -72,21 +98,33 @@ test.describe('character field', () => {
 	});
 
 	test('it decodes from noise into the portrait', async ({ page }) => {
+		await recordResolve(page);
 		await page.goto('/');
-
-		const progress = async (): Promise<number> =>
-			Number((await page.locator('[data-character-field]').getAttribute('data-resolve')) ?? '-1');
 
 		// Character counts cannot measure this: a resolved cell whose portrait
 		// luminance is black renders a space, so it looks unresolved. The
 		// renderer publishes its actual progress instead.
-		await page.waitForTimeout(1000);
-		const early = await progress();
-		await page.waitForTimeout(3800);
-		const late = await progress();
+		//
+		// Asserted in order, because the field's FIRST published value is 1.00 --
+		// it starts matching the server-rendered static frame so there is no
+		// flash, then scatters and decodes back. Checking "is it resolved" on its
+		// own is satisfied by that opening frame and proves nothing.
+		const trail = (): Promise<number[]> =>
+			page.evaluate(() => (window as unknown as { __resolve: number[] }).__resolve);
 
-		expect(early, `expected noise early, got p=${early}`).toBeLessThan(0.35);
-		expect(late, `expected a resolved portrait, got p=${late}`).toBeGreaterThan(0.9);
+		await expect
+			.poll(async () => Math.min(...(await trail()), Infinity), {
+				message: 'the field never scattered into noise',
+				timeout: 12000,
+			})
+			.toBeLessThan(0.35);
+
+		await expect
+			.poll(async () => (await trail()).at(-1) ?? -1, {
+				message: 'the field never resolved back into the portrait',
+				timeout: 12000,
+			})
+			.toBeGreaterThan(0.9);
 	});
 
 	test('exactly one animation loop, throttled to 30fps', async ({ page }) => {

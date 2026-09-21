@@ -47,16 +47,25 @@ CI quality gates, and the service-worker kill switch.
   animations rather than speeding them up.
 - Draft entries no longer ship their cover images.
 - Hero column alignment; skip-link focus behaviour.
+- Cursor, trail and proximity — one script, no `requestAnimationFrame` of its own.
+- Scroll-into-view reveals and the scroll-progress bar — both zero JS, `animation-timeline`.
+- Nav: legibility, sticky, non-colour current-page cues, Email as a button. Nav, rail and pointer
+  all take their colour from the section in view.
+- Page transitions via CSS `@view-transition` (no `ClientRouter`, ever).
+- Space Grotesk 700 (OFL) with a **measured** metric-matched fallback — closes the Archive Regular
+  licence gap.
+- `scripts/check-assets.mjs` as a CI gate. It has already caught two real regressions.
+- **Restructured to a one-pager.** Eight full-height sections in one document, with the work detail
+  routes kept: `/work/[slug]` still deep-links, shares and renders without JS. `Section.astro` is
+  the shell `Chapter.astro` was going to be.
+- Screen-filling work panels with scroll-driven parallax, and two art interludes between them.
+- `How I work` — a three-item grid on AI-driven development.
 
 **Remaining:**
 
-- Cursor + proximity effects (one script, ~1.1 KB).
-- Scroll-into-view reveals and the scroll-progress bar — both zero JS, `animation-timeline`.
-- Nav: legibility, sticky, non-colour current-page cues, Email as a button.
-- Page transitions via CSS `@view-transition` (no `ClientRouter`, ever).
-- A display face (Space Grotesk 700, OFL) — also closes the Archive Regular licence gap.
-- `scripts/check-assets.mjs` as a CI gate.
-- `Chapter.astro` shell, so Phase 3 adds chapters without touching the layout.
+- Contact section design. It is the one section that has had no design attention.
+- Lighthouse CI. **LCP and CLS have never been measured on built output**, so the Phase 2 gate is
+  not yet fully met.
 
 **Gate:** `pnpm check:assets` exits 0 · LCP < 2.5 s and CLS < 0.1 on built output · no shipped image
 over 250 KB · zero EXIF · keyboard traversal and axe clean **with JavaScript disabled**.
@@ -122,3 +131,11 @@ Nothing on this list may be installed without moving it off the list first.
 6. **Stale remote branches** (`develop`, `first_site`, `sveltekit`) still to be pruned, which makes
    the old `icov` blobs and the 2021 "fix: remove public info" commit unreachable.
 7. **Firebase console follow-ups** — see `README.md` § Security.
+8. **The art interludes are generated placeholders.** `src/assets/art/signal.webp` and `field.webp`
+   come from `scripts/make-art.mjs`. They exist so the layout can be judged against real images
+   rather than grey boxes, and they are meant to be replaced by Rick's photography. Replacing them
+   is a file swap plus the import in `src/pages/index.astro`; delete the generator once they are
+   gone.
+9. **`src/lib/practice.ts` is placeholder copy.** The three `How I work` cards are written in a
+   plausible voice, not Rick's, and the claims are about this repo. They need his own words before
+   launch — the file says so at the top.

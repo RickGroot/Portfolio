@@ -71,8 +71,11 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		text-size-adjust: none;
 
 		/* Fade the edges so the grid does not end in a hard rectangle. */
-		mask-image: radial-gradient(135% 105% at 64% 46%, #000 42%, transparent 88%);
-		opacity: 0.95;
+		/* Barely a mask. The previous radial faded the field out well before the */
+		/* edges, so a full-bleed element still read as a small patch in the */
+		/* middle of the screen. This only softens the last few percent. */
+		mask-image: radial-gradient(150% 130% at 50% 50%, #000 72%, transparent 100%);
+		opacity: 1;
 	}
 
 	.field__layer {

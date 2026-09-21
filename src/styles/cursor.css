@@ -41,8 +41,12 @@
 	cursor: auto;
 }
 
+/* The cursor follows the section you are on. --c-section-ink is published by
+   src/scripts/sections.ts and falls back to the cool accent, so this is still
+   correct with the script disabled. */
 .cursor__dot,
 .cursor__ring {
+	--cursor-ink: var(--c-section-ink, var(--c-cool));
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -56,15 +60,17 @@
 	inline-size: 7px;
 	block-size: 7px;
 	margin: -3.5px 0 0 -3.5px;
-	background: var(--c-cool);
-	transition: scale var(--speed-trail) var(--ease-trail);
+	background: var(--cursor-ink);
+	transition:
+		background-color var(--speed) var(--ease),
+		scale var(--speed-trail) var(--ease-trail);
 }
 
 .cursor__ring {
 	inline-size: 30px;
 	block-size: 30px;
 	margin: -15px 0 0 -15px;
-	border: 1px solid var(--c-cool);
+	border: 1px solid var(--cursor-ink);
 	/* The trail. */
 	transition:
 		translate var(--speed-slow) var(--ease-out),
@@ -75,7 +81,7 @@
 	/* Velocity shifts the ring from cool to hot and swells it slightly.
 	   A style recalc on ONE 30px element per frame -- not compositor-only,
 	   and not worth pretending otherwise. */
-	border-color: color-mix(in oklab, var(--c-cool), var(--c-hot) calc(var(--pointer-v) * 100%));
+	border-color: color-mix(in oklab, var(--cursor-ink), var(--c-hot) calc(var(--pointer-v) * 100%));
 	scale: calc(1 + var(--pointer-v) * 0.55);
 }
 
@@ -115,27 +121,32 @@
 [data-proximity] {
 	position: relative;
 	isolation: isolate;
-	/* The glow pseudo-element is inset by -30% so it can travel with the
-	   pointer. Without clipping, that is 30% of the card's width hanging off
-	   each side -- 202px of horizontal page overflow on a 1440px viewport.
-	   `clip` rather than `hidden`: it does not create a scroll container. */
-	overflow: clip;
 }
 
+/*
+ * The glow lives INSIDE the element it belongs to.
+ *
+ * It used to be inset by -30% and then clipped, which is why it looked cut off
+ * at the panel edge -- and un-clipping it hung 30% of a 1152px panel off each
+ * side of the page. Keeping it within bounds and softening the falloff reads as
+ * light moving across a surface instead of a disc being trimmed.
+ */
 [data-proximity]::before {
 	content: '';
 	position: absolute;
-	inset: -30%;
+	inset: 0;
 	z-index: -1;
 	pointer-events: none;
 	/* STATIC gradient, translated. Never animate background-position. */
+	/* Positioned by the pointer rather than translated, so it can never leave
+	   the box. A wide soft falloff keeps the edge invisible. */
 	background: radial-gradient(
-		closest-side,
-		color-mix(in oklab, var(--c-entry-ink, var(--c-cool)) 20%, transparent),
-		transparent
+		38rem 38rem at var(--px) var(--py),
+		color-mix(in oklab, var(--c-entry-ink, var(--c-cool)) 17%, transparent),
+		color-mix(in oklab, var(--c-entry-ink, var(--c-cool)) 5%, transparent) 38%,
+		transparent 72%
 	);
 	opacity: 0;
-	translate: calc(var(--px) - 50%) calc(var(--py) - 50%);
 	transition: opacity var(--speed) var(--ease);
 }
 

@@ -1,0 +1,153 @@
+---
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+	id: string;
+	image: ImageMetadata;
+	alt: string;
+	statement: string;
+	caption: string;
+	/** Which accent the treatment leans on. */
+	tone?: 'cool' | 'hot' | undefined;
+}
+
+const { id, image, alt, statement, caption, tone = 'cool' } = Astro.props;
+---
+
+<section
+	id={id}
+	class="art"
+	aria-labelledby={`${id}-heading`}
+	data-section
+	style={`--art-tone: var(--c-${tone});`}
+>
+	<h2 id={`${id}-heading`} class="visually-hidden">
+		Interlude
+	</h2>
+
+	<div class="art__media">
+		<Image
+			src={image}
+			alt={alt}
+			widths={[800, 1200, 1600]}
+			sizes="100vw"
+			loading="lazy"
+			decoding="async"
+		/>
+		<span class="art__dither" aria-hidden="true"></span>
+		<span class="art__scrim" aria-hidden="true"></span>
+	</div>
+
+	<div class="art__copy wrap">
+		<p class="art__statement">{statement}</p>
+		<p class="art__caption">{caption}</p>
+	</div>
+</section>
+
+<style>
+	/*
+	 * An interlude: no navigation, no links, nothing to do. It exists to give
+	 * the narrative a breath between projects, which is the one thing a
+	 * wall-to-wall sequence of case studies cannot do for itself.
+	 */
+	.art {
+		position: relative;
+		min-block-size: 100svh;
+		display: grid;
+		align-content: end;
+		margin-inline: calc(50% - 50vw);
+		overflow: clip;
+		padding-block-end: var(--s-24);
+		isolation: isolate;
+	}
+
+	.art__media {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		overflow: clip;
+	}
+
+	.art__media :global(img) {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: -12%;
+		inline-size: 100%;
+		block-size: 124%;
+		object-fit: cover;
+		/* Pushed well down and tinted, so it reads as a treated surface rather */
+		/* than a photograph someone forgot to style. */
+		filter: grayscale(1) contrast(1.25) brightness(0.42);
+	}
+
+	/* Parallax, deeper than the project panels -- an interlude should feel like
+	   it sits further back. Scroll-driven, transform only. */
+	@media (prefers-reduced-motion: no-preference) {
+		@supports (animation-timeline: view()) {
+			.art__media :global(img) {
+				animation: art-parallax linear both;
+				animation-timeline: view();
+				animation-range: cover 0% cover 100%;
+			}
+		}
+	}
+
+	@keyframes art-parallax {
+		from {
+			translate: 0 -11%;
+		}
+		to {
+			translate: 0 11%;
+		}
+	}
+
+	/* The signature treatment, at image scale: an ordered dot screen in the page
+	   colour laid over the art. Static -- nothing animates here. */
+	.art__dither {
+		position: absolute;
+		inset: 0;
+		background-image:
+			radial-gradient(circle at 25% 25%, var(--c-bg) 1px, transparent 1.2px),
+			radial-gradient(circle at 75% 75%, var(--c-bg) 1px, transparent 1.2px);
+		background-size: 4px 4px;
+		opacity: 0.55;
+		mix-blend-mode: multiply;
+	}
+
+	.art__scrim {
+		position: absolute;
+		inset: 0;
+		background:
+			linear-gradient(to bottom, var(--c-bg) 0 6%, transparent 34%, transparent 52%, var(--c-bg)),
+			radial-gradient(
+				90% 70% at 30% 60%,
+				color-mix(in oklab, var(--art-tone) 12%, transparent),
+				transparent 70%
+			);
+	}
+
+	.art__copy {
+		position: relative;
+		display: grid;
+		gap: var(--s-4);
+		max-width: var(--measure);
+	}
+
+	.art__statement {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: clamp(1.75rem, 0.9rem + 3.2vw, 3.25rem);
+		line-height: 1.08;
+		letter-spacing: var(--tracking-display);
+		text-wrap: balance;
+	}
+
+	.art__caption {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--art-tone);
+	}
+</style>

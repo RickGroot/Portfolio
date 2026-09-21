@@ -154,6 +154,30 @@ does not prevent it — the browser will scroll to the hero and paint highlight 
 A symbol-only ramp makes this vanishingly rare in practice (nobody searches for `=`). Accepted, and
 written down rather than hidden by disabling the art.
 
+## The art interludes
+
+Two full-bleed sections sit between the work panels. They are not the character field — they are
+ordinary images under a CSS treatment: greyscaled, pushed down to 42% brightness, parallaxed, and
+screened with a static dot pattern (`.art__dither`).
+
+`scripts/make-art.mjs` generates the placeholders: an interference field and a flow field, both
+deterministic, both obviously not photographs, so there is no licence question while the real
+photography is outstanding.
+
+**Screen at display time, not at bake time.** The first version quantised the source through an
+ordered Bayer dither, which looked right in isolation and was wrong twice over. The dot screen is
+already applied in CSS, so baking one in doubled it. And high-frequency noise is the worst possible
+input for a lossy encoder: `check-assets` failed the build at **507 KB** for one backdrop. Removing
+the baked dither took the same image to **67 KB** with no visible difference, because the CSS
+overlay was doing the work anyway — and it does it at a period tied to CSS pixels rather than to
+whichever `srcset` candidate the browser picked.
+
+**The source is WebP, not PNG.** Lossless PNG of an interference field is ~1.1 MB; the rings near
+each wave source are genuinely high-frequency and do not compress. These are placeholders bound for
+git history. Astro re-encodes to WebP regardless, and the page then greyscales, darkens and screens
+the result, so q92 generation loss has nothing left to show by the time it reaches the screen.
+1.6 MB of sources became 141 KB with output unchanged.
+
 ## Changing the portrait
 
 1. Replace `src/assets/portrait-placeholder.png`.

@@ -2,7 +2,18 @@ import { test, expect } from '@playwright/test';
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
-const SECTIONS = ['top', 'nlziet', 'chromecast', 'vamp', 'contact'];
+// Document order. The rail is built from the same list in index.astro, so a
+// mismatch here means a rail dot points at an id that moved.
+const SECTIONS = [
+	'top',
+	'nlziet',
+	'chromecast',
+	'interlude-signal',
+	'practice',
+	'vamp',
+	'interlude-field',
+	'contact',
+];
 
 test.describe('one-page sections', () => {
 	test('every section fills the viewport', async ({ page }) => {
@@ -62,16 +73,24 @@ test.describe('one-page sections', () => {
 			await page.goto('/');
 			// End must reach the last section, whatever the advance is doing.
 			await page.keyboard.press('End');
-			await page.waitForTimeout(900);
-			const last = await page.evaluate(() => {
-				const el = document.getElementById('contact');
-				return el ? Math.round(el.getBoundingClientRect().top) : 99999;
-			});
-			expect(Math.abs(last), 'End did not land on the last section').toBeLessThan(120);
+			await expect
+				.poll(
+					async () =>
+						page.evaluate(() => {
+							const el = document.getElementById('contact');
+							return el ? Math.abs(Math.round(el.getBoundingClientRect().top)) : 99999;
+						}),
+					{ message: 'End did not land on the last section', timeout: 6000 },
+				)
+				.toBeLessThan(120);
 
 			await page.keyboard.press('Home');
-			await page.waitForTimeout(900);
-			expect(await page.evaluate(() => window.scrollY)).toBeLessThan(120);
+			await expect
+				.poll(async () => page.evaluate(() => window.scrollY), {
+					message: 'Home did not return to the top',
+					timeout: 6000,
+				})
+				.toBeLessThan(120);
 		});
 
 		test('every section is reachable one advance at a time', async ({ page }) => {
@@ -100,7 +119,20 @@ test.describe('one-page sections', () => {
 			// focus() scrolls the new input into view, and scroll-behavior is
 			// smooth, so let that finish before sampling -- otherwise the tail of
 			// the focus scroll is misread as the key press moving the page.
-			await page.waitForTimeout(900);
+			// Polled rather than fixed: the document grew and a fixed wait no
+			// longer covers the travel.
+			let settled = -1;
+			await expect
+				.poll(
+					async () => {
+						const y = await page.evaluate(() => Math.round(window.scrollY));
+						const stable = y === settled;
+						settled = y;
+						return stable;
+					},
+					{ message: 'the focus scroll never settled', timeout: 8000 },
+				)
+				.toBe(true);
 			const before = await page.evaluate(() => window.scrollY);
 			await page.keyboard.press('ArrowDown');
 			await page.waitForTimeout(600);
@@ -139,12 +171,16 @@ test.describe('one-page sections', () => {
 
 	test('deep links still land on the right section', async ({ page }) => {
 		await page.goto('/#vamp');
-		await page.waitForTimeout(700);
-		const top = await page.evaluate(() => {
-			const el = document.getElementById('vamp');
-			return el ? Math.round(el.getBoundingClientRect().top) : 99999;
-		});
-		expect(Math.abs(top), '/#vamp did not land on the VAMP section').toBeLessThan(140);
+		await expect
+			.poll(
+				async () =>
+					page.evaluate(() => {
+						const el = document.getElementById('vamp');
+						return el ? Math.abs(Math.round(el.getBoundingClientRect().top)) : 99999;
+					}),
+				{ message: '/#vamp did not land on the VAMP section', timeout: 6000 },
+			)
+			.toBeLessThan(140);
 	});
 });
 
