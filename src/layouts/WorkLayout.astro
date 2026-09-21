@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import TagList from '@components/TagList.astro';
 import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
+import { vt } from '@lib/vt';
 
 interface Props {
 	entry: PublishedWorkEntry;
@@ -18,13 +19,14 @@ const { title, role, company, summary, tags, accent, cover, coverAlt, links } = 
 			<p class="meta">
 				<span>{role}</span> · <span>{company}</span> · <span>{formatPeriod(entry)}</span>
 			</p>
-			<h1>{title}</h1>
+			<h1 style={`view-transition-name:${vt('title', entry.id)}`}>{title}</h1>
 			<p class="lede">{summary}</p>
 			<TagList tags={tags} />
 		</header>
 
 		<Image
 			class="cover"
+			style={`view-transition-name:${vt('cover', entry.id)}`}
 			src={cover}
 			alt={coverAlt}
 			widths={[600, 1000, 1600]}

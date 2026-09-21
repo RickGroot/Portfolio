@@ -1,0 +1,90 @@
+import { test, expect } from '@playwright/test';
+
+const ROUTES = ['/', '/work/nlziet', '/work/chromecast', '/work/vamp', '/work/kijk', '/404-x'];
+
+/**
+ * A SINGLE duplicated `view-transition-name` in a document makes the browser
+ * skip the entire transition, with no error and nothing in the console. The
+ * one-pager renders a name per project, so this is the guard that survives
+ * someone adding another section later.
+ */
+test('no duplicate view-transition-name on any route', async ({ page }) => {
+	for (const path of ROUTES) {
+		await page.goto(path);
+		const dupes = await page.evaluate(() => {
+			const names = [...document.querySelectorAll<HTMLElement>('*')]
+				.map((el) => getComputedStyle(el).viewTransitionName)
+				.filter((n) => n && n !== 'none');
+			return names.filter((n, i) => names.indexOf(n) !== i);
+		});
+		expect(dupes, `${path} has duplicate view-transition-name: ${dupes.join(', ')}`).toEqual([]);
+	}
+});
+
+test('the names actually pair up between the one-pager and each detail page', async ({ page }) => {
+	await page.goto('/');
+	const onHome = await page.evaluate(() =>
+		[...document.querySelectorAll<HTMLElement>('*')]
+			.map((el) => getComputedStyle(el).viewTransitionName)
+			.filter((n) => n && n !== 'none'),
+	);
+
+	for (const id of ['nlziet', 'chromecast', 'vamp']) {
+		// A morph only happens if BOTH documents carry the same name. Naming one
+		// side only is the other silent failure mode.
+		expect(onHome, `the one-pager is missing cover-${id}`).toContain(`cover-${id}`);
+		expect(onHome, `the one-pager is missing title-${id}`).toContain(`title-${id}`);
+
+		await page.goto(`/work/${id}`);
+		const onDetail = await page.evaluate(() =>
+			[...document.querySelectorAll<HTMLElement>('*')]
+				.map((el) => getComputedStyle(el).viewTransitionName)
+				.filter((n) => n && n !== 'none'),
+		);
+		expect(onDetail, `/work/${id} is missing cover-${id}`).toContain(`cover-${id}`);
+		expect(onDetail, `/work/${id} is missing title-${id}`).toContain(`title-${id}`);
+	}
+});
+
+test('names are valid CSS idents', async ({ page }) => {
+	await page.goto('/');
+	const names = await page.evaluate(() =>
+		[...document.querySelectorAll<HTMLElement>('*')]
+			.map((el) => getComputedStyle(el).viewTransitionName)
+			.filter((n) => n && n !== 'none'),
+	);
+	expect(names.length).toBeGreaterThan(0);
+	for (const n of names) {
+		// A dot or a space silently invalidates the declaration, so the name is
+		// never applied and the morph never happens.
+		expect(n, `"${n}" is not a valid ident`).toMatch(/^[a-zA-Z][a-zA-Z0-9-]*$/);
+	}
+});
+
+test('transitions are opted out under reduced motion', async ({ browser }) => {
+	const context = await browser.newContext({ reducedMotion: 'reduce' });
+	const page = await context.newPage();
+	await page.goto('/');
+
+	// The at-rule sits inside @media (prefers-reduced-motion: no-preference), so
+	// under reduce it must not be in the matching rules at all.
+	const optedIn = await page.evaluate(() => {
+		for (const sheet of [...document.styleSheets]) {
+			let rules: CSSRuleList;
+			try {
+				rules = sheet.cssRules;
+			} catch {
+				continue; // cross-origin sheet
+			}
+			for (const rule of [...rules]) {
+				if (rule instanceof CSSMediaRule && !window.matchMedia(rule.conditionText).matches) {
+					continue;
+				}
+				if (rule.cssText.includes('@view-transition')) return true;
+			}
+		}
+		return false;
+	});
+	expect(optedIn, 'cross-document transitions are active under reduced motion').toBe(false);
+	await context.close();
+});

@@ -3,6 +3,7 @@ import { Image } from 'astro:assets';
 import TagList from './TagList.astro';
 import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
 import { ink } from '@lib/accent';
+import { vt } from '@lib/vt';
 
 interface Props {
 	entry: PublishedWorkEntry;
@@ -40,7 +41,13 @@ const href = `/work/${entry.id}`;
 		<span>{formatPeriod(entry)}</span>
 	</p>
 
-	<a class="panel__media" href={href} tabindex="-1" aria-hidden="true">
+	<a
+		class="panel__media"
+		href={href}
+		tabindex="-1"
+		aria-hidden="true"
+		style={`view-transition-name:${vt('cover', entry.id)}`}
+	>
 		<span class="panel__frame">
 			<Image
 				src={cover}
@@ -60,7 +67,7 @@ const href = `/work/${entry.id}`;
 	</a>
 
 	<div class="panel__body">
-		<h3 class="panel__title">
+		<h3 class="panel__title" style={`view-transition-name:${vt('title', entry.id)}`}>
 			<a href={href}>{title}</a>
 		</h3>
 		<div class="panel__detail">
@@ -357,6 +364,31 @@ const href = `/work/${entry.id}`;
 		}
 		50% {
 			scale: 1 1;
+		}
+	}
+
+	/* ---- narrow screens -------------------------------------------------- */
+
+	/* On a phone the stacked title, summary, tags and link left the image with
+	   188px on an iPhone 13 -- not a showcase by any reading. Floor the media
+	   and tighten the detail around it. If a section then exceeds the viewport,
+	   the advance script lets it scroll normally before advancing, which is
+	   already covered by tests. */
+	@media (max-width: 59.99rem) {
+		.panel__media {
+			min-block-size: 42svh;
+		}
+
+		.panel__body {
+			gap: var(--s-3);
+		}
+
+		.panel__summary {
+			font-size: var(--t-base);
+		}
+
+		.panel__meta {
+			gap: var(--s-1) var(--s-2);
 		}
 	}
 

@@ -63,3 +63,35 @@
 	white-space: nowrap;
 	border: 0;
 }
+
+/*
+ * Cross-document view transitions.
+ *
+ * CSS only -- no JavaScript, and specifically NOT Astro's ClientRouter, which
+ * would keep the field's RAF loop and its observers alive across navigations
+ * and need real per-navigation teardown.
+ *
+ * "Limited availability": Chromium supports it, others navigate normally. Pure
+ * progressive enhancement, so never design a transition the site NEEDS -- the
+ * cover morph is a delight, not wayfinding.
+ *
+ * Wrapping the at-rule in @media is the clean way to honour reduced motion; you
+ * cannot cancel a cross-document transition from inside ::view-transition-*
+ * without leaving a snap.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+}
+
+::view-transition-group(*) {
+	animation-duration: 320ms;
+	animation-timing-function: var(--ease-out);
+}
+
+/* A short root cross-fade under a slightly longer element morph. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 180ms;
+}
