@@ -1,30 +1,87 @@
-<h1> Hi, I'm Rick Groot! <img src="https://media.giphy.com/media/RK4DU8PoCb36TasMZa/giphy.gif" width="100"></h1>
-<img align='right' src="https://github.com/rickgroot.png" width="230" style="border-radius:50%">
+# rickgroot.nl
 
-_Front-End Developer [@Triple](https://www.wearetriple.com/)_
+Personal portfolio for Rick Groot — Connected TV developer.
 
----
+Astro 7, static output, strict TypeScript, native CSS. No UI framework.
+Deployed to Firebase Hosting at <https://rickgroot.nl>.
 
-![Ricks GitHub stats](https://github-readme-stats.vercel.app/api?username=rickgroot&show_icons=true&theme=dracula)
+> The previous contents of this file were a GitHub _profile_ readme (badges, stats card) that had
+> ended up in a project repo. It is preserved in git history; its real home is
+> `github.com/RickGroot/RickGroot`.
 
-[![LinkediIn: rick-groot-469777193](https://img.shields.io/badge/-rickgroot-blue?style=flat-square&logo=Linkedin&logoColor=white&link=https://www.linkedin.com/in/rick-groot-469777193/)](https://www.linkedin.com/in/rick-groot-469777193/)
-[![GitHub RickGroot](https://img.shields.io/github/followers/rickgroot?label=follow&style=social)](https://github.com/rickgroot)
+## Requirements
 
-## A bit more about me...
+- **Node 24.21.0** (see `.node-version`). Node 25 will not install — `eslint-plugin-astro` declares
+  `^22.22.3 || ^24.16.0 || >=26.3.0` and 25 falls in the gap.
+- pnpm 11+.
 
-```javascript
-const rick = {
-	pronouns: 'he' | 'his',
-	code: ['Javascript', 'HTML', 'CSS'],
-	tools: ['Svelte', "API's", 'Node', 'Semantic', 'Interaction', 'UX'],
-	hobbies: ['Playing Trumpet', 'Photography', 'Lots of gaming']
-};
+## Getting started
+
+```bash
+pnpm install --ignore-scripts
+pnpm setup:browsers
+pnpm dev
 ```
 
-![CSS](https://img.shields.io/badge/-CSS-000000?style=flat&logo=css3&logoColor=663399)
-![HTML5](https://img.shields.io/badge/-HTML5-000000?style=flat&logo=HTML5)
-![JavaScript](https://img.shields.io/badge/-JavaScript-000000?style=flat&logo=javascript)
-![Node.js](https://img.shields.io/badge/-Node.js-000000?style=flat&logo=node.js&logoColor=339933)
-![Svelte](https://img.shields.io/badge/-Svelte-000000?style=flat&logo=svelte&logoColor=FF3E00)
-![Netlify](https://img.shields.io/badge/-Netlify-000000?style=flat&logo=netlify&logoColor=00C7B7)
-![Heroku](https://img.shields.io/badge/-Heroku-000000?style=flat&logo=heroku&logoColor=430098)
+`pnpm setup:browsers` is **required**, not optional — `@playwright/test` has no install hook, so
+browsers are never downloaded automatically with or without `--ignore-scripts`.
+
+## Commands
+
+| Command          | What it does                                     |
+| ---------------- | ------------------------------------------------ |
+| `pnpm dev`       | Dev server                                       |
+| `pnpm typecheck` | `astro check` — the gate for `.astro` files      |
+| `pnpm lint`      | eslint + prettier check                          |
+| `pnpm build`     | Production build to `dist/`                      |
+| `pnpm preview`   | Serve the built output                           |
+| `pnpm test`      | Playwright: routing, smoke, axe, payload budgets |
+| `pnpm jazz`      | Opt-in. Try it.                                  |
+
+## Project layout
+
+```
+src/
+  content/work/*.md    All work content. Nothing lives in .ts files.
+  content.config.ts    The schema. Astro 7 Content Layer API.
+  pages/               /, /work, /work/[id], 404
+  assets/              Imported images -- hashed, resized, AVIF/WebP by astro:assets
+  styles/              Design tokens. global.css is imported ONCE, in BaseLayout.
+public/                Only files referenced from outside the HTML
+  service-worker.js    Kill switch -- do NOT delete before ~2027-09
+docs/                  Roadmap, content guide, performance, easter eggs
+```
+
+## Documentation
+
+- [`CLAUDE.md`](CLAUDE.md) — engineering rules, pinned versions and why, hard prohibitions
+- [`docs/roadmap.md`](docs/roadmap.md) — phases, gates, deferred dependencies, open items
+- [`docs/content-guide.md`](docs/content-guide.md) — how to add work, field rules, image rights
+- [`docs/performance.md`](docs/performance.md) — budgets, measurement, renderer rules
+- [`docs/easter-eggs.md`](docs/easter-eggs.md) — what exists, and how to turn it off
+
+## Deployment
+
+Pushes to `main` build and deploy to Firebase Hosting. Pull requests deploy to a Firebase preview
+channel with a live URL — that is the staging environment. Both are gated on typecheck, lint, build
+and the Playwright suite; the deploy job consumes the built artifact, so **the deployed bytes are
+the tested bytes**.
+
+The previous site is tagged `v1-sveltekit` as a restore point.
+
+## Security
+
+The Firebase **web** API key that used to sit in `firebaseConfig.js` is a public client identifier
+by design — the file was dead code and has been removed, but rotating that key is not the right
+reflex. What is worth doing in the console for `portfolio-rick-groot`:
+
+1. Confirm Authentication, Firestore, Realtime Database and Storage are **disabled**. If any is
+   enabled with permissive rules, the _rules_ are the exposure, not the key.
+2. Add HTTP-referrer restrictions to the API key, scoped to `rickgroot.nl`.
+3. Verify the service account behind `FIREBASE_SERVICE_ACCOUNT_PORTFOLIO_RICK_GROOT` holds only
+   `roles/firebasehosting.admin`. **That secret is the real one** — the Firebase CLI's generated
+   service account is frequently over-privileged.
+
+## Licence
+
+Code is MIT. Content, copy and photography are all rights reserved. See [LICENSE](LICENSE).
