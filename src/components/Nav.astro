@@ -1,27 +1,33 @@
 ---
+import { socialLinks } from '@lib/social';
+
 const path = Astro.url.pathname;
-const links = [
-	{ href: '/#top', label: 'Work' },
-	{ href: '/#contact', label: 'Contact' },
-];
-// On a one-pager the nav points at fragments, so 'current' means the page,
-// not the section -- the rail handles section position.
-const isCurrent = (href: string) => path === '/' && href.startsWith('/#');
+const onHome = path === '/';
+const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 ---
 
 <nav aria-label="Primary">
-	<a href="/" class="mark">
-		Rick Groot
+	<a href="/" class="mark" aria-current={onHome ? 'page' : undefined}>
+		<span class="mark__name">Rick Groot</span>
+		<span class="mark__role">Connected TV developer</span>
 	</a>
-	<ul>
-		{links.map((l) => (
-			<li>
-				<a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>
-					{l.label}
+
+	<div class="actions">
+		{
+			/* On a detail page this goes back to the narrative; on the one-pager
+			   it is a same-page jump. Either way it is a real link. */
+			!onHome && (
+				<a class="link" href="/">
+					<span aria-hidden="true">←</span> Overview
 				</a>
-			</li>
-		))}
-	</ul>
+			)
+		}
+		{email && (
+			<a class="cta" href={email.href}>
+				Email
+			</a>
+		)}
+	</div>
 </nav>
 
 <style>
@@ -30,40 +36,75 @@ const isCurrent = (href: string) => path === '/' && href.startsWith('/#');
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--s-6);
-		padding-block: var(--s-6);
-		border-bottom: 1px solid var(--c-line);
+		padding-block: var(--s-4);
 	}
 
 	.mark {
+		display: grid;
+		gap: 1px;
+		text-decoration: none;
+		line-height: 1.1;
+	}
+
+	.mark__name {
+		font-family: var(--font-display);
 		font-weight: 700;
 		letter-spacing: -0.02em;
-		text-decoration: none;
 	}
 
-	ul {
+	.mark__role {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-mute);
+	}
+
+	.actions {
 		display: flex;
-		gap: var(--s-6);
-		list-style: none;
-		margin: 0;
-		padding: 0;
+		align-items: center;
+		gap: var(--s-4);
 	}
 
-	a {
-		text-decoration: none;
+	.link {
+		font-size: var(--t-sm);
 		color: var(--c-text-dim);
-		transition: color var(--speed) var(--ease);
+		text-decoration: none;
 	}
 
-	a:hover,
-	a[aria-current='page'] {
+	.link:hover,
+	.link:focus-visible {
 		color: var(--c-text);
 	}
 
-	/* Current page is marked by more than colour alone. */
-	a[aria-current='page'] {
-		text-decoration: underline;
-		text-decoration-color: var(--c-accent);
-		text-decoration-thickness: 2px;
-		text-underline-offset: 0.4em;
+	/*
+	 * A button shape, not another text link.
+	 *
+	 * The nav reference that was disliked had "unclear navigation" -- you could
+	 * not tell what the options were. A different KIND of thing should look
+	 * different, so the one action on the page is shaped like an action and the
+	 * navigation is shaped like navigation. Nothing has to be guessed.
+	 */
+	.cta {
+		font-size: var(--t-sm);
+		font-weight: 700;
+		padding: var(--s-2) var(--s-4);
+		border: 1px solid var(--c-cool);
+		border-radius: 999px;
+		color: var(--c-cool);
+		text-decoration: none;
+		transition:
+			background-color var(--speed) var(--ease),
+			color var(--speed) var(--ease);
+		/* 44px touch target. */
+		min-block-size: 44px;
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.cta:hover,
+	.cta:focus-visible {
+		background: var(--c-cool);
+		color: var(--c-void);
 	}
 </style>

@@ -21,7 +21,8 @@
 		"test:a11y": "playwright test tests/a11y",
 		"test:budget": "playwright test tests/budgets",
 		"setup:browsers": "playwright install --with-deps chromium",
-		"jazz": "node scripts/jazz.mjs"
+		"jazz": "node scripts/jazz.mjs",
+		"check:assets": "node scripts/check-assets.mjs"
 	},
 	"dependencies": {
 		"astro": "7.3.3"

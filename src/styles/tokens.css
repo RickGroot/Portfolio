@@ -73,7 +73,7 @@
 	--font-sans:
 		'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
 		sans-serif;
-	--font-display: var(--font-sans);
+	--font-display: 'Space Grotesk', 'Display Fallback', var(--font-sans);
 	/* The character field REQUIRES a uniform advance width. A stack is a risk
 	   here: `ui-monospace` resolved to a proportional face in testing, which
 	   shears the grid. tests/e2e/field.spec.ts asserts uniformity. */

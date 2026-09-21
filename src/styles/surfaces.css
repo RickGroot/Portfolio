@@ -1,0 +1,95 @@
+/*
+ * Surfaces: the ground, the grain, and per-section depth.
+ *
+ * The flat single-colour ground read as unfinished. This adds three things,
+ * all static or compositor-only, none of them an animation loop:
+ *
+ *   1. A grain layer over the whole page, so the dark is not a flat fill.
+ *   2. A per-section accent wash, so each project owns its screen.
+ *   3. A vignette, so a full-screen section has a centre.
+ */
+
+/* ---- Grain --------------------------------------------------------------- */
+
+/*
+ * An SVG fractal-noise tile as a data URI. One decode, one paint, no request.
+ * Fixed attachment so it does not slide with the content -- it should read as
+ * a property of the screen, not of the page.
+ */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	opacity: 0.055;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+	mix-blend-mode: overlay;
+}
+
+/* Grain over system colours is noise in the bad sense. */
+@media (forced-colors: active) {
+	body::before {
+		display: none;
+	}
+}
+
+/* Everything else has to sit above the grain. */
+body > * {
+	position: relative;
+	z-index: 1;
+}
+
+/* ---- Section depth ------------------------------------------------------- */
+
+/*
+ * Each work section gets a wash of its own accent plus a vignette. Both are
+ * static gradients on a pseudo-element -- painted once, never animated.
+ *
+ * `--c-entry-accent` is the RAW brand colour, which is correct here: these are
+ * large, very low-opacity fills, not text, so the AA floor that `--c-entry-ink`
+ * exists for does not apply.
+ */
+.section::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		radial-gradient(
+			120% 90% at 78% 30%,
+			color-mix(in oklab, var(--c-entry-accent, var(--c-cool)) 9%, transparent),
+			transparent 62%
+		),
+		radial-gradient(
+			90% 70% at 12% 88%,
+			color-mix(in oklab, var(--c-void) 85%, transparent),
+			transparent 70%
+		);
+}
+
+/* The masthead paints its own scrim over the character field; a second wash
+   on top of that just muddies it. */
+.hero::after {
+	z-index: 1;
+}
+
+/*
+ * Alternating ground, so consecutive full-screen sections are distinguishable
+ * even before their content loads. Two steps only -- more reads as stripes.
+ */
+.section:nth-of-type(even) {
+	background: color-mix(in oklab, var(--c-surface) 55%, var(--c-bg));
+}
+
+/* ---- Panel surface ------------------------------------------------------- */
+
+.panel__media {
+	/* A hairline that survives whatever image sits behind it, plus a soft
+	   drop so the panel lifts off the section ground. */
+	border-color: color-mix(in oklab, var(--c-entry-ink) 22%, var(--c-line));
+	box-shadow:
+		0 1px 0 0 color-mix(in oklab, var(--c-text) 6%, transparent) inset,
+		0 24px 60px -30px rgb(0 0 0 / 0.8);
+}

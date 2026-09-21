@@ -49,6 +49,36 @@
 			animation-timeline: view();
 			animation-range: entry 8% cover 26%;
 		}
+
+		/*
+		 * Section arrival.
+		 *
+		 * A longer, gentler range than the card reveals: a full-screen section
+		 * should settle as it lands rather than pop. Only opacity and translate,
+		 * so nothing here can shift layout.
+		 */
+		[data-section] .section__inner,
+		[data-section] .panel {
+			animation: arrive linear both;
+			animation-timeline: view();
+			animation-range: entry 4% cover 34%;
+		}
+
+		/* The masthead is at the top of the document and never "arrives". */
+		.hero .hero__copy {
+			animation: none;
+		}
+	}
+}
+
+@keyframes arrive {
+	from {
+		opacity: 0;
+		translate: 0 26px;
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
 	}
 }
 
