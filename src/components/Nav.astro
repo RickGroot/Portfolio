@@ -1,10 +1,12 @@
 ---
 const path = Astro.url.pathname;
 const links = [
-	{ href: '/', label: 'Home' },
-	{ href: '/work', label: 'Work' },
+	{ href: '/#top', label: 'Work' },
+	{ href: '/#contact', label: 'Contact' },
 ];
-const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+// On a one-pager the nav points at fragments, so 'current' means the page,
+// not the section -- the rail handles section position.
+const isCurrent = (href: string) => path === '/' && href.startsWith('/#');
 ---
 
 <nav aria-label="Primary">

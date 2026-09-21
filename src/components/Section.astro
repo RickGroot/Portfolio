@@ -1,0 +1,35 @@
+---
+interface Props {
+	id: string;
+	label: string;
+	/** Rendered as a visible heading, or hidden when the section has its own. */
+	labelHidden?: boolean | undefined;
+	index?: string | undefined;
+	accent?: string | undefined;
+	class?: string | undefined;
+}
+
+const { id, label, labelHidden = false, index, accent, class: cls = '' } = Astro.props;
+---
+
+<section
+	id={id}
+	class:list={['section', cls]}
+	aria-labelledby={`${id}-heading`}
+	data-section
+	style={accent ? `--c-entry-accent:${accent}` : undefined}
+>
+	<div class="section__inner wrap">
+		<header class="section__head">
+			{index && (
+				<span class="section__index" aria-hidden="true">
+					{index}
+				</span>
+			)}
+			<h2 id={`${id}-heading`} class:list={{ 'visually-hidden': labelHidden }}>
+				{label}
+			</h2>
+		</header>
+		<slot />
+	</div>
+</section>

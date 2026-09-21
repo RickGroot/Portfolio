@@ -1,17 +1,20 @@
 ---
 import { render } from 'astro:content';
 import WorkLayout from '@layouts/WorkLayout.astro';
-import { getFeaturedWork, type PublishedWorkEntry } from '@lib/work';
+import { getPublishedWork, type PublishedWorkEntry } from '@lib/work';
 
 export async function getStaticPaths() {
-	const entries = await getFeaturedWork();
+	// EVERY published entry, not just featured. `featured` controls what gets
+	// a section on the one-pager; it must not decide whether a case study is
+	// reachable at all. KIJK is not featured and still deserves a URL.
+	const entries = await getPublishedWork();
 	const ids = entries.map((e) => e.id).sort();
 
 	// Deliberately annoying guard. Adding a work page should be an explicit,
 	// reviewed edit -- not something that happens quietly because a `featured`
 	// flag was flipped. A typo in the frontmatter breaks the build here rather
 	// than silently dropping a page from the site (and from the sitemap).
-	const expected = ['chromecast', 'nlziet', 'vamp'];
+	const expected = ['chromecast', 'kijk', 'nlziet', 'vamp'];
 	if (ids.join(',') !== expected.join(',')) {
 		throw new Error(
 			`Expected featured work pages [${expected.join(', ')}], got [${ids.join(', ')}]. ` +

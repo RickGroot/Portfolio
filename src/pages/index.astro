@@ -1,62 +1,113 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CharacterField from '@components/CharacterField.astro';
-import WorkCard from '@components/WorkCard.astro';
+import Section from '@components/Section.astro';
+import WorkPanel from '@components/WorkPanel.astro';
 import TagList from '@components/TagList.astro';
 import SocialLinks from '@components/SocialLinks.astro';
-import { getFeaturedWork } from '@lib/work';
+import { getFeaturedWork, getPublishedWork, formatPeriod } from '@lib/work';
 import { skills } from '@lib/skills';
 import { site } from '@lib/site';
 
 const featured = await getFeaturedWork();
+const published = await getPublishedWork();
+// Non-featured entries keep their copy somewhere, rather than being orphaned
+// now that the /work index page is gone.
+const also = published.filter((e) => !e.data.featured);
+
+const rail = [
+	{ id: 'top', label: 'Top' },
+	...featured.map((e) => ({ id: e.id, label: e.data.title })),
+	{ id: 'contact', label: 'Contact' },
+];
 ---
 
 <BaseLayout title={site.name} description={site.description}>
-	<section class="hero">
+	<nav class="rail" data-rail aria-label="Sections">
+		{rail.map((s) => (
+			<a href={`#${s.id}`}>
+				<span class="visually-hidden">{s.label}</span>
+			</a>
+		))}
+	</nav>
+
+	{/* ---- Masthead ---- */}
+	<section id="top" class="section hero" aria-labelledby="top-heading" data-section>
 		<CharacterField />
 		<div class="hero__copy">
-			<h1>Rick Groot</h1>
+			<p class="hero__eyebrow">Connected TV developer</p>
+			<h1 id="top-heading">Rick Groot</h1>
 			<p class="lede">
 				I build Connected TV experiences — Smart TV apps, Chromecast receivers and video players
 				that have to run well on hardware you do not get to choose.
 			</p>
 			<TagList tags={skills} label="What I work on" />
 		</div>
-	</section>
-
-	<section aria-labelledby="featured-heading" class="featured">
-		<h2 id="featured-heading">Selected work</h2>
-		<div class="list">
-			{featured.map((entry) => (
-				<WorkCard entry={entry} as="h3" />
-			))}
-		</div>
-		<p>
-			<a href="/work">All work →</a>
+		<p class="hero__cue" aria-hidden="true">
+			Scroll
 		</p>
 	</section>
 
-	<section aria-labelledby="contact-heading" class="contact">
-		<h2 id="contact-heading">Contact</h2>
-		<p>Feel free to reach out.</p>
-		<SocialLinks />
-	</section>
+	{/* ---- Work, one full screen each ---- */}
+	{featured.map((entry, i) => (
+		<Section
+			id={entry.id}
+			label={entry.data.title}
+			labelHidden={true}
+			accent={entry.data.accent}
+			class="section--work"
+		>
+			<WorkPanel entry={entry} index={String(i + 1).padStart(2, '0')} />
+		</Section>
+	))}
+
+	{/* ---- Contact ---- */}
+	<Section id="contact" label="Contact" index="04">
+		<div class="contact">
+			<p class="lede">
+				Feel free to reach out — I am always happy to talk about Connected TV, performance, or
+				trumpets.
+			</p>
+			<SocialLinks />
+
+			{also.length > 0 && (
+				<div class="also">
+					<h3 class="also__title">Also shipped</h3>
+					<ul>
+						{also.map((e) => (
+							<li>
+								<a href={`/work/${e.id}`}>{e.data.title}</a>
+								<span>
+									{e.data.role} · {e.data.company} · {formatPeriod(e)}
+								</span>
+							</li>
+						))}
+					</ul>
+				</div>
+			)}
+		</div>
+	</Section>
+
+	<script>
+		import { boot } from '../scripts/sections';
+		boot();
+	</script>
 </BaseLayout>
 
 <style>
+	/* ---- Masthead -------------------------------------------------------- */
+
 	.hero {
 		position: relative;
 		display: grid;
-		align-items: center;
-		min-block-size: var(--hero-min);
-		padding-block: var(--s-16) var(--s-24);
-		/* The field is absolutely positioned inside and bleeds past the wrap, */
-		/* so the hero owns the full width of the viewport. */
+		align-content: center;
+		min-block-size: 100svh;
+		/* Full bleed, so the field can fill the whole screen. */
 		margin-inline: calc(50% - 50vw);
+		overflow: clip;
 	}
 
-	/* Scrim so the heading stays legible over the field. A static gradient, */
-	/* painted once -- never animated. */
+	/* Scrim. A static gradient, painted once — never animated. */
 	.hero::after {
 		content: '';
 		position: absolute;
@@ -66,23 +117,20 @@ const featured = await getFeaturedWork();
 		background:
 			linear-gradient(
 				100deg,
-				var(--c-bg) 0 38%,
-				color-mix(in oklab, var(--c-bg) 55%, transparent) 58%,
-				transparent 78%
+				var(--c-bg) 0 30%,
+				color-mix(in oklab, var(--c-bg) 45%, transparent) 55%,
+				transparent 80%
 			),
-			linear-gradient(to bottom, var(--c-bg), transparent 18%, transparent 82%, var(--c-bg));
+			linear-gradient(to bottom, var(--c-bg), transparent 14%, transparent 84%, var(--c-bg));
 	}
 
-	/* The hero bleeds full width, so the copy has to re-establish the page */
-	/* column itself -- same formula as .wrap, so its left edge lines up with */
-	/* every heading below it. --measure goes on the CHILDREN: putting it on */
-	/* this box would shrink it and margin-inline:auto would then centre the */
-	/* short box in the viewport instead of aligning it to the column. */
 	.hero__copy {
 		position: relative;
 		z-index: 2;
 		display: grid;
 		gap: var(--s-6);
+		/* Same formula as .wrap, so the left edge lines up with every section */
+		/* below. --measure goes on the children, not on this box. */
 		width: min(100% - var(--gutter) * 2, var(--wrap));
 		margin-inline: auto;
 	}
@@ -91,9 +139,43 @@ const featured = await getFeaturedWork();
 		max-width: var(--measure);
 	}
 
+	.hero__eyebrow {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-cool);
+	}
+
 	.hero__copy h1 {
 		font-size: var(--t-3xl);
 		letter-spacing: var(--tracking-display);
+	}
+
+	.hero__cue {
+		position: absolute;
+		z-index: 2;
+		inset-block-end: var(--s-8);
+		inset-inline-start: 50%;
+		translate: -50% 0;
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-mute);
+		animation: cue 2.4s ease-in-out infinite;
+	}
+
+	@keyframes cue {
+		0%,
+		100% {
+			translate: -50% 0;
+			opacity: 0.5;
+		}
+		50% {
+			translate: -50% 6px;
+			opacity: 1;
+		}
 	}
 
 	.lede {
@@ -101,15 +183,48 @@ const featured = await getFeaturedWork();
 		color: var(--c-text-dim);
 	}
 
-	.featured,
+	/* ---- Contact --------------------------------------------------------- */
+
 	.contact {
 		display: grid;
 		gap: var(--s-8);
-		padding-block-end: var(--s-16);
+		max-width: var(--measure);
 	}
 
-	.list {
+	.also__title {
+		font-size: var(--t-sm);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-dim);
+		margin-block-end: var(--s-3);
+	}
+
+	.also ul {
 		display: grid;
-		gap: var(--s-12);
+		gap: var(--s-3);
+		list-style: none;
+		padding: 0;
+		border-block-start: 1px solid var(--c-line);
+		padding-block-start: var(--s-4);
+	}
+
+	.also li {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-1) var(--s-3);
+		align-items: baseline;
+	}
+
+	.also span {
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-mute);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero__cue {
+			animation: none;
+		}
 	}
 </style>

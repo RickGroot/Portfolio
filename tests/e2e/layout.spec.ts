@@ -17,13 +17,17 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 	const main = await left('main#main');
 	const h1 = await left('.hero__copy h1');
 	const lede = await left('.hero .lede');
-	const featured = await left('#featured-heading');
-	const contact = await left('#contact-heading');
+	// The section's content column, not the panel title -- the title sits in
+	// the right column of a two-column panel and is inset by design.
+	const nlziet = await left('#nlziet .section__inner');
+	// Also the content column: the section's '04' index marker sits before the
+	// heading, so the h2 itself is inset by design.
+	const contact = await left('#contact .section__inner');
 
 	for (const [name, x] of [
 		['hero h1', h1],
 		['hero lede', lede],
-		['Selected work', featured],
+		['NLZIET section column', nlziet],
 		['Contact', contact],
 	] as const) {
 		expect(

@@ -25,7 +25,7 @@ test('ships no canvas and no graphics context, on any route', async ({ page }) =
 		} as typeof getContext;
 	});
 
-	for (const path of ['/', '/work', '/work/nlziet', '/404-not-a-page']) {
+	for (const path of ['/', '/work/nlziet', '/404-not-a-page']) {
 		await page.goto(path, { waitUntil: 'networkidle' });
 		await page.waitForTimeout(600);
 

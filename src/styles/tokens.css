@@ -67,7 +67,7 @@
 	--art-4: var(--c-cool);
 	--art-hot: var(--c-hot);
 
-	--art-cell: clamp(9px, 1.05vw, 13px);
+	--art-cell: clamp(10px, 1.25vw, 17px);
 
 	/* ---- Type ----------------------------------------------------------- */
 	--font-sans:

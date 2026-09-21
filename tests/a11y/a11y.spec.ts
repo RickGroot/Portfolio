@@ -1,14 +1,7 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-const ROUTES = [
-	'/',
-	'/work',
-	'/work/nlziet',
-	'/work/chromecast',
-	'/work/vamp',
-	'/definitely-not-a-page',
-];
+const ROUTES = ['/', '/work/nlziet', '/work/chromecast', '/work/vamp', '/definitely-not-a-page'];
 
 for (const path of ROUTES) {
 	test(`${path} has no detectable accessibility violations`, async ({ page }) => {
@@ -33,15 +26,17 @@ test('the skip link is the first thing keyboard focus reaches', async ({ page })
 
 test('every link has an accessible name', async ({ page }) => {
 	// The old footer rendered four icon-only links with no label at all.
-	for (const path of ['/', '/work']) {
+	for (const path of ['/', '/work/nlziet']) {
 		await page.goto(path);
-		const unnamed = await page
-			.locator('a')
-			.evaluateAll((links) =>
-				links
-					.filter((a) => !(a.textContent ?? '').trim() && !a.getAttribute('aria-label'))
-					.map((a) => a.getAttribute('href') ?? '(no href)'),
-			);
+		const unnamed = await page.locator('a').evaluateAll((links) =>
+			links
+				// Links removed from the accessibility tree on purpose -- a
+				// decorative duplicate of a real link right next to it -- have no
+				// accessible name by design.
+				.filter((a) => a.getAttribute('aria-hidden') !== 'true')
+				.filter((a) => !(a.textContent ?? '').trim() && !a.getAttribute('aria-label'))
+				.map((a) => a.getAttribute('href') ?? '(no href)'),
+		);
 		expect(unnamed, `${path}: links without an accessible name`).toEqual([]);
 	}
 });

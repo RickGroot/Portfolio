@@ -3,20 +3,21 @@ import { test, expect } from '@playwright/test';
 test('homepage renders identity and featured work', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toHaveText('Rick Groot');
-	await expect(page.getByRole('link', { name: /NLZIET/ })).toBeVisible();
-	await expect(page.getByRole('link', { name: /VAMP/ })).toBeVisible();
+	await expect(page.locator('#nlziet .panel__title a')).toBeVisible();
+	await expect(page.locator('#vamp .panel__title a')).toBeVisible();
 });
 
-test('/work is the complete record, including non-featured entries', async ({ page }) => {
-	await page.goto('/work');
-	// KIJK gets no dedicated route, so its full body must render inline here
-	// or the copy would be orphaned.
-	await expect(page.getByText('KIJK', { exact: false }).first()).toBeVisible();
-	await expect(page.getByText(/THEOplayer/).first()).toBeVisible();
+test('the one-pager is the complete record, including non-featured entries', async ({ page }) => {
+	await page.goto('/');
+	// KIJK earns no section on the one-pager, so the contact section must at
+	// least name it and link to its case study -- otherwise the copy is
+	// orphaned, which is exactly what happened when /work was removed.
+	await expect(page.getByRole('link', { name: 'KIJK' })).toBeVisible();
+	await expect(page.getByRole('link', { name: 'KIJK' })).toHaveAttribute('href', '/work/kijk');
 });
 
 test('drafts never escape the collection', async ({ page }) => {
-	await page.goto('/work');
+	await page.goto('/');
 	const body = (await page.locator('body').innerText()).toLowerCase();
 	// NOS is held back over image rights; Ajax and NH Nieuws are unwritten.
 	expect(body).not.toContain('nh nieuws');
@@ -30,7 +31,7 @@ test('a work page renders its case study body and links', async ({ page }) => {
 });
 
 test('no dead read.cv link survives anywhere', async ({ page }) => {
-	for (const path of ['/', '/work', '/work/vamp']) {
+	for (const path of ['/', '/work/vamp']) {
 		await page.goto(path);
 		await expect(page.locator('a[href*="read.cv"]'), `${path}`).toHaveCount(0);
 	}

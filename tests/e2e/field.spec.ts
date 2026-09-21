@@ -191,7 +191,6 @@ test.describe('character field', () => {
 	test('exactly one field on the site, and no canvas anywhere', async ({ page }) => {
 		for (const [path, expected] of [
 			['/', 1],
-			['/work', 0],
 			['/work/vamp', 0],
 		] as const) {
 			await page.goto(path);

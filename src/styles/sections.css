@@ -1,0 +1,132 @@
+/*
+ * Full-height sections for the one-page narrative.
+ *
+ * The section geometry is pure CSS and works with no JavaScript at all --
+ * `src/scripts/sections.ts` only adds the animated advance on top. If the
+ * script never runs, this is an ordinary long page that scrolls normally.
+ */
+
+.section {
+	/* svh, not vh: on mobile the browser chrome collapses on scroll and `vh`
+	   would leave a section taller than the visible viewport forever. */
+	min-block-size: 100svh;
+
+	/*
+	 * Full bleed, escaping main's wrap.
+	 *
+	 * Without this, .section__inner re-applies the wrap formula INSIDE an
+	 * already-inset parent and every section ends up one gutter (48px) right
+	 * of the hero. It also means a section can carry a full-width background
+	 * later without fighting the layout.
+	 */
+	margin-inline: calc(50% - 50vw);
+	display: grid;
+	align-content: center;
+	padding-block: var(--s-16);
+	position: relative;
+	scroll-margin-block-start: 0;
+}
+
+.section__inner {
+	display: grid;
+	gap: var(--s-8);
+	width: min(100% - var(--gutter) * 2, var(--wrap));
+	margin-inline: auto;
+}
+
+.section__head {
+	display: flex;
+	align-items: baseline;
+	gap: var(--s-4);
+}
+
+.section__index {
+	font-family: var(--font-mono);
+	font-size: var(--t-xs);
+	letter-spacing: var(--tracking-meta);
+	font-variant-numeric: tabular-nums;
+	color: var(--c-text-mute);
+}
+
+/* A hairline between sections, so the boundary reads even mid-transition. */
+.section + .section::before {
+	content: '';
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline: var(--gutter);
+	block-size: 1px;
+	background: linear-gradient(90deg, var(--c-line), transparent 60%);
+}
+
+/* ---- Section progress rail ---------------------------------------------- */
+
+/*
+ * Where you are in the narrative. It is a nav, not decoration: every dot is a
+ * real link to a real id, so it works with the script disabled and gives a
+ * keyboard user a way to jump.
+ */
+.rail {
+	position: fixed;
+	right: var(--s-6);
+	top: 50%;
+	translate: 0 -50%;
+	z-index: var(--z-nav);
+	display: grid;
+	gap: var(--s-3);
+}
+
+.rail a {
+	display: block;
+	inline-size: 10px;
+	block-size: 10px;
+	border-radius: 50%;
+	border: 1px solid var(--c-line-loud);
+	transition:
+		background-color var(--speed) var(--ease),
+		border-color var(--speed) var(--ease),
+		scale var(--speed) var(--ease);
+}
+
+.rail a:hover,
+.rail a:focus-visible {
+	border-color: var(--c-cool);
+	scale: 1.3;
+}
+
+.rail a[aria-current='true'] {
+	background: var(--c-cool);
+	border-color: var(--c-cool);
+}
+
+@media (max-width: 48rem) {
+	.rail {
+		display: none;
+	}
+}
+
+/* ---- The animated advance ----------------------------------------------- */
+
+/*
+ * Only engaged when the script says so. Two gates, both necessary:
+ *   - data-sections="on" is set by the script, so no-JS keeps native scroll.
+ *   - reduced motion disables it entirely; smooth-scrolling someone who asked
+ *     for less motion is exactly the wrong move.
+ */
+:root[data-sections='on'] {
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root[data-sections='on'] {
+		scroll-behavior: auto;
+	}
+}
+
+/*
+ * A section whose content is taller than the viewport must scroll normally
+ * before the advance takes over -- otherwise its bottom is unreachable. The
+ * script checks for this; the class is here so the state is inspectable.
+ */
+.section[data-overflows] {
+	align-content: start;
+}
