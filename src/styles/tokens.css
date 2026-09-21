@@ -1,0 +1,66 @@
+/*
+ * Design tokens. The repo previously had ZERO CSS custom properties and an
+ * empty colors.scss -- every colour was hardcoded inline. Everything visual
+ * should resolve to something declared here.
+ *
+ * Phase 2 owns the real design system; these are the honest minimum needed
+ * to build a legible shell without hardcoding values again.
+ */
+:root {
+	/* Palette: restrained, 2-4 colours per surface (see docs/art-system.md, Phase 3). */
+	--c-bg: #101214;
+	--c-surface: #171a1d;
+	--c-text: #e8e6e3;
+	--c-text-dim: #a0a4a8;
+	--c-line: #2a2e33;
+	--c-accent: #01efac;
+	--c-focus: #01efac;
+
+	/* Per-entry accent. Overridden inline from the `accent` frontmatter field. */
+	--c-entry-accent: var(--c-accent);
+
+	/* Type. Lato is self-hosted; the CDN import it replaced was render-blocking
+	   AND sent EU visitor IPs to Google without consent. */
+	--font-sans:
+		'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+		sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+	/* Fluid scale. clamp() keeps this readable from 320px to 2560px without
+	   a media query per step. */
+	--t-xs: 0.8125rem;
+	--t-sm: 0.9375rem;
+	--t-base: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+	--t-lg: clamp(1.25rem, 1.15rem + 0.5vw, 1.5rem);
+	--t-xl: clamp(1.75rem, 1.5rem + 1.2vw, 2.5rem);
+	--t-2xl: clamp(2.25rem, 1.7rem + 2.6vw, 4rem);
+
+	--lh-tight: 1.15;
+	--lh-body: 1.6;
+	--measure: 68ch;
+
+	/* Spacing: a 4px base, named by step rather than by pixel value. */
+	--s-1: 0.25rem;
+	--s-2: 0.5rem;
+	--s-3: 0.75rem;
+	--s-4: 1rem;
+	--s-6: 1.5rem;
+	--s-8: 2rem;
+	--s-12: 3rem;
+	--s-16: 4rem;
+	--s-24: 6rem;
+
+	--radius: 4px;
+	--gutter: clamp(1rem, 5vw, 3rem);
+	--wrap: 72rem;
+
+	--speed: 200ms;
+	--ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Motion is opt-out at the token level, so no component has to remember. */
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--speed: 1ms;
+	}
+}

@@ -1,0 +1,84 @@
+/*
+ * Modern reset. Replaces normalize.css v8 (353 lines of IE/legacy-Edge
+ * resets) with the handful of rules that still earn their place.
+ */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+* {
+	margin: 0;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	tab-size: 4;
+}
+
+body {
+	min-height: 100svh;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+	display: block;
+	max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+	font: inherit;
+	color: inherit;
+}
+
+p,
+h1,
+h2,
+h3,
+h4 {
+	overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	text-wrap: balance;
+}
+
+p {
+	text-wrap: pretty;
+}
+
+ul[class],
+ol[class] {
+	list-style: none;
+	padding: 0;
+}
+
+/* Visible focus everywhere, always. Never remove this without a replacement. */
+:focus-visible {
+	outline: 2px solid var(--c-focus);
+	outline-offset: 3px;
+	border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}

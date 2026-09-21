@@ -1,0 +1,104 @@
+---
+import { Image } from 'astro:assets';
+import TagList from './TagList.astro';
+import { formatPeriod, type WorkEntry } from '@lib/work';
+
+interface Props {
+	entry: WorkEntry;
+	/** Heading level, so the card fits the outline of whatever page uses it. */
+	as?: 'h2' | 'h3';
+}
+
+const { entry, as: Heading = 'h2' } = Astro.props;
+const { title, role, company, summary, tags, accent, cover, coverAlt, featured } = entry.data;
+const href = featured ? `/work/${entry.id}` : undefined;
+---
+
+<article class="card" style={`--c-entry-accent: ${accent}`}>
+	<Image
+		src={cover}
+		alt={coverAlt}
+		widths={[400, 800, 1200]}
+		sizes="(min-width: 60rem) 36rem, 100vw"
+		loading="lazy"
+		decoding="async"
+	/>
+
+	<div class="body">
+		<p class="meta">
+			<span>{role}</span> · <span>{company}</span> · <span>{formatPeriod(entry)}</span>
+		</p>
+
+		<Heading class="title">
+			{href ? (
+				<a href={href}>
+					{title}
+					<span class="visually-hidden"> — read the full case study</span>
+				</a>
+			) : (
+				title
+			)}
+		</Heading>
+
+		<p class="summary">{summary}</p>
+		<TagList tags={tags} />
+	</div>
+</article>
+
+<style>
+	.card {
+		display: grid;
+		gap: var(--s-4);
+		padding-block-end: var(--s-8);
+		border-bottom: 1px solid var(--c-line);
+	}
+
+	.card :global(img) {
+		width: 100%;
+		height: auto;
+		border-radius: var(--radius);
+		border: 1px solid var(--c-line);
+	}
+
+	.body {
+		display: grid;
+		gap: var(--s-3);
+	}
+
+	.meta {
+		font-size: var(--t-xs);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--c-text-dim);
+	}
+
+	.title {
+		font-size: var(--t-xl);
+	}
+
+	.title a {
+		text-decoration: none;
+		background-image: linear-gradient(var(--c-entry-accent), var(--c-entry-accent));
+		background-repeat: no-repeat;
+		background-position: 0 100%;
+		background-size: 0% 2px;
+		transition: background-size var(--speed) var(--ease);
+	}
+
+	.title a:hover {
+		background-size: 100% 2px;
+	}
+
+	.summary {
+		max-width: var(--measure);
+		color: var(--c-text-dim);
+	}
+
+	@media (min-width: 60rem) {
+		.card {
+			grid-template-columns: 22rem 1fr;
+			align-items: start;
+			gap: var(--s-8);
+		}
+	}
+</style>

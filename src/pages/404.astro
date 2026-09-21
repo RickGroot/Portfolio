@@ -1,0 +1,59 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+
+// Plain but genuinely useful. The "lost signal" treatment is Phase 6; what
+// matters in Phase 1 is that this file EXISTS so Firebase can serve a real
+// HTTP 404 instead of the homepage with a 200.
+---
+
+<BaseLayout title="Page not found" description="That page does not exist." noindex={true}>
+	<section class="four-oh-four">
+		<p class="code">404</p>
+		<h1>No signal here</h1>
+		<p class="lede">That page does not exist — but these do.</p>
+		<ul>
+			<li>
+				<a href="/">Home</a>
+			</li>
+			<li>
+				<a href="/work">Work</a>
+			</li>
+			<li>
+				<a href="/work/nlziet">NLZIET</a>
+			</li>
+			<li>
+				<a href="/work/chromecast">Chromecast receivers</a>
+			</li>
+			<li>
+				<a href="/work/vamp">VAMP</a>
+			</li>
+		</ul>
+	</section>
+</BaseLayout>
+
+<style>
+	.four-oh-four {
+		display: grid;
+		gap: var(--s-4);
+		padding-block: var(--s-24);
+		max-width: var(--measure);
+	}
+	.code {
+		font-family: var(--font-mono);
+		font-size: var(--t-sm);
+		letter-spacing: 0.3em;
+		color: var(--c-accent);
+	}
+	.lede {
+		font-size: var(--t-lg);
+		color: var(--c-text-dim);
+	}
+	ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-4) var(--s-6);
+		list-style: none;
+		padding: 0;
+		margin-block-start: var(--s-4);
+	}
+</style>

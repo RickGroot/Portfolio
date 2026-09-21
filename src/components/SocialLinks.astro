@@ -1,0 +1,39 @@
+---
+import { socialLinks } from '@lib/social';
+---
+
+<ul class="social">
+	{socialLinks.map((l) => (
+		<li>
+			<a
+				href={l.href}
+				rel={l.href.startsWith('mailto:') ? undefined : 'me noopener noreferrer'}
+				target={l.href.startsWith('mailto:') ? undefined : '_blank'}
+			>
+				{l.label}
+				{!l.href.startsWith('mailto:') && (
+					<span class="visually-hidden"> (opens in a new tab)</span>
+				)}
+			</a>
+		</li>
+	))}
+</ul>
+
+<style>
+	.social {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-4) var(--s-6);
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+	/* The old footer rendered these as bare icons with no accessible name --
+	   four unlabelled links to a screen reader. Text labels instead. */
+	a {
+		color: var(--c-text-dim);
+	}
+	a:hover {
+		color: var(--c-text);
+	}
+</style>

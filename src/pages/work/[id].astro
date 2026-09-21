@@ -1,0 +1,36 @@
+---
+import { render } from 'astro:content';
+import WorkLayout from '@layouts/WorkLayout.astro';
+import { getFeaturedWork, type WorkEntry } from '@lib/work';
+
+export async function getStaticPaths() {
+	const entries = await getFeaturedWork();
+	const ids = entries.map((e) => e.id).sort();
+
+	// Deliberately annoying guard. Adding a work page should be an explicit,
+	// reviewed edit -- not something that happens quietly because a `featured`
+	// flag was flipped. A typo in the frontmatter breaks the build here rather
+	// than silently dropping a page from the site (and from the sitemap).
+	const expected = ['chromecast', 'nlziet', 'vamp'];
+	if (ids.join(',') !== expected.join(',')) {
+		throw new Error(
+			`Expected featured work pages [${expected.join(', ')}], got [${ids.join(', ')}]. ` +
+				`If this change is intended, update the guard in src/pages/work/[id].astro ` +
+				`and docs/content-guide.md.`,
+		);
+	}
+
+	return entries.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+}
+
+interface Props {
+	entry: WorkEntry;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<WorkLayout entry={entry}>
+	<Content />
+</WorkLayout>

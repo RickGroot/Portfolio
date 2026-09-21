@@ -1,0 +1,67 @@
+---
+const path = Astro.url.pathname;
+const links = [
+	{ href: '/', label: 'Home' },
+	{ href: '/work', label: 'Work' },
+];
+const isCurrent = (href: string) => (href === '/' ? path === '/' : path.startsWith(href));
+---
+
+<nav aria-label="Primary">
+	<a href="/" class="mark">
+		Rick Groot
+	</a>
+	<ul>
+		{links.map((l) => (
+			<li>
+				<a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>
+					{l.label}
+				</a>
+			</li>
+		))}
+	</ul>
+</nav>
+
+<style>
+	nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--s-6);
+		padding-block: var(--s-6);
+		border-bottom: 1px solid var(--c-line);
+	}
+
+	.mark {
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		text-decoration: none;
+	}
+
+	ul {
+		display: flex;
+		gap: var(--s-6);
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	a {
+		text-decoration: none;
+		color: var(--c-text-dim);
+		transition: color var(--speed) var(--ease);
+	}
+
+	a:hover,
+	a[aria-current='page'] {
+		color: var(--c-text);
+	}
+
+	/* Current page is marked by more than colour alone. */
+	a[aria-current='page'] {
+		text-decoration: underline;
+		text-decoration-color: var(--c-accent);
+		text-decoration-thickness: 2px;
+		text-underline-offset: 0.4em;
+	}
+</style>

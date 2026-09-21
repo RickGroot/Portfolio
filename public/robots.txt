@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rickgroot.nl/sitemap-index.xml

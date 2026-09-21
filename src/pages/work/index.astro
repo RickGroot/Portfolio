@@ -1,0 +1,74 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import WorkCard from '@components/WorkCard.astro';
+import { getPublishedWork } from '@lib/work';
+
+const entries = await getPublishedWork();
+
+// `/work` is the complete record: every non-draft entry appears here.
+// Featured entries show a summary and link to their own page; everything else
+// renders its full body inline, so no copy is orphaned by not being featured.
+const rendered = await Promise.all(
+	entries.map(async (entry) => ({
+		entry,
+		Content: entry.data.featured ? null : (await render(entry)).Content,
+	})),
+);
+---
+
+<BaseLayout
+	title="Work"
+	description="Connected TV work by Rick Groot — Smart TV apps, Chromecast receivers and video player integrations, plus personal projects."
+>
+	<header class="head">
+		<h1>Work</h1>
+		<p class="lede">
+			Connected TV apps, Chromecast receivers and video players — plus what I build for myself.
+		</p>
+		<p class="note">
+			Client work at Triple is project-based: engagements run intermittently rather than
+			continuously, so dates mark first-to-last involvement.
+		</p>
+	</header>
+
+	<div class="list">
+		{rendered.map(({ entry, Content }) => (
+			<section aria-labelledby={`work-${entry.id}`}>
+				<h2 id={`work-${entry.id}`} class="visually-hidden">
+					{entry.data.title}
+				</h2>
+				<WorkCard entry={entry} as="h3" />
+				{Content && (
+					<div class="prose inline-body">
+						<Content />
+					</div>
+				)}
+			</section>
+		))}
+	</div>
+</BaseLayout>
+
+<style>
+	.head {
+		display: grid;
+		gap: var(--s-4);
+		padding-block: var(--s-12) var(--s-8);
+		max-width: var(--measure);
+	}
+	.lede {
+		font-size: var(--t-lg);
+		color: var(--c-text-dim);
+	}
+	.note {
+		font-size: var(--t-sm);
+		color: var(--c-text-dim);
+	}
+	.list {
+		display: grid;
+		gap: var(--s-12);
+	}
+	.inline-body {
+		padding-block-start: var(--s-6);
+	}
+</style>

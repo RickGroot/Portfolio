@@ -1,0 +1,122 @@
+---
+import { Image } from 'astro:assets';
+import BaseLayout from './BaseLayout.astro';
+import TagList from '@components/TagList.astro';
+import { formatPeriod, type WorkEntry } from '@lib/work';
+
+interface Props {
+	entry: WorkEntry;
+}
+
+const { entry } = Astro.props;
+const { title, role, company, summary, tags, accent, cover, coverAlt, links } = entry.data;
+---
+
+<BaseLayout title={title} description={summary}>
+	<article style={`--c-entry-accent: ${accent}`}>
+		<header class="head">
+			<p class="meta">
+				<span>{role}</span> · <span>{company}</span> · <span>{formatPeriod(entry)}</span>
+			</p>
+			<h1>{title}</h1>
+			<p class="lede">{summary}</p>
+			<TagList tags={tags} />
+		</header>
+
+		<Image
+			class="cover"
+			src={cover}
+			alt={coverAlt}
+			widths={[600, 1000, 1600]}
+			sizes="(min-width: 72rem) 68rem, 100vw"
+			loading="eager"
+			fetchpriority="high"
+		/>
+
+		<div class="prose body">
+			<slot />
+		</div>
+
+		{links.length > 0 && (
+			<footer class="links">
+				<h2 class="visually-hidden">Project links</h2>
+				<ul>
+					{links.map((l) => (
+						<li>
+							<a href={l.href} target="_blank" rel="noopener noreferrer">
+								{l.label}
+								<span class="visually-hidden"> (opens in a new tab)</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			</footer>
+		)}
+
+		<p class="back">
+			<a href="/work">← All work</a>
+		</p>
+	</article>
+</BaseLayout>
+
+<style>
+	.head {
+		display: grid;
+		gap: var(--s-4);
+		padding-block: var(--s-12) var(--s-8);
+		max-width: var(--measure);
+	}
+
+	.meta {
+		font-size: var(--t-xs);
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--c-text-dim);
+	}
+
+	h1 {
+		border-bottom: 3px solid var(--c-entry-accent);
+		padding-block-end: var(--s-3);
+	}
+
+	.lede {
+		font-size: var(--t-lg);
+		color: var(--c-text-dim);
+	}
+
+	.cover {
+		width: 100%;
+		height: auto;
+		border-radius: var(--radius);
+		border: 1px solid var(--c-line);
+	}
+
+	.body {
+		padding-block-start: var(--s-8);
+	}
+
+	.links {
+		margin-block-start: var(--s-8);
+	}
+
+	.links ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-4);
+		list-style: none;
+		padding: 0;
+	}
+
+	.links a {
+		display: inline-block;
+		padding: var(--s-2) var(--s-4);
+		border: 1px solid var(--c-entry-accent);
+		border-radius: var(--radius);
+		text-decoration: none;
+	}
+
+	.back {
+		margin-block-start: var(--s-12);
+		color: var(--c-text-dim);
+	}
+</style>

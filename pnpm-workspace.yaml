@@ -1,0 +1,17 @@
+# pnpm settings live HERE, not in .npmrc.
+# Since pnpm 10, only auth and registry settings are read from .npmrc --
+# putting these there resolves to `undefined` and the control silently does nothing.
+# Verify with: pnpm config get minimumReleaseAge  ->  4320
+
+# Quarantine newly published versions for 3 days (4320 minutes).
+# Supply-chain defence: most malicious releases are yanked within hours.
+# Escape hatch for a genuine security patch:
+#   pnpm install --config.minimumReleaseAge=0
+minimumReleaseAge: 4320
+
+# Refuse to install under a Node version outside package.json#engines.
+engineStrict: true
+
+# No package may run install/postinstall scripts. Declarative and committed,
+# so it holds even when someone forgets `--ignore-scripts`.
+onlyBuiltDependencies: []
