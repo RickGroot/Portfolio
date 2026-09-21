@@ -1,0 +1,63 @@
+name: Verify
+
+on:
+  workflow_call:
+  push:
+    branches-ignore: [main]
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.15.1
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      # Org policy: --ignore-scripts. --frozen-lockfile makes a stale lockfile
+      # a CI failure rather than a silent re-resolution.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # Required: @playwright/test has no install hook, so browsers are never
+      # downloaded automatically -- with or without --ignore-scripts.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-1.63.0
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - run: pnpm run typecheck
+      - run: pnpm run lint
+      - run: pnpm run build
+      - run: pnpm run test
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      # The deploy jobs consume THIS artifact, so the deployed bytes are the
+      # tested bytes. Rebuilding in the deploy job would ship something no test
+      # ever saw.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
