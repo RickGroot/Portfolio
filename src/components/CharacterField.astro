@@ -1,0 +1,112 @@
+---
+import { STATIC_FRAME } from '../generated/portrait-map';
+
+/**
+ * The hero character field.
+ *
+ * Layer A holds the static, fully-resolved portrait, rendered at build time.
+ * That is what no-JS, reduced-motion, data-saver and import-failure visitors
+ * see -- the real thing, not a spinner. The renderer only ever takes over an
+ * element that already looks right.
+ */
+---
+
+<div class="field" data-character-field data-field-state="static" aria-hidden="true">
+	<pre class="field__layer field__layer--a" data-layer="a">{STATIC_FRAME}</pre>
+	<pre class="field__layer field__layer--b" data-layer="b"></pre>
+</div>
+
+<script>
+	import { boot } from '@lib/field/boot';
+	boot();
+</script>
+
+<style>
+	.field {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		overflow: hidden;
+
+		/* It is decoration. It must never eat a click, and it must never be */
+		/* selected -- global ::selection would otherwise paint a solid accent */
+		/* block across the whole hero on a triple-click. */
+		pointer-events: none;
+		user-select: none;
+		-webkit-user-select: none;
+
+		/* The only reliable guarantee that a full-bleed generated element */
+		/* cannot shift layout, which is how CLS stays under 0.1. */
+		contain: strict;
+
+		display: grid;
+		place-items: center;
+
+		font-family: var(--font-mono);
+		font-size: var(--art-cell);
+		line-height: 1.05;
+		white-space: pre;
+		color: var(--art-2);
+
+		/* Ligatures MUST be off. */
+		/* The ramp emits '==', '--', '::', '**' constantly. If a visitor's */
+		/* monospace resolves to Fira Code, JetBrains Mono or Cascadia Code, */
+		/* those fuse into single wide glyphs and the grid shears -- on exactly */
+		/* the machines developers use. reset.css sets */
+		/* `text-rendering: optimizeLegibility` on body, which ENABLES ligature */
+		/* processing, so this has to override it explicitly. */
+		font-variant-ligatures: none;
+		font-feature-settings:
+			'liga' 0,
+			'calt' 0,
+			'dlig' 0;
+		font-kerning: none;
+		letter-spacing: 0;
+		text-rendering: optimizeSpeed;
+
+		/* ASCII punctuation is bidi-neutral, so a translation extension setting */
+		/* dir=rtl would mirror the whole field. Cheap insurance. */
+		direction: ltr;
+		unicode-bidi: isolate;
+		text-size-adjust: none;
+
+		/* Fade the edges so the grid does not end in a hard rectangle. */
+		mask-image: radial-gradient(112% 82% at 62% 44%, #000 28%, transparent 72%);
+		opacity: 0.85;
+	}
+
+	.field__layer {
+		grid-area: 1 / 1;
+		margin: 0;
+		font: inherit;
+		white-space: inherit;
+	}
+
+	/* The resolve state is the colour mask: cells still in noise are cool, */
+	/* cells that have resolved into the portrait are warm. */
+	.field__layer--a {
+		color: var(--art-2);
+	}
+	.field__layer--b {
+		color: var(--art-hot);
+	}
+
+	/* Before the renderer takes over, layer A holds the resolved portrait, so */
+	/* it should read as resolved rather than as field. */
+	.field[data-field-state='static'] .field__layer--a {
+		color: var(--art-hot);
+	}
+
+	@media print {
+		.field {
+			display: none;
+		}
+	}
+
+	/* System colours would override both accents and the art is decorative. */
+	@media (forced-colors: active) {
+		.field {
+			display: none;
+		}
+	}
+</style>

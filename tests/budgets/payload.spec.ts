@@ -1,22 +1,23 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Phase 1 asserts ZERO WebGL contexts and ZERO animation loops -- not one.
+ * Zero canvases, zero graphics contexts -- permanently.
  *
- * A test that already passes at `1` teaches nothing. Phase 3 introduces the art
- * renderer and must change these numbers deliberately, in the same commit, so
- * the budget change is visible in review. See docs/performance.md.
+ * Phase 1 also asserted zero animation loops, specifically so that introducing
+ * one would have to be a deliberate edit to this file rather than something
+ * that slipped in. Phase 2 makes that edit: the character field runs exactly one
+ * loop. The RAF assertion moves to `tests/e2e/field.spec.ts`, which measures the
+ * thing that actually matters -- one loop, throttled to 30fps, stopped when
+ * offscreen -- rather than a raw call count.
+ *
+ * The canvas assertions get STRONGER here, not weaker. The signature treatment
+ * is rendered as text, so a canvas appearing means somebody reintroduced a
+ * WebGL path that was deliberately cut. See docs/performance.md.
  */
-test('ships no WebGL context and no animation loop', async ({ page }) => {
+test('ships no canvas and no graphics context, on any route', async ({ page }) => {
 	await page.addInitScript(() => {
-		const w = window as unknown as { __raf: number; __ctx: number };
-		w.__raf = 0;
+		const w = window as unknown as { __ctx: number };
 		w.__ctx = 0;
-		const raf = window.requestAnimationFrame.bind(window);
-		window.requestAnimationFrame = (cb) => {
-			w.__raf += 1;
-			return raf(cb);
-		};
 		const getContext = HTMLCanvasElement.prototype.getContext;
 		HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...args: never[]) {
 			w.__ctx += 1;
@@ -24,18 +25,18 @@ test('ships no WebGL context and no animation loop', async ({ page }) => {
 		} as typeof getContext;
 	});
 
-	await page.goto('/', { waitUntil: 'networkidle' });
-	await page.waitForTimeout(1500);
+	for (const path of ['/', '/work', '/work/nlziet', '/404-not-a-page']) {
+		await page.goto(path, { waitUntil: 'networkidle' });
+		await page.waitForTimeout(600);
 
-	const { raf, ctx, canvases } = await page.evaluate(() => ({
-		raf: (window as unknown as { __raf: number }).__raf,
-		ctx: (window as unknown as { __ctx: number }).__ctx,
-		canvases: document.querySelectorAll('canvas').length,
-	}));
+		const { ctx, canvases } = await page.evaluate(() => ({
+			ctx: (window as unknown as { __ctx: number }).__ctx,
+			canvases: document.querySelectorAll('canvas').length,
+		}));
 
-	expect(canvases, 'canvas elements').toBe(0);
-	expect(ctx, 'canvas contexts created').toBe(0);
-	expect(raf, 'requestAnimationFrame calls').toBe(0);
+		expect(canvases, `${path}: canvas elements`).toBe(0);
+		expect(ctx, `${path}: graphics contexts created`).toBe(0);
+	}
 });
 
 test('initial JavaScript stays inside the Phase 1 budget', async ({ page }) => {

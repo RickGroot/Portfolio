@@ -62,4 +62,33 @@ export default [
 		files: ['tests/**/*.spec.ts'],
 		rules: { '@typescript-eslint/unbound-method': 'off' },
 	},
+
+	{
+		/*
+		 * One requestAnimationFrame loop, site-wide.
+		 *
+		 * src/lib/field/loop.ts is the only module allowed to schedule frames;
+		 * everything else subscribes to it. This is a real control -- a comment
+		 * saying 'please do not add a second loop' is not.
+		 */
+		files: ['src/**/*.ts', 'src/**/*.astro'],
+		ignores: ['src/lib/field/loop.ts'],
+		rules: {
+			'no-restricted-globals': [
+				'error',
+				{
+					name: 'requestAnimationFrame',
+					message: 'Subscribe to src/lib/field/loop.ts instead. One RAF loop, site-wide.',
+				},
+			],
+			'no-restricted-properties': [
+				'error',
+				{
+					object: 'window',
+					property: 'requestAnimationFrame',
+					message: 'Subscribe to src/lib/field/loop.ts instead. One RAF loop, site-wide.',
+				},
+			],
+		},
+	},
 ];
