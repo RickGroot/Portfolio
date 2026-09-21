@@ -59,9 +59,13 @@ test.describe('skip link', () => {
 		expect(skipFocused, 'the skip link is not the first tab stop').toBe(true);
 
 		// It must actually be visible once focused, not merely present.
-		const box = await page.locator('.skip-link').boundingBox();
-		expect(box, 'the focused skip link has no box').not.toBeNull();
-		expect(box!.y, 'the focused skip link is still offscreen').toBeGreaterThanOrEqual(0);
+		// Polled, because it slides in over --speed: measuring at t=0 catches it
+		// still at translateY(-200%) and says nothing about whether it arrives.
+		await expect
+			.poll(async () => (await page.locator('.skip-link').boundingBox())?.y ?? -999, {
+				message: 'the focused skip link never came on screen',
+			})
+			.toBeGreaterThanOrEqual(0);
 
 		await page.keyboard.press('Enter');
 

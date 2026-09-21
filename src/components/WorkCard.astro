@@ -14,7 +14,7 @@ const { title, role, company, summary, tags, accent, cover, coverAlt, featured }
 const href = featured ? `/work/${entry.id}` : undefined;
 ---
 
-<article class="card" style={`--c-entry-accent: ${accent}`}>
+<article class="card" data-proximity data-reveal style={`--c-entry-accent: ${accent}`}>
 	<Image
 		src={cover}
 		alt={coverAlt}

@@ -6,6 +6,8 @@
 @import './tokens.css';
 @import './reset.css';
 @import './typography.css';
+@import './motion.css';
+@import './cursor.css';
 
 .wrap {
 	width: min(100% - var(--gutter) * 2, var(--wrap));

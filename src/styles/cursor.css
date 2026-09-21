@@ -1,0 +1,156 @@
+/*
+ * Custom cursor, trail, and proximity.
+ *
+ * The trail is not a loop: the dot snaps, the ring transitions. The lag between
+ * them IS the trail, and because the ring covers a longer distance in the same
+ * fixed time, it stretches further behind on fast movement for free.
+ */
+
+@property --pointer-v {
+	syntax: '<number>';
+	inherits: true;
+	initial-value: 0;
+}
+
+@property --px {
+	syntax: '<length-percentage>';
+	inherits: false;
+	initial-value: 50%;
+}
+
+@property --py {
+	syntax: '<length-percentage>';
+	inherits: false;
+	initial-value: 50%;
+}
+
+/*
+ * Only hide the native cursor once the script has created replacements --
+ * it sets data-cursor itself, after appending its nodes. Doing this in CSS
+ * alone would leave a visitor with no cursor at all if the script failed.
+ */
+:root[data-cursor='custom'] body {
+	cursor: none;
+}
+
+/* The I-beam is information. Give it back over text and controls. */
+:root[data-cursor='custom'] .prose,
+:root[data-cursor='custom'] p,
+:root[data-cursor='custom'] input,
+:root[data-cursor='custom'] textarea {
+	cursor: auto;
+}
+
+.cursor__dot,
+.cursor__ring {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: var(--z-cursor);
+	pointer-events: none;
+	border-radius: 50%;
+	translate: -100px -100px;
+}
+
+.cursor__dot {
+	inline-size: 7px;
+	block-size: 7px;
+	margin: -3.5px 0 0 -3.5px;
+	background: var(--c-cool);
+	transition: scale var(--speed-trail) var(--ease-trail);
+}
+
+.cursor__ring {
+	inline-size: 30px;
+	block-size: 30px;
+	margin: -15px 0 0 -15px;
+	border: 1px solid var(--c-cool);
+	/* The trail. */
+	transition:
+		translate var(--speed-slow) var(--ease-out),
+		scale var(--speed) var(--ease),
+		border-color var(--speed) linear,
+		opacity var(--speed) linear;
+
+	/* Velocity shifts the ring from cool to hot and swells it slightly.
+	   A style recalc on ONE 30px element per frame -- not compositor-only,
+	   and not worth pretending otherwise. */
+	border-color: color-mix(in oklab, var(--c-cool), var(--c-hot) calc(var(--pointer-v) * 100%));
+	scale: calc(1 + var(--pointer-v) * 0.55);
+}
+
+/* Keeps the ring legible over both the dark ground and a bright cover image. */
+@supports (mix-blend-mode: difference) {
+	.cursor__ring {
+		mix-blend-mode: difference;
+	}
+}
+
+/* Instant on, slow off -- the asymmetry is what makes a press feel physical. */
+:root[data-pressed] .cursor__dot {
+	scale: 2.4;
+	transition: none;
+}
+
+:root[data-cursor-out] .cursor__dot,
+:root[data-cursor-out] .cursor__ring {
+	opacity: 0;
+}
+
+/* Interactive targets swell the ring and hollow the dot, so the cursor itself
+   reports affordance. Gated: without :has() the cursor simply stays uniform. */
+@supports selector(:has(a)) {
+	:root[data-cursor='custom']:has(a:hover, button:hover) .cursor__ring {
+		scale: 1.9;
+		border-color: var(--c-hot);
+	}
+
+	:root[data-cursor='custom']:has(a:hover, button:hover) .cursor__dot {
+		opacity: 0;
+	}
+}
+
+/* ---- Proximity ---------------------------------------------------------- */
+
+[data-proximity] {
+	position: relative;
+	isolation: isolate;
+	/* The glow pseudo-element is inset by -30% so it can travel with the
+	   pointer. Without clipping, that is 30% of the card's width hanging off
+	   each side -- 202px of horizontal page overflow on a 1440px viewport.
+	   `clip` rather than `hidden`: it does not create a scroll container. */
+	overflow: clip;
+}
+
+[data-proximity]::before {
+	content: '';
+	position: absolute;
+	inset: -30%;
+	z-index: -1;
+	pointer-events: none;
+	/* STATIC gradient, translated. Never animate background-position. */
+	background: radial-gradient(
+		closest-side,
+		color-mix(in oklab, var(--c-entry-ink, var(--c-cool)) 20%, transparent),
+		transparent
+	);
+	opacity: 0;
+	translate: calc(var(--px) - 50%) calc(var(--py) - 50%);
+	transition: opacity var(--speed) var(--ease);
+}
+
+[data-proximity]:hover::before,
+/* Keyboard equivalent: --px/--py keep their 50% initial values, so a tabbed
+   card gets the identical glow, centred. Hover/focus parity is a rule here,
+   not an afterthought. */
+[data-proximity]:focus-within::before {
+	opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	/* The glow is a STATE indicator, not autonomous motion, so it stays --
+	   it just arrives instantly. */
+	[data-proximity]::before {
+		transition: none;
+	}
+}

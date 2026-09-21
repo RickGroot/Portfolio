@@ -1,0 +1,123 @@
+/*
+ * Scroll-linked motion. Zero JavaScript.
+ *
+ * Both effects here use `animation-timeline`, which is not Baseline — Chromium
+ * supports it, others lag. That is accepted deliberately: the fallback is that
+ * content is simply visible and the bar is absent, which costs nothing. An
+ * IntersectionObserver polyfill would cost bytes AND reintroduce the
+ * stuck-at-opacity-0 bug it exists to prevent.
+ */
+
+/* ---- Reveals ------------------------------------------------------------ */
+
+/*
+ * The stuck-at-opacity-0 bug is structurally impossible here, and that is the
+ * whole point of writing it this way:
+ *
+ *   1. `opacity: 0` appears ONLY inside @keyframes, never as a base rule. With
+ *      no support, with reduced motion, or with JS off, the element has its
+ *      normal computed opacity. There is nothing to un-stick.
+ *   2. The range ends at `cover 26%`, so anything already past that on load is
+ *      at its end state. Above-the-fold content does not wait for a scroll that
+ *      never comes.
+ */
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: view()) {
+		[data-reveal] {
+			animation: reveal linear both;
+			animation-timeline: view();
+			animation-range: entry 8% cover 26%;
+		}
+
+		/*
+		 * Stagger with animation-range, NOT animation-delay.
+		 * `animation-delay` does nothing on a scroll-driven animation — it is a
+		 * time offset, and there is no time axis here.
+		 */
+		[data-reveal-stagger] > *:nth-child(2) {
+			animation-range: entry 11% cover 30%;
+		}
+		[data-reveal-stagger] > *:nth-child(3) {
+			animation-range: entry 14% cover 34%;
+		}
+		[data-reveal-stagger] > *:nth-child(n + 4) {
+			animation-range: entry 17% cover 38%;
+		}
+
+		[data-reveal-stagger] > * {
+			animation: reveal linear both;
+			animation-timeline: view();
+			animation-range: entry 8% cover 26%;
+		}
+	}
+}
+
+@keyframes reveal {
+	from {
+		opacity: 0;
+		/* translate only — nothing that affects layout, so CLS stays at zero. */
+		translate: 0 14px;
+	}
+	to {
+		opacity: 1;
+		translate: 0 0;
+	}
+}
+
+/* ---- Scroll progress ----------------------------------------------------- */
+
+.progress {
+	position: fixed;
+	inset-block-start: 0;
+	inset-inline: 0;
+	block-size: 2px;
+	z-index: var(--z-progress);
+	transform: scaleX(0);
+	transform-origin: 0 50%;
+	pointer-events: none;
+
+	/*
+	 * The one place the two accents are allowed to blend. At 2px the muddy
+	 * oklab midpoint is too small to see; anywhere larger it reads as khaki.
+	 */
+	background: linear-gradient(90deg, var(--c-cool), var(--c-hot));
+}
+
+@supports (animation-timeline: scroll()) {
+	.progress {
+		animation: progress linear both;
+		animation-timeline: scroll(root block);
+	}
+}
+
+/* No timeline support means no meaningful bar. Hide it rather than leave a
+   permanent 0-width sliver. */
+@supports not (animation-timeline: scroll()) {
+	.progress {
+		display: none;
+	}
+}
+
+@keyframes progress {
+	to {
+		transform: scaleX(1);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	/*
+	 * The bar STAYS. It is 1:1 with the user's own scrolling, so it is not
+	 * autonomous motion — removing it removes information.
+	 *
+	 * reset.css carries the matching `animation-duration: auto !important`
+	 * exception for [data-scroll-linked], without which the global
+	 * `0.01ms !important` would re-map this onto a sliver of the scroll range
+	 * and pin the bar at full.
+	 *
+	 * Drop the gradient though: a two-colour bar sliding is a colour change
+	 * nobody asked for.
+	 */
+	.progress {
+		background: var(--c-cool);
+	}
+}
