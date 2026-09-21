@@ -52,6 +52,15 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 		letter-spacing: -0.02em;
 	}
 
+	.mark__name {
+		transition: color var(--speed) var(--ease);
+	}
+
+	.mark:hover .mark__name,
+	.mark:focus-visible .mark__name {
+		color: var(--c-section-ink, var(--c-cool));
+	}
+
 	.mark__role {
 		font-family: var(--font-mono);
 		font-size: var(--t-xs);
@@ -85,13 +94,18 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 	 * different, so the one action on the page is shaped like an action and the
 	 * navigation is shaped like navigation. Nothing has to be guessed.
 	 */
+	/* The action follows the section you are on. --c-section-ink is published
+	   by src/scripts/sections.ts and falls back to the cool accent, so this is
+	   correct with the script disabled. */
 	.cta {
+		--nav-ink: var(--c-section-ink, var(--c-cool));
+		transition-property: background-color, color, border-color;
 		font-size: var(--t-sm);
 		font-weight: 700;
 		padding: var(--s-2) var(--s-4);
-		border: 1px solid var(--c-cool);
+		border: 1px solid var(--nav-ink);
 		border-radius: 999px;
-		color: var(--c-cool);
+		color: var(--nav-ink);
 		text-decoration: none;
 		transition:
 			background-color var(--speed) var(--ease),
@@ -104,7 +118,7 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 
 	.cta:hover,
 	.cta:focus-visible {
-		background: var(--c-cool);
+		background: var(--nav-ink);
 		color: var(--c-void);
 	}
 </style>

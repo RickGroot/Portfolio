@@ -11,101 +11,166 @@ interface Props {
 
 const { entry, index } = Astro.props;
 const { title, role, company, summary, tags, accent, cover } = entry.data;
+const href = `/work/${entry.id}`;
 ---
 
-<div
+<article
 	class="panel"
 	data-proximity
 	style={`--c-entry-accent:${accent}; --c-entry-ink:${ink(accent)}`}
 >
-	<a class="panel__media" href={`/work/${entry.id}`} tabindex="-1" aria-hidden="true">
-		<Image
-			src={cover}
-			alt=""
-			widths={[600, 1000, 1600]}
-			sizes="(min-width: 60rem) 46vw, 92vw"
-			loading={index === '01' ? 'eager' : 'lazy'}
-			decoding="async"
-		/>
-		{/* Ordered-dither overlay. Resolves out on hover / focus -- the same
-		    "signal into clarity" idea as the hero, at a fraction of the cost. */}
-		<span class="panel__dither" aria-hidden="true"></span>
-		<span class="panel__scanline" aria-hidden="true"></span>
+	<p class="panel__meta">
+		<span class="panel__index" aria-hidden="true">
+			{index}
+		</span>
+		<span class="panel__bars" aria-hidden="true">
+			<i></i>
+			<i></i>
+			<i></i>
+			<i></i>
+		</span>
+		<span>{role}</span>
+		<span class="panel__sep" aria-hidden="true">
+			/
+		</span>
+		<span>{company}</span>
+		<span class="panel__sep" aria-hidden="true">
+			/
+		</span>
+		<span>{formatPeriod(entry)}</span>
+	</p>
+
+	<a class="panel__media" href={href} tabindex="-1" aria-hidden="true">
+		<span class="panel__frame">
+			<Image
+				src={cover}
+				alt=""
+				widths={[800, 1400, 2000]}
+				sizes="(min-width: 60rem) 76vw, 94vw"
+				loading={index === '01' ? 'eager' : 'lazy'}
+				decoding="async"
+			/>
+		</span>
+		<span class="panel__dither"></span>
+		<span class="panel__sheen"></span>
+		<span class="panel__bracket panel__bracket--tl"></span>
+		<span class="panel__bracket panel__bracket--tr"></span>
+		<span class="panel__bracket panel__bracket--bl"></span>
+		<span class="panel__bracket panel__bracket--br"></span>
 	</a>
 
 	<div class="panel__body">
-		<p class="panel__meta">
-			<span class="panel__index" aria-hidden="true">
-				{index}
-			</span>
-			<span>{role}</span> · <span>{company}</span> · <span>{formatPeriod(entry)}</span>
-		</p>
-
 		<h3 class="panel__title">
-			<a href={`/work/${entry.id}`}>
-				{title}
-				<span class="panel__rule" aria-hidden="true"></span>
-			</a>
+			<a href={href}>{title}</a>
 		</h3>
-
-		<p class="panel__summary">{summary}</p>
-		<TagList tags={tags} />
-
-		<p class="panel__more">
-			<a href={`/work/${entry.id}`}>
-				Read the case study <span aria-hidden="true">→</span>
-			</a>
-		</p>
+		<div class="panel__detail">
+			<p class="panel__summary">{summary}</p>
+			<TagList tags={tags} />
+			<p class="panel__more">
+				<a href={href}>
+					Read the case study <span aria-hidden="true">→</span>
+				</a>
+			</p>
+		</div>
 	</div>
-</div>
+</article>
 
 <style>
 	.panel {
 		display: grid;
-		gap: var(--s-8);
+		grid-template-rows: auto 1fr auto;
+		gap: var(--s-4);
+		block-size: 100%;
+		min-block-size: 0;
+	}
+
+	/* ---- meta line ------------------------------------------------------- */
+
+	.panel__meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-2) var(--s-3);
 		align-items: center;
-		width: 100%;
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-dim);
 	}
 
-	@media (min-width: 60rem) {
-		.panel {
-			grid-template-columns: 1.05fr 1fr;
-			gap: var(--s-16);
-		}
+	.panel__index {
+		font-size: var(--t-lg);
+		font-weight: 700;
+		color: var(--c-entry-ink);
+		line-height: 1;
 	}
 
-	/* ---- media ---------------------------------------------------------- */
+	.panel__sep {
+		color: var(--c-text-mute);
+	}
+
+	/* ---- media: the biggest thing on the screen -------------------------- */
 
 	.panel__media {
 		position: relative;
 		display: block;
+		min-block-size: 0;
 		overflow: clip;
 		border-radius: var(--radius-lg);
-		border: 1px solid var(--c-line);
+		border: 1px solid color-mix(in oklab, var(--c-entry-ink) 26%, var(--c-line));
 		background: var(--c-surface);
-		/* The link is decorative -- the real one is the title. Keep it out of */
-		/* the tab order rather than making a keyboard user pass two links to */
-		/* reach one destination. */
+		box-shadow:
+			0 1px 0 0 color-mix(in oklab, var(--c-text) 7%, transparent) inset,
+			0 40px 90px -40px rgb(0 0 0 / 0.9);
 		isolation: isolate;
 	}
 
-	.panel__media :global(img) {
+	/* The frame crops; the image inside is oversized so it can travel without
+	   ever exposing an edge. */
+	.panel__frame {
+		position: absolute;
+		inset: 0;
 		display: block;
-		width: 100%;
-		height: auto;
-		aspect-ratio: 16 / 10;
+		overflow: clip;
+	}
+
+	.panel__media :global(img) {
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: -9%;
+		inline-size: 100%;
+		block-size: 118%;
 		object-fit: cover;
+		filter: saturate(0.7) contrast(1.06);
 		transition:
 			scale var(--speed-slow) var(--ease-out),
 			filter var(--speed-slow) var(--ease-out);
-		filter: saturate(0.72) contrast(1.06);
 	}
 
-	/* The dither. */
-	/* Two offset dot grids in the page background colour, punched over the */
-	/* image. At 3px they read as an ordered dither rather than a texture. Only */
-	/* `opacity` animates, so this is compositor-only -- never animate */
-	/* background-size or background-position here. */
+	/* Parallax. Scroll-driven, zero JS, transform only. */
+	/* The image is 118% of the frame and starts 9% high, so an 8% travel never */
+	/* reveals a gap. cover 0% -> cover 100% maps the whole time the section is */
+	/* on screen, which is what makes it track the scroll rather than jump. */
+	@media (prefers-reduced-motion: no-preference) {
+		@supports (animation-timeline: view()) {
+			.panel__media :global(img) {
+				animation: parallax linear both;
+				animation-timeline: view();
+				animation-range: cover 0% cover 100%;
+			}
+		}
+	}
+
+	@keyframes parallax {
+		from {
+			translate: 0 -8%;
+		}
+		to {
+			translate: 0 8%;
+		}
+	}
+
+	/* Ordered dither, dissolving on hover / focus. Only opacity animates. */
 	.panel__dither {
 		position: absolute;
 		inset: 0;
@@ -114,58 +179,39 @@ const { title, role, company, summary, tags, accent, cover } = entry.data;
 			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
 			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
 		background-size: 3px 3px;
-		opacity: 0.92;
+		opacity: 0.9;
 		transition: opacity var(--speed-slow) var(--ease-out);
 	}
 
-	/* A slow idle drift, so the panel is never completely dead. Transform only. */
-	.panel__scanline {
+	/* A sheen sweeping across on hover. Static gradient on a transformed */
+	/* element -- never animate background-position. */
+	.panel__sheen {
 		position: absolute;
-		inset: -20% 0;
+		inset-block: 0;
+		inset-inline-start: 0;
+		inline-size: 45%;
 		pointer-events: none;
 		background: linear-gradient(
-			to bottom,
-			transparent 0%,
-			color-mix(in oklab, var(--c-entry-ink) 14%, transparent) 48%,
-			transparent 60%
+			100deg,
+			transparent,
+			color-mix(in oklab, var(--c-entry-ink) 16%, transparent),
+			transparent
 		);
-		opacity: 0;
-		transition: opacity var(--speed-slow) var(--ease-out);
-		animation: drift 9s linear infinite;
+		translate: -160% 0;
+		rotate: 4deg;
+		transition: translate 900ms var(--ease-out);
 	}
 
-	@keyframes drift {
-		from {
-			translate: 0 -30%;
-		}
-		to {
-			translate: 0 30%;
-		}
+	.panel:hover .panel__sheen,
+	.panel:focus-within .panel__sheen {
+		translate: 320% 0;
 	}
 
-	/* Hover AND focus-within: the keyboard path gets the identical reveal. */
-	.panel:hover .panel__dither,
-	.panel:focus-within .panel__dither {
-		opacity: 0;
-	}
-
-	.panel:hover .panel__scanline,
-	.panel:focus-within .panel__scanline {
-		opacity: 1;
-	}
-
-	.panel:hover .panel__media :global(img),
-	.panel:focus-within .panel__media :global(img) {
-		scale: 1.03;
-		filter: saturate(1) contrast(1);
-	}
-
-	/* Corner brackets. They draw in on hover and sit just outside the frame,
-	   which is what makes a panel read as a viewport rather than a card. */
+	/* Corner brackets: a viewport, not a card. */
 	.panel__bracket {
 		position: absolute;
-		inline-size: 18px;
-		block-size: 18px;
+		inline-size: 22px;
+		block-size: 22px;
 		pointer-events: none;
 		border-color: var(--c-entry-ink);
 		opacity: 0;
@@ -175,19 +221,32 @@ const { title, role, company, summary, tags, accent, cover } = entry.data;
 	}
 
 	.panel__bracket--tl {
-		inset-block-start: 10px;
-		inset-inline-start: 10px;
-		border-block-start: 1px solid;
-		border-inline-start: 1px solid;
-		translate: 6px 6px;
+		inset-block-start: 12px;
+		inset-inline-start: 12px;
+		border-block-start: 2px solid;
+		border-inline-start: 2px solid;
+		translate: 8px 8px;
 	}
-
+	.panel__bracket--tr {
+		inset-block-start: 12px;
+		inset-inline-end: 12px;
+		border-block-start: 2px solid;
+		border-inline-end: 2px solid;
+		translate: -8px 8px;
+	}
+	.panel__bracket--bl {
+		inset-block-end: 12px;
+		inset-inline-start: 12px;
+		border-block-end: 2px solid;
+		border-inline-start: 2px solid;
+		translate: 8px -8px;
+	}
 	.panel__bracket--br {
-		inset-block-end: 10px;
-		inset-inline-end: 10px;
-		border-block-end: 1px solid;
-		border-inline-end: 1px solid;
-		translate: -6px -6px;
+		inset-block-end: 12px;
+		inset-inline-end: 12px;
+		border-block-end: 2px solid;
+		border-inline-end: 2px solid;
+		translate: -8px -8px;
 	}
 
 	.panel:hover .panel__bracket,
@@ -196,13 +255,71 @@ const { title, role, company, summary, tags, accent, cover } = entry.data;
 		translate: 0 0;
 	}
 
-	/* Idle signal bars. Four co-prime durations, negative delays -- nothing
-	   starts aligned and the loop does not visibly repeat. Transform only. */
+	.panel:hover .panel__dither,
+	.panel:focus-within .panel__dither {
+		opacity: 0;
+	}
+
+	.panel:hover .panel__media :global(img),
+	.panel:focus-within .panel__media :global(img) {
+		scale: 1.04;
+		filter: saturate(1) contrast(1);
+	}
+
+	/* ---- title and detail ------------------------------------------------ */
+
+	.panel__body {
+		display: grid;
+		gap: var(--s-4);
+		align-items: end;
+	}
+
+	/* Big. This is the thing you should be able to read across the room. */
+	.panel__title {
+		font-size: clamp(2.75rem, 1rem + 7vw, 7rem);
+		line-height: 0.92;
+		letter-spacing: -0.04em;
+		text-transform: uppercase;
+	}
+
+	.panel__title a {
+		text-decoration: none;
+		background-image: linear-gradient(var(--c-entry-ink), var(--c-entry-ink));
+		background-repeat: no-repeat;
+		background-position: 0 100%;
+		background-size: 0% 3px;
+		transition: background-size var(--speed-slow) var(--ease-out);
+	}
+
+	.panel__title a:hover,
+	.panel__title a:focus-visible {
+		background-size: 100% 3px;
+	}
+
+	.panel__detail {
+		display: grid;
+		gap: var(--s-3);
+		max-width: var(--measure);
+	}
+
+	.panel__summary {
+		color: var(--c-text-dim);
+		font-size: var(--t-lg);
+	}
+
+	.panel__more a {
+		color: var(--c-entry-ink);
+		font-size: var(--t-sm);
+		text-underline-offset: 0.3em;
+	}
+
+	/* ---- idle signal bars ------------------------------------------------ */
+
 	.panel__bars {
 		display: inline-flex;
 		align-items: flex-end;
 		gap: 2px;
-		block-size: 0.75em;
+		block-size: 0.9em;
 	}
 
 	.panel__bars i {
@@ -214,6 +331,8 @@ const { title, role, company, summary, tags, accent, cover } = entry.data;
 		animation: bars 2.6s ease-in-out infinite;
 	}
 
+	/* Co-prime durations and negative delays: nothing starts aligned and the */
+	/* loop does not visibly repeat. */
 	.panel__bars i:nth-child(1) {
 		animation-duration: 1.7s;
 		animation-delay: -0.4s;
@@ -241,85 +360,41 @@ const { title, role, company, summary, tags, accent, cover } = entry.data;
 		}
 	}
 
-	/* ---- body ------------------------------------------------------------ */
+	/* ---- wide screens: the title breaks the frame ------------------------ */
 
-	.panel__body {
-		display: grid;
-		gap: var(--s-4);
-		max-width: var(--measure);
-	}
+	@media (min-width: 60rem) {
+		.panel {
+			gap: var(--s-6);
+		}
 
-	.panel__meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--s-2);
-		align-items: baseline;
-		font-size: var(--t-xs);
-		letter-spacing: var(--tracking-meta);
-		text-transform: uppercase;
-		color: var(--c-text-dim);
-	}
+		.panel__body {
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+			align-items: start;
+			gap: var(--s-8);
+			/* Pull the title up over the image's bottom edge. This is what makes */
+			/* it read as editorial rather than as a stacked card. */
+			margin-block-start: calc(var(--s-12) * -1);
+		}
 
-	.panel__index {
-		font-variant-numeric: tabular-nums;
-		color: var(--c-entry-ink);
-	}
+		.panel__title {
+			position: relative;
+			z-index: 2;
+			text-shadow: 0 8px 40px rgb(0 0 0 / 0.85);
+		}
 
-	.panel__title {
-		font-size: var(--t-2xl);
-		letter-spacing: var(--tracking-display);
-	}
-
-	.panel__title a {
-		position: relative;
-		text-decoration: none;
-	}
-
-	.panel__rule {
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: -0.12em;
-		height: 2px;
-		background: var(--c-entry-ink);
-		transform: scaleX(0);
-		transform-origin: 100% 50%;
-		transition: transform var(--speed) var(--ease);
-	}
-
-	/* Draws from the left, wipes out to the right — the asymmetry is what */
-	/* makes it read as deliberate rather than a toggle. */
-	.panel__title a:hover .panel__rule,
-	.panel__title a:focus-visible .panel__rule {
-		transform: scaleX(1);
-		transform-origin: 0 50%;
-	}
-
-	.panel__summary {
-		color: var(--c-text-dim);
-		font-size: var(--t-lg);
-	}
-
-	.panel__more {
-		margin-block-start: var(--s-2);
-		font-size: var(--t-sm);
-	}
-
-	.panel__more a {
-		color: var(--c-entry-ink);
-		text-underline-offset: 0.3em;
+		.panel__detail {
+			padding-block-start: var(--s-12);
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		/* The dither is a state indicator, so it stays — it just arrives */
-		/* instantly. The idle drift is autonomous motion, so it goes. */
-		.panel__scanline,
 		.panel__bars i {
 			animation: none;
+			scale: 1 0.7;
 		}
 
-		.panel__bars i {
-			scale: 1 0.7;
+		.panel__sheen {
+			display: none;
 		}
 	}
 </style>
