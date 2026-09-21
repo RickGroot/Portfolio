@@ -60,6 +60,18 @@ CI quality gates, and the service-worker kill switch.
   the shell `Chapter.astro` was going to be.
 - Screen-filling work panels with scroll-driven parallax, and two art interludes between them.
 - `How I work` — a three-item grid on AI-driven development.
+- Work detail pages rebuilt in the one-pager's language. They were still the Phase 1 layout: an
+  untreated colour cover, a sentence-case heading and no accent, so the view transition morphed a
+  dithered monochrome thumbnail into a raw photograph and the page read as a different site. They
+  now carry the same dither, brackets, parallax, display title and per-entry accent, the chrome
+  answers to the entry via `--c-section-ink`, and each one links to the previous and next case
+  study instead of dead-ending.
+- Display titles are sized against their own column with a container query. `overflow-wrap:
+break-word` from the reset is right for prose and splits a word in half at display sizes --
+  "CHROMECAST" shipped as "CHROMECA / ST" at 1715px wide.
+- `check-assets` gained a ninth check: **`var(--x)` with no definition anywhere in `src/`**. An
+  undefined custom property is not a CSS error; the declaration is silently dropped. `--s-10` and
+  `--s-5` were both in the new detail page and neither is in the scale.
 
 **Remaining:**
 

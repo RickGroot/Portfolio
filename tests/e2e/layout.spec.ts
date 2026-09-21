@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -102,4 +102,68 @@ test.describe('skip link', () => {
 			expect(parseFloat(style.width), `${selector} focus ring has no width`).toBeGreaterThan(0);
 		}
 	});
+});
+
+/**
+ * A display title that does not fit its column does not overflow -- the reset
+ * sets `overflow-wrap: break-word` on headings, which is right for prose and
+ * silently splits a word in half at display sizes. It shipped as
+ * "CHROMECA / ST" at 1715px wide and nothing failed, because nothing was
+ * looking. This measures the longest word against the box it has to live in.
+ */
+test.describe('display titles fit their column', () => {
+	const VIEWS = [
+		{ w: 1920, h: 1080 },
+		{ w: 1715, h: 1265 },
+		{ w: 1440, h: 900 },
+		{ w: 1280, h: 720 },
+		{ w: 1024, h: 768 },
+		{ w: 820, h: 1180 },
+		{ w: 390, h: 844 },
+	];
+
+	const offenders = (page: Page, selector: string) =>
+		page.evaluate((sel) => {
+			const bad: string[] = [];
+			for (const el of document.querySelectorAll<HTMLElement>(sel)) {
+				const cs = getComputedStyle(el);
+				const probe = document.createElement('span');
+				probe.style.cssText =
+					`position:absolute;visibility:hidden;white-space:nowrap;` +
+					`font:${cs.font};letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};`;
+				document.body.append(probe);
+				let widest = 0;
+				let word = '';
+				for (const w of (el.textContent ?? '').trim().split(/\s+/)) {
+					probe.textContent = w;
+					const ww = probe.getBoundingClientRect().width;
+					if (ww > widest) {
+						widest = ww;
+						word = w;
+					}
+				}
+				probe.remove();
+				const box = el.getBoundingClientRect().width;
+				// One pixel of slack: sub-pixel metrics differ between the probe
+				// and the real line box.
+				if (widest > box + 1) {
+					bad.push(`"${word}" needs ${Math.round(widest)}px in a ${Math.round(box)}px box`);
+				}
+			}
+			return bad;
+		}, selector);
+
+	for (const v of VIEWS) {
+		test(`${v.w}x${v.h}: no title breaks mid-word`, async ({ page }) => {
+			await page.setViewportSize({ width: v.w, height: v.h });
+
+			await page.goto('/');
+			expect(await offenders(page, '.panel__title'), `one-pager at ${v.w}px`).toEqual([]);
+
+			for (const slug of ['nlziet', 'chromecast', 'vamp', 'kijk']) {
+				await page.goto(`/work/${slug}`);
+				expect(await offenders(page, 'h1'), `/work/${slug} at ${v.w}px`).toEqual([]);
+			}
+		});
+	}
 });

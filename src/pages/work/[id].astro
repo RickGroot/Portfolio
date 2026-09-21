@@ -23,17 +23,30 @@ export async function getStaticPaths() {
 		);
 	}
 
-	return entries.map((entry) => ({ params: { id: entry.id }, props: { entry } }));
+	// Position in the published order, so the number on a case study is the
+	// same number its panel carries on the one-pager.
+	return entries.map((entry, i) => ({
+		params: { id: entry.id },
+		props: {
+			entry,
+			index: String(i + 1).padStart(2, '0'),
+			prev: entries[i - 1],
+			next: entries[i + 1],
+		},
+	}));
 }
 
 interface Props {
 	entry: PublishedWorkEntry;
+	index: string;
+	prev?: PublishedWorkEntry | undefined;
+	next?: PublishedWorkEntry | undefined;
 }
 
-const { entry } = Astro.props;
+const { entry, index, prev, next } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<WorkLayout entry={entry}>
+<WorkLayout entry={entry} index={index} prev={prev} next={next}>
 	<Content />
 </WorkLayout>

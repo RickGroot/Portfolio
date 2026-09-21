@@ -95,15 +95,45 @@ test.describe('one-page sections', () => {
 
 		test('every section is reachable one advance at a time', async ({ page }) => {
 			await page.goto('/');
+
+			// A fixed wait per press raced the advance script's own 620ms settle:
+			// under parallel load one press landed mid-scroll, was swallowed, and
+			// the walk finished a section short. Wait for the page to actually
+			// stop moving instead.
+			const settle = async (): Promise<void> => {
+				let last = -1;
+				await expect
+					.poll(
+						async () => {
+							const y = await page.evaluate(() => Math.round(window.scrollY));
+							const stable = y === last;
+							last = y;
+							return stable;
+						},
+						{ message: 'the page never stopped scrolling', timeout: 8000 },
+					)
+					.toBe(true);
+			};
+
+			const atTop = (): Promise<string> =>
+				page.evaluate(
+					() =>
+						[...document.querySelectorAll<HTMLElement>('[data-section]')]
+							.map((el) => ({ id: el.id, d: Math.abs(el.getBoundingClientRect().top) }))
+							.sort((a, b) => a.d - b.d)[0]?.id ?? '',
+				);
+
+			await settle();
+			const visited = [await atTop()];
 			for (let i = 1; i < SECTIONS.length; i++) {
 				await page.keyboard.press('PageDown');
-				await page.waitForTimeout(800);
+				await settle();
+				visited.push(await atTop());
 			}
-			const reachedEnd = await page.evaluate(() => {
-				const el = document.getElementById('contact');
-				return el ? el.getBoundingClientRect().top < 120 : false;
-			});
-			expect(reachedEnd, 'repeated advances did not reach the last section').toBe(true);
+
+			// Stronger than "did we get to the end": one press must advance exactly
+			// one section, so the walk has to name every section in document order.
+			expect(visited, 'one press did not advance exactly one section').toEqual(SECTIONS);
 		});
 
 		test('typing in a field is never hijacked', async ({ page }) => {

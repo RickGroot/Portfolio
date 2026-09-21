@@ -210,6 +210,44 @@ if (existsSync(fontDir)) {
 	if (!fonts.some((f) => /^OFL/i.test(f))) fail('fonts ship without a licence file');
 }
 
+/* ---- 9. Undefined custom properties -------------------------------------- */
+
+/*
+ * An undefined `var(--x)` is not a CSS error. The declaration is simply
+ * dropped, the layout quietly loses a rule, and nothing anywhere says so.
+ * `--s-10` and `--s-5` were both used on the work detail page; neither is in
+ * the scale, so the hero's bottom padding and the lede's rule offset silently
+ * evaluated to nothing and the page shipped looking wrong.
+ *
+ * A property counts as defined if anything under src/ declares it -- in CSS, in
+ * an inline style, via @property, or through setProperty() from a script.
+ */
+{
+	const sources = walk('src').filter((f) => /\.(css|astro|ts)$/.test(f));
+	const blob = sources.map((f) => readFileSync(f, 'utf8')).join('\n');
+
+	const defined = new Set();
+	// `--x:` in a stylesheet, an inline style attribute or a define:vars object.
+	for (const m of blob.matchAll(/(--[a-zA-Z][\w-]*)\s*:/g)) defined.add(m[1]);
+	// `@property --x`, which registers without a colon on the same token.
+	for (const m of blob.matchAll(/@property\s+(--[a-zA-Z][\w-]*)/g)) defined.add(m[1]);
+	// `setProperty('--x', ...)` from the interaction scripts.
+	for (const m of blob.matchAll(/setProperty\(\s*['"`](--[a-zA-Z][\w-]*)/g)) defined.add(m[1]);
+
+	const missing = new Map();
+	for (const f of sources) {
+		for (const m of readFileSync(f, 'utf8').matchAll(/var\(\s*(--[a-zA-Z][\w-]*)\s*([,)])/g)) {
+			// A fallback makes the reference safe by construction.
+			if (m[2] === ',' || defined.has(m[1])) continue;
+			if (!missing.has(m[1])) missing.set(m[1], new Set());
+			missing.get(m[1]).add(f);
+		}
+	}
+	for (const [name, where] of missing) {
+		fail(`${name} is used but never defined (${[...where].join(', ')})`);
+	}
+}
+
 /* ---- report -------------------------------------------------------------- */
 
 if (AS_JSON) {

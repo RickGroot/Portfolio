@@ -13,9 +13,16 @@ interface Props {
 	description?: string | undefined;
 	ogImage?: string | undefined;
 	noindex?: boolean | undefined;
+	/**
+	 * The accent the page chrome answers to. The one-pager's advance script
+	 * publishes this per section as you scroll; a page that is about exactly one
+	 * thing sets it once here instead. The nav, the rail and the cursor all read
+	 * `--c-section-ink`, and they live in <body>, so this is where it belongs.
+	 */
+	sectionInk?: string | undefined;
 }
 
-const { title, description = site.description, ogImage, noindex } = Astro.props;
+const { title, description = site.description, ogImage, noindex, sectionInk } = Astro.props;
 ---
 
 <!doctype html>
@@ -23,7 +30,7 @@ const { title, description = site.description, ogImage, noindex } = Astro.props;
 	<head>
 		<BaseHead title={title} description={description} ogImage={ogImage} noindex={noindex} />
 	</head>
-	<body>
+	<body {...(sectionInk ? { style: `--c-section-ink:${sectionInk}` } : {})}>
 		<a class="skip-link" href="#main">
 			Skip to content
 		</a>
