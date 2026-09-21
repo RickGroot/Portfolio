@@ -3,6 +3,22 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 export type WorkEntry = CollectionEntry<'work'>;
 
 /**
+ * An entry that is actually rendered.
+ *
+ * `cover`/`coverAlt` are optional on the raw schema so that drafts can omit them
+ * -- a draft carrying an `image()` reference would ship that asset to the CDN
+ * even though no page renders it. The schema's superRefine guarantees both are
+ * present on anything not marked draft, so every consumer downstream of
+ * getPublishedWork() can rely on them.
+ */
+export type PublishedWorkEntry = WorkEntry & {
+	data: WorkEntry['data'] & {
+		cover: NonNullable<WorkEntry['data']['cover']>;
+		coverAlt: string;
+	};
+};
+
+/**
  * Renders the period honestly.
  *
  * Client work at Triple is project-based and runs intermittently, so a bare
@@ -15,12 +31,24 @@ export function formatPeriod(entry: WorkEntry): string {
 }
 
 /** Every publishable entry, in author-defined order. Drafts never escape this. */
-export async function getPublishedWork(): Promise<WorkEntry[]> {
+export async function getPublishedWork(): Promise<PublishedWorkEntry[]> {
 	const entries = await getCollection('work', ({ data }) => !data.draft);
-	return entries.sort((a, b) => a.data.order - b.data.order);
+
+	// Backstop, not the primary gate -- the schema's superRefine should already
+	// have failed the build. If this ever throws, the schema has been loosened.
+	for (const entry of entries) {
+		if (!entry.data.cover || !entry.data.coverAlt) {
+			throw new Error(
+				`Published work entry "${entry.id}" has no cover or coverAlt. ` +
+					`The schema in src/content.config.ts should have rejected this.`,
+			);
+		}
+	}
+
+	return (entries as PublishedWorkEntry[]).sort((a, b) => a.data.order - b.data.order);
 }
 
 /** The subset that earns a dedicated page at /work/<slug>. */
-export async function getFeaturedWork(): Promise<WorkEntry[]> {
+export async function getFeaturedWork(): Promise<PublishedWorkEntry[]> {
 	return (await getPublishedWork()).filter((e) => e.data.featured);
 }

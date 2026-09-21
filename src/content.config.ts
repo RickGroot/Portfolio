@@ -15,48 +15,83 @@ const work = defineCollection({
 	loader: glob({ base: './src/content/work', pattern: '**/[^_]*.md' }),
 
 	schema: ({ image }) =>
-		z.object({
-			title: z.string().min(1).max(60),
-			role: z.string().min(1).max(60),
-			company: z.enum(['Triple', 'Independent']),
+		z
+			.object({
+				title: z.string().min(1).max(60),
+				role: z.string().min(1).max(60),
+				company: z.enum(['Triple', 'Independent']),
 
-			/**
-			 * First-to-last year of involvement -- NOT a claim of continuous work.
-			 * Agency projects run intermittently, so `status` carries the nuance:
-			 * `ongoing` renders as "Ongoing since 2022", `completed` renders the
-			 * period verbatim. See docs/content-guide.md.
-			 */
-			period: z.string().regex(/^\d{4}(–\d{4})?$/, 'Use "2023" or "2022–2025" (en dash)'),
-			status: z.enum(['ongoing', 'completed']),
+				/**
+				 * First-to-last year of involvement -- NOT a claim of continuous work.
+				 * Agency projects run intermittently, so `status` carries the nuance:
+				 * `ongoing` renders as "Ongoing since 2022", `completed` renders the
+				 * period verbatim. See docs/content-guide.md.
+				 */
+				period: z.string().regex(/^\d{4}(–\d{4})?$/, 'Use "2023" or "2022–2025" (en dash)'),
+				status: z.enum(['ongoing', 'completed']),
 
-			// 180 is the practical <meta name="description"> ceiling.
-			summary: z.string().min(50).max(180),
+				// 180 is the practical <meta name="description"> ceiling.
+				summary: z.string().min(50).max(180),
 
-			// The card layout breaks past four.
-			tags: z.array(z.string().min(1)).min(1).max(4),
+				// The card layout breaks past four.
+				tags: z.array(z.string().min(1)).min(1).max(4),
 
-			// Becomes a CSS custom property, so it must be a real 6-digit hex.
-			accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+				// Becomes a CSS custom property, so it must be a real 6-digit hex.
+				accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
 
-			// image() emits intrinsic width/height on the <img>, which is what
-			// makes CLS < 0.1 achievable rather than aspirational.
-			cover: image(),
-			// Required and non-empty: an unlabelled image is a build failure,
-			// not something the a11y test should be first to notice.
-			coverAlt: z.string().min(1),
+				/**
+				 * image() emits intrinsic width/height on the <img>, which is what
+				 * makes CLS < 0.1 achievable rather than aspirational.
+				 *
+				 * OPTIONAL IN THE SCHEMA, REQUIRED IN PRACTICE -- see the superRefine
+				 * below, which rejects any non-draft entry without one.
+				 *
+				 * It has to be optional because `image()` creates a build-time
+				 * reference: Astro emits the asset for EVERY entry carrying one,
+				 * whether or not a page renders it. A draft entry with a cover
+				 * therefore ships its image to the CDN, unreferenced by any page but
+				 * publicly fetchable. Letting drafts omit it is what keeps them off
+				 * the wire. `scripts/check-assets.mjs` gates the regression.
+				 */
+				cover: image().optional(),
+				// An unlabelled image is a build failure, not something the a11y
+				// test should be first to notice.
+				coverAlt: z.string().min(1).optional(),
 
-			links: z
-				.array(z.object({ label: z.string().min(1), href: z.url() }))
-				.max(3)
-				.default([]),
+				links: z
+					.array(z.object({ label: z.string().min(1), href: z.url() }))
+					.max(3)
+					.default([]),
 
-			// `/work` is the complete record. `featured` additionally earns a page.
-			featured: z.boolean().default(false),
-			order: z.number().int().nonnegative(),
+				// `/work` is the complete record. `featured` additionally earns a page.
+				featured: z.boolean().default(false),
+				order: z.number().int().nonnegative(),
 
-			// Replaces commenting entries out. Filtered from every getCollection.
-			draft: z.boolean().default(false),
-		}),
+				// Replaces commenting entries out. Filtered from every getCollection.
+				draft: z.boolean().default(false),
+			})
+			.superRefine((data, ctx) => {
+				// The guarantee lives here rather than on the field, so a draft can
+				// stay imageless (and therefore un-shipped) while anything that
+				// actually renders still cannot go out without a labelled cover.
+				if (data.draft) return;
+
+				if (!data.cover) {
+					ctx.addIssue({
+						code: 'custom',
+						path: ['cover'],
+						message:
+							'A published entry needs a cover. Add one, or set `draft: true` while it has none.',
+					});
+				}
+				if (!data.coverAlt) {
+					ctx.addIssue({
+						code: 'custom',
+						path: ['coverAlt'],
+						message: 'A published entry needs coverAlt describing what is actually in the image.',
+					});
+				}
+			}),
 });
 
 export const collections = { work };

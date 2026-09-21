@@ -1,7 +1,7 @@
 ---
 import { render } from 'astro:content';
 import WorkLayout from '@layouts/WorkLayout.astro';
-import { getFeaturedWork, type WorkEntry } from '@lib/work';
+import { getFeaturedWork, type PublishedWorkEntry } from '@lib/work';
 
 export async function getStaticPaths() {
 	const entries = await getFeaturedWork();
@@ -24,7 +24,7 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-	entry: WorkEntry;
+	entry: PublishedWorkEntry;
 }
 
 const { entry } = Astro.props;

@@ -2,10 +2,10 @@
 import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import TagList from '@components/TagList.astro';
-import { formatPeriod, type WorkEntry } from '@lib/work';
+import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
 
 interface Props {
-	entry: WorkEntry;
+	entry: PublishedWorkEntry;
 }
 
 const { entry } = Astro.props;

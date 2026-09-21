@@ -7,8 +7,8 @@ status: completed
 summary: Front-end work on the Ajax webshop during my internship at Triple, and my first real exposure to React and TypeScript in a multidisciplinary team.
 tags: ['React', 'TypeScript', 'Webshop']
 accent: '#d40a2a'
-cover: ../../assets/work/ajax.jpg
-coverAlt: The Ajax club crest.
+# cover removed: src/assets/work/ajax.jpg still needs a provenance check before it
+#   can ship. Restore `cover` + `coverAlt` when cleared, then drop `draft: true`.
 order: 6
 draft: true
 ---

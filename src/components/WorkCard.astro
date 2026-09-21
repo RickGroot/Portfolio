@@ -1,10 +1,10 @@
 ---
 import { Image } from 'astro:assets';
 import TagList from './TagList.astro';
-import { formatPeriod, type WorkEntry } from '@lib/work';
+import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
 
 interface Props {
-	entry: WorkEntry;
+	entry: PublishedWorkEntry;
 	/** Heading level, so the card fits the outline of whatever page uses it. */
 	as?: 'h2' | 'h3';
 }

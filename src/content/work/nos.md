@@ -7,8 +7,9 @@ status: completed
 summary: The Smart TV app for Dutch broadcaster NOS, focused on a maintainable Svelte UI built for remote-control navigation, with THEOplayer for live and on-demand playback.
 tags: ['Svelte', 'Connected TV', 'Video streaming']
 accent: '#e61e14'
-cover: ../../assets/work/nos.webp
-coverAlt: The NOS logo on the exterior wall of its building.
+# cover removed: src/assets/work/nos.webp is an ANP Kippa press photo (visible credit
+#   line burned into the image). Restore a cover you own or are licensed to use, add
+#   coverAlt, then drop `draft: true`.
 order: 5
 draft: true
 ---
