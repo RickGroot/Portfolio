@@ -49,7 +49,7 @@ src/
   styles/              Design tokens. global.css is imported ONCE, in BaseLayout.
 public/                Only files referenced from outside the HTML
   service-worker.js    Kill switch -- do NOT delete before ~2027-09
-docs/                  Roadmap, content guide, performance, easter eggs
+docs/                  Roadmap, art system, content guide, performance, easter eggs
 ```
 
 ## Documentation
@@ -57,6 +57,7 @@ docs/                  Roadmap, content guide, performance, easter eggs
 - [`CLAUDE.md`](CLAUDE.md) — engineering rules, pinned versions and why, hard prohibitions
 - [`docs/roadmap.md`](docs/roadmap.md) — phases, gates, deferred dependencies, open items
 - [`docs/content-guide.md`](docs/content-guide.md) — how to add work, field rules, image rights
+- [`docs/art-system.md`](docs/art-system.md) — the character field: why text, the measurements, the invariants
 - [`docs/performance.md`](docs/performance.md) — budgets, measurement, renderer rules
 - [`docs/easter-eggs.md`](docs/easter-eggs.md) — what exists, and how to turn it off
 

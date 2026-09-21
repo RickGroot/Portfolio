@@ -2,55 +2,57 @@
 
 ## Budgets
 
-| Budget                      | Limit                 | How it is measured                      |
-| --------------------------- | --------------------- | --------------------------------------- |
-| Initial JS, homepage        | ≤ 20 KB gzip          | `tests/budgets/payload.spec.ts`         |
-| Deferred art renderer chunk | ≤ 25 KB gzip          | Phase 3 gate                            |
-| Total JS, homepage          | ≤ 45 KB gzip          | Phase 3 gate                            |
-| LCP                         | < 2.5 s               | Lighthouse CI on built output (Phase 2) |
-| CLS                         | < 0.1                 | Lighthouse CI (Phase 2)                 |
-| INP                         | < 200 ms              | **Field only** — see below              |
-| WebGL contexts              | **at most** 1         | `tests/budgets/payload.spec.ts`         |
-| Animation loops             | 1, paused when idle   | `tests/budgets/payload.spec.ts`         |
-| DPR                         | adaptive, capped ~1.5 | Phase 3                                 |
+| Budget                | Limit               | How it is measured                      |
+| --------------------- | ------------------- | --------------------------------------- |
+| Initial JS, homepage  | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`         |
+| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 2.6 KB              |
+| Total JS, homepage    | ≤ 45 KB gzip        | measured 4.7 KB                         |
+| LCP                   | < 2.5 s             | Lighthouse CI on built output (Phase 2) |
+| CLS                   | < 0.1               | Lighthouse CI (Phase 2)                 |
+| INP                   | < 200 ms            | **Field only** — see below              |
+| Canvas elements       | **0**               | `tests/budgets/payload.spec.ts`         |
+| WebGL contexts        | **0**               | `tests/budgets/payload.spec.ts`         |
+| Animation loops       | 1, paused when idle | `tests/budgets/payload.spec.ts`         |
+| Character grid        | ≤ 6000 cells        | `tests/e2e/field.spec.ts`               |
 
 ### Two honesty notes
 
 **INP cannot be measured in a lab.** It needs real interactions from real users. Lighthouse reports
 Total Blocking Time; use TBT as the lab proxy and say so. Do not report a Lighthouse number as INP.
 
-**"At most 1" context, not "exactly 1".** After a permanent fallback there are zero contexts. A CI
-assertion written `=== 1` will flake.
+**Count renders, not `requestAnimationFrame` calls.** The loop must schedule a frame every display
+refresh in order to sample time; it throttles the _work_, not the scheduling. Counting rAF would
+measure the visitor's monitor rather than us — `tests/e2e/field.spec.ts` counts DOM mutations.
 
-### On excluding the renderer from the budget
+### Why there is no "deferred renderer" exemption any more
 
-The original brief said "< 60 KB gzip initial, deferred renderer excluded". That is half right: a
-chunk fetched after LCP genuinely does not affect LCP. But an _unbounded_ exclusion is not a budget,
-it ignores shader-compile and texture-upload cost that lands on the main thread as INP, and metered
-connections pay for the bytes whenever they arrive.
+The original brief said "< 60 KB gzip initial, deferred renderer excluded". An _unbounded_ exclusion
+is not a budget: it ignores main-thread cost, and metered connections pay for the bytes whenever
+they arrive. So the plan replaced it with three bounded numbers.
 
-The measured 26 KB baseline came from a SvelteKit SPA carrying the Firebase SDK. An Astro static
-site with no framework lands near zero — Phase 1 measures **2.04 KB**. Excluding something from a
-budget you are at 3% of is headroom, not a constraint. Hence three bounded numbers instead of one
-plus an exemption, and the 25 KB renderer ceiling is a **trip-wire**: if it is breached, the OGL
-decision reopens on evidence.
+Then the exemption stopped mattering. The signature treatment renders as **text in two `<pre>`
+elements** — no canvas, no WebGL, no shader compile, no texture upload. The whole art system
+measures **2.6 KB gzip**, against the 25 KB a GPU renderer would have taken on its own.
 
-For calibration: the realistic tree-shaken OGL subset for a fullscreen textured quad measures
-**25.5 KB gzip unminified**, so roughly 12–16 KB minified. A hand-written WebGL2 fullscreen quad is
-2–3 KB. The delta is real; the library buys correctness and time, not bytes.
+For calibration on what was avoided: the realistic tree-shaken OGL subset for a fullscreen textured
+quad measures 25.5 KB gzip unminified, roughly 12–16 KB minified — plus a quality governor,
+context-loss handling and build-time poster generation. All of it existed to serve an effect that a
+string assignment produces.
 
 ## Baseline vs now
 
-|                      | Old site (measured live)               | Phase 1                                      |
+|                      | Old site (measured live)               | Now                                          |
 | -------------------- | -------------------------------------- | -------------------------------------------- |
-| Initial JS           | 26 KB gzip                             | **2.04 KB gzip**                             |
-| Homepage images      | **5.7 MB**                             | responsive AVIF/WebP, largest variant 292 KB |
+| Total JS             | 26 KB gzip                             | **4.7 KB gzip** (incl. the whole art system) |
+| Homepage images      | **5.7 MB**                             | none — the hero is text                      |
 | Fonts                | 1.1 MB of TTF, none of which loaded    | 45 KB of WOFF2                               |
 | Third-party requests | 2 render-blocking Google Fonts imports | **0**                                        |
-| Repo assets          | 6.9 MB                                 | 1019 KB                                      |
+| Repo assets          | 6.9 MB                                 | ~1 MB                                        |
+| `dist`               | —                                      | 0.49 MB                                      |
 
 **The performance problem was never JavaScript.** It was 5.7 MB of unoptimised camera JPEGs on the
-homepage and a font stack that silently fell back to a CDN. Phase 2 owns the rest of that work.
+homepage and a font stack that silently fell back to a CDN. The homepage now has no hero image at
+all: the portrait is a 0.62 KB luminance map rendered as characters.
 
 ## Image export spec
 
@@ -92,24 +94,34 @@ something to do by accident.
 content-hashes those filenames, so this is safe and without it every repeat visit re-validates your
 CSS), `must-revalidate` for HTML, and `no-store` for `/service-worker.js`.
 
-## Renderer rules — written down before the renderer exists
+## Renderer rules
 
-Phase 3 must honour these. They are here now so they are not negotiated later under pressure.
+The art renders as text. `src/lib/field/` owns it; see `docs/art-system.md`.
 
-- **One** WebGL2 context, **one** `requestAnimationFrame` loop, owned by a lifecycle controller.
-  Sections declare art in markup; they never create a context or a loop.
-- DPR capped at ~1.5. Resolution scale is the primary quality lever — a dithered aesthetic at 0.5×
-  reads as _intentional_, which is the one genuine synergy in this art direction.
-- Lazy bootstrap after critical content. The capability gate sits **before** the dynamic `import()`,
-  so a weak device never pays the bytes.
-- Pause when hidden or offscreen. **No permanent background loops.**
-- Dispose everything: `cancelAnimationFrame`, `deleteTexture`, `deleteProgram`, `deleteShader`,
-  `deleteBuffer`, `IntersectionObserver.disconnect()`, `ResizeObserver.disconnect()`,
-  `removeEventListener`, `ImageBitmap.close()`, and `loseContext()` before removing the canvas —
-  that last one is what actually frees the context rather than leaving it to GC.
-- Guard the pending `import()` with a generation counter: scroll past fast and it can resolve after
-  teardown, creating a context for a dead section.
-- `preventDefault()` on `webglcontextlost` or restore never fires. Never call `delete*` on a lost
-  context. Attempt restore **once**; a second loss in a session means permanent poster.
-- The DOM owns content and accessibility. The canvas owns decoration. **If the canvas dies, the
-  portfolio still works.**
+- **One `requestAnimationFrame` loop on the site**, in `src/lib/field/loop.ts`. Everything else
+  subscribes. `eslint.config.js` restricts `requestAnimationFrame` everywhere else, so this is
+  enforced rather than requested.
+- **Throttled to 30fps.** Character art has no sub-cell motion — a glyph either changes or it does
+  not — so the perceptual gap to 60 is far smaller than for continuous motion, and 30 divides evenly
+  into 60/90/120, which is what makes a stepped cadence read as intentional rather than dropped.
+- **Never read layout inside the tick.** `textContent = s` alone is ~0.0 ms; adding a forced read
+  like `offsetHeight` makes it 0.3–0.9 ms. Resolve progress comes from `IntersectionObserver`
+  thresholds, never `getBoundingClientRect`.
+- **Grid capped at 6000 cells**, sized from the _measured_ advance width — never an assumed one.
+  Cell aspect varies by font (0.55 Consolas, 0.60 Courier New) and a user's minimum-font-size
+  setting can inflate it further. If the measured font is not actually monospace, the renderer
+  bails to the static frame rather than shipping a sheared grid.
+- **Stops when offscreen or hidden.** `IntersectionObserver` unsubscribes, which cancels the RAF —
+  it does not idle. There is no permanent background loop on this site.
+- **Dispose everything**: unsubscribe, `io.disconnect()`, `ro.disconnect()`, remove listeners,
+  release the typed arrays. A generation counter guards the dynamic `import()`, which can resolve
+  after teardown if someone scrolls past fast.
+- **Two `<pre>` layers is the colour budget.** Measured 3× single-layer cost, not 2× — overlapping
+  repaint is superlinear. A third accent is not affordable on mobile.
+- **ASCII-only ramp, ligatures explicitly disabled.** A glyph missing from the user's font falls
+  back per-glyph with an unconstrained advance and shears the line; `reset.css` sets
+  `text-rendering: optimizeLegibility` on `body`, which _enables_ ligature processing, so the
+  field must override it.
+- The DOM owns content and accessibility. The field is decoration, `aria-hidden`, `contain: strict`,
+  and not selectable. **If the renderer never starts, the hero still shows the portrait** — it is
+  server-rendered into the markup at build time.

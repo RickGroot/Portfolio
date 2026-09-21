@@ -22,11 +22,14 @@ _Note on timing:_ the script's own work is negligible, but Node's cold start on 
 (antivirus scanning `node.exe`) can be 1–2 s. Measure the script against the `node -e ""` baseline
 on the same machine rather than in absolute terms.
 
-### The `potato` quality tier (Phase 3, named now)
+### The `potato` quality tier — removed
 
-The lowest device tier is called `potato` and it means **poster only — the renderer is never
-imported**. The name is a joke that still teaches the behaviour to whoever maintains this in six
-months: this device gets potato quality, i.e. a picture.
+There used to be a device tier called `potato`, meaning "poster only, never load the renderer".
+It is gone, along with the tier system and the WebGL renderer it belonged to: the art is text now,
+the whole system costs 2.6 KB gzip, and there is no quality left to degrade.
+
+Recorded rather than silently deleted, because the joke did real work — the name taught the
+behaviour to whoever read the tier list six months later. If tiers ever come back, bring the name.
 
 ## Planned (Phase 6)
 

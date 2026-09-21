@@ -54,8 +54,10 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
    SvelteKit service worker, which cached the old site cache-first. Deleting it re-opens the bug for
    anyone who has not visited since the migration.
 4. **Do not add Astro's `ClientRouter`.** Static output means every navigation is a fresh document,
-   so a canvas can never leak a WebGL context across navigations. ClientRouter re-introduces that
-   entire class of bug for no benefit on a CDN-served static site.
+   so the field's RAF loop, its observers and its listeners are torn down by the browser for free.
+   ClientRouter would keep them alive across navigations and require real per-navigation teardown,
+   for no benefit on a CDN-served static site. Page transitions use CSS `@view-transition` instead,
+   which needs no JavaScript at all.
 
 ## Structural rules
 
@@ -70,18 +72,29 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 
 ## Budgets
 
-| Budget                      | Limit                                                      |
-| --------------------------- | ---------------------------------------------------------- |
-| Initial JS, homepage        | ≤ 20 KB gzip                                               |
-| Deferred art renderer chunk | ≤ 25 KB gzip — a trip-wire, not an allowance               |
-| Total JS, homepage          | ≤ 45 KB gzip                                               |
-| LCP / CLS                   | < 2.5 s / < 0.1                                            |
-| WebGL contexts              | **at most** 1 (not "exactly" — a permanent fallback has 0) |
+| Budget                      | Limit                                                     |
+| --------------------------- | --------------------------------------------------------- |
+| Initial JS, homepage        | ≤ 20 KB gzip                                              |
+| Deferred art renderer chunk | ≤ 25 KB gzip — a trip-wire, not an allowance              |
+| Total JS, homepage          | ≤ 45 KB gzip                                              |
+| LCP / CLS                   | < 2.5 s / < 0.1                                           |
+| Canvas elements             | **0**, asserted on every route                            |
+| WebGL contexts              | **0** — the art is text; there is no GPU path             |
+| Animation loops             | **exactly 1**, throttled to 30fps, stopped when offscreen |
 
 INP is field-only. Use TBT as the lab proxy; do not claim Lighthouse measures INP.
 
-Phase 1 asserts **0 canvases and 0 RAF loops** in `tests/budgets/`. Phase 3 must change those
-numbers deliberately, in the same commit that introduces the renderer.
+Phase 1 asserted 0 canvases **and** 0 RAF loops, specifically so that adding a loop had to be a
+deliberate edit. Phase 2 made that edit: the character field runs one loop. The canvas assertions
+got _stronger_ — a canvas appearing now means someone reintroduced a WebGL path that was cut.
+
+`eslint.config.js` restricts `requestAnimationFrame` everywhere except `src/lib/field/loop.ts`, so
+"one loop" is enforced rather than requested.
+
+## The art system
+
+The hero renders as text in two `<pre>` elements. No canvas, no WebGL, 2.6 KB gzip.
+See `docs/art-system.md` before touching `src/lib/field/`.
 
 ## Content rule
 
