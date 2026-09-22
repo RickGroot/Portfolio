@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Browser, type Page } from '@playwright/test';
 
 /**
  * LCP and CLS on built output.
@@ -96,6 +96,32 @@ async function measure(page: Page, path: string, cpuThrottle: number): Promise<V
 	return v;
 }
 
+/**
+ * Median of several samples, each in a fresh context.
+ *
+ * A single sample is not a measurement here. Repeated back to back on an idle
+ * machine the homepage produced 784, 840 and 1132ms, and 1788ms immediately
+ * after the parallel suite -- a 2.3x spread on identical bytes. A threshold set
+ * against one sample would fail for reasons that have nothing to do with the
+ * code, and a gate that cries wolf gets switched off, which is worse than not
+ * having one.
+ */
+async function median(browser: Browser, path: string, samples = 3): Promise<Vitals> {
+	const runs: Vitals[] = [];
+	for (let i = 0; i < samples; i++) {
+		const context = await browser.newContext();
+		const page = await context.newPage();
+		runs.push(await measure(page, path, 4));
+		await context.close();
+	}
+	const mid = Math.floor(samples / 2);
+	const lcp = [...runs].sort((a, b) => a.lcp - b.lcp)[mid]!.lcp;
+	const cls = [...runs].sort((a, b) => a.cls - b.cls)[mid]!.cls;
+	// CLS must be clean in EVERY run, not just the median one.
+	const worstCls = Math.max(...runs.map((r) => r.cls));
+	return { lcp, cls: Math.max(cls, worstCls), lcpElement: runs[0]!.lcpElement };
+}
+
 const ROUTES = ['/', '/work/chromecast'];
 
 // CLAUDE.md budget. Held against the throttled run, which is the harder one.
@@ -105,10 +131,11 @@ const CLS_BUDGET = 0.1;
 /*
  * A trip-wire well under the allowance, so the budget has teeth rather than
  * being decoration -- the same reasoning as the 8 KB field-chunk gate. The
- * real numbers at 4x throttle are far below this; if a change doubles them
- * this fails while there is still headroom to spare.
+ * Set from observed data: the median at 4x throttle is ~840ms, so this leaves
+ * roughly 1.8x of headroom over normal variance while still failing long
+ * before the 2500ms budget does.
  */
-const LCP_TRIPWIRE = 1200;
+const LCP_TRIPWIRE = 1500;
 
 /*
  * Tagged @vitals and EXCLUDED from `pnpm test`, which runs 8 workers in
@@ -119,8 +146,8 @@ const LCP_TRIPWIRE = 1200;
  */
 test.describe('core web vitals on built output @vitals', () => {
 	for (const path of ROUTES) {
-		test(`${path} — 4x CPU throttle`, async ({ page }) => {
-			const v = await measure(page, path, 4);
+		test(`${path} — 4x CPU throttle, median of 3`, async ({ browser }) => {
+			const v = await median(browser, path);
 			// Printed, not only asserted: the number is the point of the test.
 			console.log(`  ${path} @4x  LCP ${v.lcp}ms  CLS ${v.cls}  (LCP element: ${v.lcpElement})`);
 
