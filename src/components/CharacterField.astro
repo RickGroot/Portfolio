@@ -78,8 +78,27 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		opacity: 1;
 	}
 
+	/*
+	 * The layer BOX is pinned to the field; only the text inside it is centred.
+	 *
+	 * These used to be grid items centred by the parent, so the box was sized by
+	 * its own content -- and the server-rendered static frame is a fixed 64x32
+	 * while the live grid is sized from the viewport. The handover therefore
+	 * changed the box from 540px to 639px tall and moved it 84px up the screen,
+	 * which measured as 0.2331 CLS on its own: the entire homepage budget, twice
+	 * over, from one decorative element.
+	 *
+	 * `contain: strict` on .field already guarantees the DOCUMENT cannot shift.
+	 * It does not stop a child visibly moving inside the contained box, and that
+	 * movement is still a layout shift. Pinning the box to inset:0 makes the
+	 * rect constant across the handover; the grid inside re-centres the text
+	 * without the element itself ever moving.
+	 */
 	.field__layer {
-		grid-area: 1 / 1;
+		position: absolute;
+		inset: 0;
+		display: grid;
+		place-content: center;
 		margin: 0;
 		font: inherit;
 		white-space: inherit;

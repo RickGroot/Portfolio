@@ -27,7 +27,8 @@ pnpm dev
 pnpm typecheck                  # astro check -- the gate for .astro files, tsc cannot see them
 pnpm lint                       # eslint + prettier --check
 pnpm build
-pnpm test                       # playwright: e2e + a11y + budgets
+pnpm test                       # playwright: e2e + a11y + budgets (excludes @vitals)
+pnpm test:vitals                # LCP/CLS at 4x CPU throttle -- SINGLE worker, see below
 pnpm jazz                       # opt-in easter egg. Never wired to install/build/CI.
 ```
 
@@ -77,12 +78,18 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 | Initial JS, homepage        | ≤ 20 KB gzip                                              |
 | Deferred art renderer chunk | ≤ 25 KB gzip — a trip-wire, not an allowance              |
 | Total JS, homepage          | ≤ 45 KB gzip                                              |
-| LCP / CLS                   | < 2.5 s / < 0.1                                           |
+| LCP / CLS                   | < 2.5 s / < 0.1, plus a 1200 ms LCP trip-wire             |
 | Canvas elements             | **0**, asserted on every route                            |
 | WebGL contexts              | **0** — the art is text; there is no GPU path             |
 | Animation loops             | **exactly 1**, throttled to 30fps, stopped when offscreen |
 
 INP is field-only. Use TBT as the lab proxy; do not claim Lighthouse measures INP.
+
+LCP and CLS are measured by `tests/budgets/vitals.spec.ts` at **4x CPU throttle**, because this is
+a portfolio about software that runs on hardware you do not choose. It is tagged `@vitals` and
+excluded from `pnpm test`: the default run uses 8 workers, and a throttled measurement taken while
+seven other browsers fight for the same cores measured over the 2.5 s budget against 788 ms on an
+uncontended machine. Run it with `pnpm test:vitals`.
 
 Phase 1 asserted 0 canvases **and** 0 RAF loops, specifically so that adding a loop had to be a
 deliberate edit. Phase 2 made that edit: the character field runs one loop. The canvas assertions

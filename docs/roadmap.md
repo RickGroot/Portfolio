@@ -76,8 +76,7 @@ break-word` from the reset is right for prose and splits a word in half at displ
 **Remaining:**
 
 - Contact section design. It is the one section that has had no design attention.
-- Lighthouse CI. **LCP and CLS have never been measured on built output**, so the Phase 2 gate is
-  not yet fully met.
+- Contact section copy (see the copy note below).
 
 **Gate:** `pnpm check:assets` exits 0 · LCP < 2.5 s and CLS < 0.1 on built output · no shipped image
 over 250 KB · zero EXIF · keyboard traversal and axe clean **with JavaScript disabled**.
@@ -112,12 +111,12 @@ a browser profile carrying the **old** service worker receives the new site.
 
 Nothing on this list may be installed without moving it off the list first.
 
-| Package           | Phase | Why deferred                                                                                                                                                |
-| ----------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@astrojs/mdx`    | 3     | Built-in `.md` is enough for prose. MDX earns its place when a page needs a component _inside_ prose.                                                       |
-| `@astrojs/rss`    | 3     | No writing section exists. A feed of five static items is noise.                                                                                            |
-| `@lhci/cli`       | 2     | Flaky on shared runners. Add once the design is stable enough to measure.                                                                                   |
-| `vite-plugin-pwa` | 4     | **`@vite-pwa/astro@1.2.0` peers `astro ^1–^5` and does NOT support Astro 7.** Wire `vite-plugin-pwa@1.3.0` through `astro.config`'s `vite.plugins` instead. |
+| Package           | Phase | Why deferred                                                                                                                                                               |
+| ----------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@astrojs/mdx`    | 3     | Built-in `.md` is enough for prose. MDX earns its place when a page needs a component _inside_ prose.                                                                      |
+| `@astrojs/rss`    | 3     | No writing section exists. A feed of five static items is noise.                                                                                                           |
+| `@lhci/cli`       | —     | **Dropped, not deferred.** It pulls in Lighthouse and a second Chrome to measure two numbers `tests/budgets/vitals.spec.ts` gets from the browser own PerformanceObserver. |
+| `vite-plugin-pwa` | 4     | **`@vite-pwa/astro@1.2.0` peers `astro ^1–^5` and does NOT support Astro 7.** Wire `vite-plugin-pwa@1.3.0` through `astro.config`'s `vite.plugins` instead.                |
 
 `ogl` and `motion` were on this list. They are not deferred — they are **cancelled**.
 
