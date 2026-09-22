@@ -1,0 +1,94 @@
+# Design references
+
+Sources for the visual direction, and what is deliberately **not** taken from each.
+
+This file exists so that inspiration does not quietly become imitation three refactors later. Every
+row below was written after visiting the site at 1440×900 in a real browser on 2026-09-22, not from
+design vocabulary. Where a claim is a measurement, the measurement is given.
+
+None of these are permission to trace layouts, copy animation timings, reuse assets, or reproduce
+another studio's identity.
+
+---
+
+## 1. Studio Freight — <https://studiofreight.com/>
+
+|                            |                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observed**               | At rest the viewport is almost entirely empty. Every navigation item is pinned to the perimeter — mark top-left, section links top-right, socials bottom-left, wordmark bottom-centre, legal bottom-right — leaving the centre for a single statement (`Moving Missions Forward`). The centre is reserved for one idea, not filled. |
+| **Adapt**                  | Perimeter-anchored chrome and a centre that holds exactly one subject per viewport. The rail and nav already sit at the edges; push further by letting sections carry far less furniture.                                                                                                                                           |
+| **Deliberately different** | No orbiting collage of image fragments. We have a handful of real project covers, not dozens, and a collage of four images reads as thin rather than abundant. Navigation will never depend on finding a floating image.                                                                                                            |
+
+> The site is heavily animated: a scroll-then-screenshot attempt timed out after 5s waiting for the
+> page to finish rendering. Worth remembering as a counter-example — this is the cost profile the
+> performance budget exists to avoid.
+
+## 2. Obys — <https://obys.agency/>
+
+|                            |                                                                                                                                                                                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observed**               | The project index carries **categorical metadata, never prose**: each entry is name + industry + disciplines + a zero-padded number (`01`…`18`). No descriptive blurbs anywhere in the index.                     |
+| **Adapt**                  | Drop the prose summary from the one-pager panels in favour of the metadata that is already in the content model (`role`, `company`, `period`, `tags`). The zero-padded index is already in use and should stay.   |
+| **Deliberately different** | No three-view switcher. With four case studies, alternate vertical/horizontal/grid views would be three ways to look at the same short list, which is the gimmick the brief warns about. No hover-only discovery. |
+
+## 3. Mouthwash Studio — <https://mouthwash.studio/>
+
+|                            |                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Observed**               | Opens with a plain declarative paragraph in ordinary sentences — who they are, who they work with, three named clients. No slogan, no abstraction. Work is then filtered by **Industry**, each project listed with its disciplines. A separate `Our Ecosystem` block holds the side projects (a café, a newsletter, a magazine) without pretending they are client work. |
+| **Adapt**                  | The opening paragraph model: concrete nouns, named things, no slogan. And an "ecosystem" beat is the honest home for VAMP, the trumpet material and the lab experiments — adjacent to the work, clearly not client work.                                                                                                                                                 |
+| **Deliberately different** | No agency voice, no "influence culture". One person, first person.                                                                                                                                                                                                                                                                                                       |
+
+## 4. 2xA — <https://2xa.studio/> and <https://2xa.studio/projects/miao-world>
+
+The closest reference to where this site is already heading, and the most useful of the seven.
+
+|                            |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observed**               | Exactly **two type families**, measured on the project page: a custom variable monospace (`2XAMONOVF`) and `HelveticaProRoman`. The contrast the studio describes as "Low Tech and High Life" is mono against a neutral grotesque — _not_ two grotesques. Project metadata is a labelled key/value block in mono caps: `PROJECT / TYPE / SERVICES / COUNTRY / YEAR / AWARDS`. Headlines break to one word per line as typographic planes (`Code- / Driven / Design / Studio`). Live local clocks for both studio cities sit in the header (`ATH(GR) 09:38  AMS(NL) 08:38`) — real state, not decoration. Projects are numbered `(01)`. |
+| **Adapt**                  | The mono-plus-neutral pairing as the answer to the type question. The labelled metadata block. Word-per-line display setting for the identity section. One piece of genuinely live state in the chrome, if an honest one exists.                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Deliberately different** | No fake terminal copy and no invented technical artifacts. A live clock is real; a fake build log is not. The project page runs 3 canvases; ours runs none (see the conflict register below).                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+
+## 5. Unseen Studio — <https://unseen.co/>
+
+|                            |                                                                                                                                                                                                                                                                                                  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Observed**               | **Measured: 1 `<canvas>`, 22 links, and 665 characters of text in the entire document.** `<main>` contains one word: "Home". The experience _is_ the canvas; there is essentially no document underneath it.                                                                                     |
+| **Adapt**                  | The idea of one unmistakable opening interaction.                                                                                                                                                                                                                                                |
+| **Deliberately different** | This is the exact failure the brief rejects — "requiring WebGL to reach content". It is also a recruiter reading a portfolio with JavaScript blocked and finding one word. Our hero is server-rendered text that is already correct before any script runs, and that property is not negotiable. |
+
+## 6. Studio Feixen — <https://www.studiofeixen.ch/>
+
+|                            |                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observed**               | A `Quick Links` set of small, concretely-named things (Fonts, Poster Shop, Graphic Design Workflow, The No Book, Nearby, Newsletter), each with one plain sentence of dry copy: _"Do you have an empty white wall at home? Here you'll find some colors!"_ Plainly stated, mildly funny, zero portfolio-speak. |
+| **Adapt**                  | **This is the answer to the copy problem.** Name a concrete thing, say what it is in one plain sentence, allow one dry joke. It is the opposite of the aphoristic register currently in `src/lib/practice.ts`.                                                                                                 |
+| **Deliberately different** | No icon-only primary navigation. A small symbol set for the visual languages may exist, but every symbol needs a plain-text equivalent.                                                                                                                                                                        |
+
+## 7. Sora UI dither transition — <https://ui.soralabs.studio/blog/dither-page-transition-webgl>
+
+Engineering reference only; the visual direction is not taken from here.
+
+|                            |                                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observed**               | Claims a 3 KB raw WebGL 1.0 implementation (no Three.js), Bayer-matrix threshold computed analytically in the shader, ~48 bytes of VRAM, shader compile under 2 ms, and **no idle render loop** — the context exists only for the duration of a transition. The article credits 2xa.studio as its visual source, which makes 2xA the root reference rather than this. |
+| **Adapt**                  | The shape of the idea: a transition-only effect with no persistent renderer, and timing coupled to real navigation state instead of a blind timeout.                                                                                                                                                                                                                  |
+| **Deliberately different** | All figures are from a React/Next App Router stack and must be re-measured here before being repeated. The orchestration is Next-specific and does not port to Astro's static output. Whether we take the WebGL path at all is an open decision — see the conflict register.                                                                                          |
+
+---
+
+## Conflict register
+
+The brief that produced this file assumes some things the repository has already decided against,
+on evidence. Recorded here so the disagreement is explicit rather than discovered later. **The
+repository's decisions stand until each is explicitly overturned.**
+
+| #   | The brief asks for                                                                                           | The repository does                                                                                                                                                                                                                                | Status                                           |
+| --- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| 1   | "One persistent shared WebGL/canvas renderer", DPR capped ~1.5, poster fallbacks                             | `CLAUDE.md`: **canvas elements 0, WebGL contexts 0**, asserted on every route by two tests. The hero is text in two `<pre>` elements, 2.6 KB gzip. The WebGL phase was cut after measuring that the reference effect uses no canvas at all.        | **Open — needs a decision**                      |
+| 2   | "Do not default to Inter, **Space Grotesk**, Sora, or another predictable pairing without a specific reason" | Ships Space Grotesk 700 as the display face. The recorded reason is that it derives from Space Mono and so rhymes with the character field, and it is OFL. 2xA suggests the stronger move is mono + neutral grotesque.                             | **Open — needs a decision**                      |
+| 3   | "No endless rounded cards, pill buttons, bento grids"                                                        | `--radius: 4px`, `--radius-lg: 10px` used across panels, the practice grid and the case-study cards; `border-radius: 999px` pills in `Nav.astro` and `TagList.astro`.                                                                              | **Conflict — brief should win**                  |
+| 4   | "No constant cursor-chasing", "no every-text-line reveal"                                                    | A custom cursor with a trailing ring and a proximity glow (`src/scripts/cursor.ts`), plus scroll reveals on most blocks.                                                                                                                           | **Open — needs a decision**                      |
+| 5   | "Use only one dominant effect in any viewport"                                                               | A work panel currently runs dither, a hover sheen, four corner brackets, idle signal bars, parallax and a proximity glow at once.                                                                                                                  | **Conflict — brief should win**                  |
+| 6   | "Do not use generated images as the site's identity"; prioritise real photos and project material            | The portrait and both art interludes are generated placeholders. They are marked temporary in `docs/roadmap.md`, but they are what the site currently looks like.                                                                                  | **Blocked on real assets**                       |
+| 7   | Bayer dithering as the primary "Decode" language                                                             | Bayer was removed from the character field after a side-by-side test: at one matrix cell per character cell it has a ~36×64 px period and reads as a screen-door lattice. It remains correct at _image_ resolution, where the period is sub-pixel. | **Resolved — both are true at different scales** |
