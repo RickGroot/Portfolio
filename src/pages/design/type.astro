@@ -29,6 +29,8 @@ interface Candidate {
 	why: string;
 	risk: string;
 	installed: boolean;
+	/** Departure Mono ships a single weight; 700 would synthesise a fake bold. */
+	weight?: number | undefined;
 }
 
 const candidates: Candidate[] = [
@@ -46,9 +48,10 @@ const candidates: Candidate[] = [
 		name: 'Departure Mono',
 		licence: 'SIL OFL — Helena Zhang, verified on departuremono.com',
 		stack: "'Departure Mono', var(--font-mono)",
+		weight: 400,
 		why: 'A pixel/bitmap monospace. It IS the low-resolution signal language rather than alluding to it, and it ships full box-drawing coverage — which would lift the ASCII-only constraint on the character field ramp, because the glyphs would be guaranteed present rather than hoped for.',
 		risk: 'A bitmap face at 100px display size is a strong commitment. It can read as retro-gaming rather than broadcast engineering if it is used for everything instead of headlines only.',
-		installed: false,
+		installed: true,
 	},
 	{
 		id: 'martian',
@@ -57,7 +60,7 @@ const candidates: Candidate[] = [
 		stack: "'Martian Mono', var(--font-mono)",
 		why: 'Deliberately brutal and wide, drawn for display rather than for code comfort. It has a sibling grotesque (Martian Grotesk), so display and text could come from one designed system instead of two unrelated families.',
 		risk: 'Wide advance widths mean long titles eat horizontal space fast. CHROMECAST is already the constraint at 6.04em in Space Grotesk.',
-		installed: false,
+		installed: true,
 	},
 ];
 
@@ -70,9 +73,9 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 			<p class="proto__flag">Internal prototype — noindex, not for launch</p>
 			<h1>Type candidates</h1>
 			<p class="proto__note">
-				The question is which monospace carries the display role, and against what text face. Faces
-				marked <em>not installed</em> fall back to the generic monospace until their files are
-				downloaded, so judge those rows on the argument, not the rendering.
+				The question is which monospace carries the display role, and against what text face. All
+				three are self-hosted here from <code>fonts/proto/</code>, which is served only to this
+				route and must be empty before launch.
 			</p>
 		</header>
 
@@ -84,7 +87,10 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 					{!c.installed && <p class="cand__missing">Not installed — showing fallback</p>}
 				</div>
 
-				<div class="cand__specimens" style={`--stack:${c.stack}`}>
+				<div
+					class="cand__specimens"
+					style={`--stack:${c.stack}; --stack-weight:${c.weight ?? 700}`}
+				>
 					{specimens.map((s) => (
 						<p class="cand__display">{s}</p>
 					))}
@@ -101,6 +107,27 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		))}
 	</div>
 </BaseLayout>
+
+<style is:global>
+	/*
+	 * Candidate faces, served ONLY to this internal route from fonts/proto/.
+	 * They are excluded from the production font budget on purpose and
+	 * check-assets warns on every run until the directory is empty.
+	 */
+	@font-face {
+		font-family: 'Departure Mono';
+		src: url('/fonts/proto/departure-mono.woff2') format('woff2');
+		font-weight: 400;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: 'Martian Mono';
+		src: url('/fonts/proto/martian-mono-700.woff2') format('woff2');
+		font-weight: 700;
+		font-display: swap;
+	}
+</style>
 
 <style>
 	.proto {
@@ -158,7 +185,7 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 
 	.cand__display {
 		font-family: var(--stack);
-		font-weight: 700;
+		font-weight: var(--stack-weight);
 		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 15cqi);
 		line-height: 0.92;
 		letter-spacing: -0.04em;

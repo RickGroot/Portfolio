@@ -166,9 +166,27 @@ for (const f of distFiles.filter((f) => /\.(js|css|html)$/.test(f))) {
 
 /* ---- 6. Third-party origins ---------------------------------------------- */
 
+/*
+ * Scoped to files a browser can actually make a request from. `textBlob`
+ * includes .txt, and an OFL licence quotes the licence's own home page --
+ * Departure Mono's cites https://openfontlicense.org, which failed the build
+ * for a URL nothing will ever fetch. The pre-existing licences only escaped
+ * because they spell it http:// and this pattern requires https.
+ *
+ * The check itself is unchanged and still covers every HTML, JS, CSS and JSON
+ * file in the build; it just no longer reads legal boilerplate as a network
+ * dependency.
+ */
+const REQUESTABLE = new Set(['.html', '.js', '.mjs', '.css', '.json', '.xml', '.webmanifest']);
+const requestableBlob = distFiles
+	.filter((f) => REQUESTABLE.has(extname(f).toLowerCase()))
+	.map((f) => readFileSync(f, 'utf8'))
+	.join('\n');
+
 const ALLOWED = ['rickgroot.nl', 'schema.org', 'github.com', 'linkedin.com', 'rickgroot.github.io'];
 const origins = new Set();
-for (const m of textBlob.matchAll(/https:\/\/([a-z0-9.-]+)/gi)) origins.add(m[1].toLowerCase());
+for (const m of requestableBlob.matchAll(/https:\/\/([a-z0-9.-]+)/gi))
+	origins.add(m[1].toLowerCase());
 for (const host of origins) {
 	if (!ALLOWED.some((a) => host === a || host.endsWith(`.${a}`)))
 		fail(`third-party origin in the build: ${host}`);
@@ -195,7 +213,30 @@ if (existsSync(TERMS_FILE)) {
 
 const fontDir = join(DIST, 'fonts');
 if (existsSync(fontDir)) {
-	const fonts = readdirSync(fontDir);
+	/*
+	 * `fonts/proto/` holds candidate faces served only to the internal /design
+	 * routes. They are excluded from the production budget because no page a
+	 * visitor can reach loads them -- but they are NOT ignored: shipping a
+	 * comparison set to production is a 32 KB mistake nobody would notice, so
+	 * the directory has to be empty before launch and says so on every run.
+	 */
+	const protoDir = join(fontDir, 'proto');
+	if (existsSync(protoDir)) {
+		const proto = readdirSync(protoDir).filter((f) => f.endsWith('.woff2'));
+		let protoTotal = 0;
+		for (const f of proto) protoTotal += statSync(join(protoDir, f)).size;
+		if (proto.length > 0) {
+			warn(
+				`${proto.length} prototype font(s) present (${kb(protoTotal)}), excluded from the ` +
+					`budget. public/fonts/proto/ must be empty before launch.`,
+			);
+		}
+		if (proto.length > 0 && !readdirSync(protoDir).some((f) => /^OFL/i.test(f))) {
+			fail('prototype fonts ship without a licence file');
+		}
+	}
+
+	const fonts = readdirSync(fontDir).filter((f) => statSync(join(fontDir, f)).isFile());
 	let total = 0;
 	for (const f of fonts) {
 		const p = join(fontDir, f);
