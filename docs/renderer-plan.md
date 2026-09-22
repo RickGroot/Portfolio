@@ -34,6 +34,31 @@ camera, or a material system. **The renderer should be written against the WebGL
 All figures in that write-up are from a React/Next stack and must be re-measured here before being
 repeated anywhere.
 
+## Revised by the reference video (2026-09-22)
+
+The 28 decodable seconds of the reference video change the answer. See the analysis in
+`DESIGN_REFERENCES.md`: the treatment Rick is reacting to is **ASCII characters on a grid**, from a
+tool whose export formats include `.txt` and `.svg`. It is not a photographic dither.
+
+**Option B is now clearly wrong.** Retiring the character field in favour of a GPU photo dither
+would move _away_ from the reference, not toward it.
+
+**Neither A nor B is quite right either.** Both assumed the renderer's job was photographic
+treatment. The three things actually missing are all properties of the character field:
+
+1. Per-character colour sampled from the source image (`Mode: Original` in the tool). Ours is two
+   fixed colours. **This is the real case for the GPU** — it is the same requirement measured at
+   40.71ms per frame with one `<span>` per cell, which is what ruled out the DOM.
+2. Selectable character sets — nine presets there, one ramp here.
+3. Scale and spacing as tunable values.
+
+**Option C — the renderer serves the character field.** A WebGL layer draws the character grid with
+per-cell colour at a resolution the DOM cannot reach, while the server-rendered text stays
+underneath as the no-JavaScript and reduced-motion state. The hero keeps the property that makes it
+correct before any script runs, and gains the one thing the reference has that it lacks.
+
+This is what should be built, and it is closer to A than to B.
+
 ## The question that has to be answered first
 
 The hero is currently a character field: text in two `<pre>` elements, 2.6 KB gzip, and — measured

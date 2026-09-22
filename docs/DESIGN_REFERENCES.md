@@ -77,6 +77,83 @@ Engineering reference only; the visual direction is not taken from here.
 
 ---
 
+---
+
+## The reference video — analysis
+
+`portfolio-dither-reference-video.mp4`, supplied 2026-09-22.
+
+**The file is truncated.** The container header declares 311s (5:11), but only **840 frames — 28.0
+seconds** of video data are present; the decoder hits `partial file` at an offset past the end of
+the file. The copy used here is byte-identical to the original (same MD5), so this is the source
+file, not the transfer. Everything below is from those 28 seconds. Roughly 91% of the video was
+never received, and nothing in it has been guessed at.
+
+It is a screen recording of an Instagram reel, whose own caption states the subject:
+
+> "How to create an ASCII block effect with the help of a free website tool! Grainrad is super
+> underrated and that's why I wanted to make a little tutorial"
+
+### What is actually being shown
+
+| Time     | What is on screen                                                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.5s     | A face rendered in **dense, per-character coloured ASCII** — skin tones, red lips, teal shadows, all sampled from the source photograph. Caption: "Let me show"            |
+| 3.0s     | **The "ASCII block effect"**: large, sparse, amber-on-black characters, letterforms individually readable (`/	f`, `fjxvYU`, `rnvYQ0`, `xuzJ0d`). Caption names it directly. |
+| 4.5s     | A figure with RGB channel-offset / pixel-sort glitch, magenta and cyan fringing                                                                                            |
+| 7.5–9s   | The tool identified: **grainrad.com**                                                                                                                                      |
+| 16.5s    | The tool's **Settings** panel, fully legible (see below)                                                                                                                   |
+| 18–22.5s | Character Set switched between `DETAILED` and `BLOCKS`, showing the difference                                                                                             |
+| 19.5s    | The **Export** panel: PNG, JPEG, GIF, **SVG**, **Text (.txt)**, Three.js (.html)                                                                                           |
+
+### The parameter surface Rick is reacting to
+
+Read directly off the panel at 16.5s:
+
+- **ASCII** — Scale `2`, Spacing `0.0`, Output Width `0`
+- **Character Set** — `STANDARD`, `BLOCKS`, `BINARY`, `DETAILED`, `MINIMAL`, `ALPHABETIC`,
+  `NUMERIC`, `MATH`, `SYMBOLS`
+- **Adjustments** — Brightness, Contrast, Saturation, Hue Rotation, Sharpness, Gamma
+- **Color** — Mode `Original`, Background, Intensity `1.0`
+
+### What this changes
+
+**The reference is text, not a photographic shader.** The signature treatment in the video is
+characters on a grid — and the export formats confirm it: a tool whose output options are `.txt`
+and `.svg` is not producing a raster dither. The character field already built here is the same
+technique, and the 3.0s "ASCII block effect" frame is close to what this site's hero already does
+in amber.
+
+So the gap is narrower and much more specific than "add WebGL". Three things are missing:
+
+1. **Per-character colour sampled from the source.** Ours is two fixed colours, where `Mode:
+Original` samples each cell from the photograph. This is the single biggest visual difference,
+   and it is the one measured at **40.71ms per frame** with one `<span>` per cell — the
+   measurement that killed the DOM approach. **This, not photographic dithering, is the real case
+   for the GPU.**
+2. **Selectable character sets.** One ramp today against nine presets there.
+3. **Scale and spacing as controls** rather than constants.
+
+This reframes the renderer: its job is to make **the character field itself** full-colour and
+higher-resolution, not to replace it with a halftone shader. That reconciles the decision with the
+one property worth keeping — a hero that is server-rendered text and correct before any script
+runs.
+
+### Deliberate differences
+
+- **Grainrad is a tool; this is a portfolio.** A settings panel exposing nine character sets and six
+  adjustments is the right interface for an editor and the wrong one for a site. The parameters get
+  chosen once, by Rick, and baked in.
+- **No glitch as identity.** The channel-offset frame at 4.5s is the brief's "Fracture", explicitly
+  a rare, occasional language. Permanent glitching harms legibility.
+- **Not a face filter.** The reel applies the effect to stock faces for the demo. Here it resolves
+  into a specific person, which is why the portrait has to be real.
+
+### Still outstanding
+
+The remaining ~283 seconds. If they contain layout, motion or transition references rather than
+more of this tutorial, the direction above may be incomplete. **Worth re-exporting and re-sending.**
+
 ## Conflict register
 
 The brief that produced this file assumes some things the repository had already decided against,
