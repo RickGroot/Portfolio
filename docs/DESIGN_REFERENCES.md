@@ -149,10 +149,51 @@ runs.
 - **Not a face filter.** The reel applies the effect to stock faces for the demo. Here it resolves
   into a specific person, which is why the portrait has to be real.
 
-### Still outstanding
+### The complete video (re-exported 2026-09-22)
 
-The remaining ~283 seconds. If they contain layout, motion or transition references rather than
-more of this tutorial, the direction above may be incomplete. **Worth re-exporting and re-sending.**
+The second export decodes fully: **9329 frames, 5:10.96, 128 MB**, no errors. The analysis below
+supersedes the truncated read above, which saw only the first 28 seconds — about 9% of it.
+
+**What it actually is:** a screen recording of a saved-reels collection on Instagram, scrolled
+through in a browser. It is not one curated art-direction reference, and most of it is tool
+bookmarks rather than visual direction — `motion.dev`, `componentry.dev`, `particles.casberry.io`,
+`manus.im`, `playgrnd.tools`, a QR generator, an orb shader. Those are worth keeping as a
+bookmark list; they are not a look.
+
+Filtering to the frames that are art direction, the signal is consistent:
+
+| Time   | What is on screen                                                                                                            | Language                    |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| 0–35s  | The Grainrad ASCII tutorial analysed above — coloured ASCII portraits, the "ASCII block effect", the nine character sets     | **Decode**                  |
+| 30s    | A face under hard **horizontal scanlines**                                                                                   | **Fracture**                |
+| 87.9s  | Black **halftone dots on saturated yellow** — an organic blob resolved entirely in dots                                      | **Decode**, at poster scale |
+| 228.5s | A photograph **sliced into a rotated grid of tiles**, recomposed                                                             | **Fracture**                |
+| 240s   | White dithered noise on **electric blue**, driven by a control panel reading `INFLUENCE RADIUS`, `FORCE SCALE`, `MAX DEFORM` | **Field**                   |
+| 270s   | **"ROTATING ARC GRID S87"** — a black-and-white op-art arc pattern above a small mono caption block                          | **Field**                   |
+| 300s   | A flat **red / yellow / black geometric poster** — hard bands, zigzags, one gradient                                         | —                           |
+
+### What this says that the first 28 seconds did not
+
+1. **The palette is wrong.** Every art-direction frame here is built on **flat, saturated colour** —
+   yellow, electric blue, red — carrying black or white marks. The site is currently a lifted
+   near-black with two accents used sparingly. Nothing in the references looks like that. This is
+   the biggest single gap between the built site and the reference, and it is a bigger change than
+   the renderer.
+2. **The poster layout at 270s is already the panel structure here**: one large graphic field, a
+   display title, and a small mono caption block beneath. That is `WorkPanel.astro`. The difference
+   is entirely treatment and colour, not composition.
+3. **Fracture has more evidence than expected** — scanlines at 30s and tile-slicing at 228.5s are
+   two separate instances, so it is more than an occasional accent.
+4. **The Grainrad section remains the most developed single idea**, and it is still the only part
+   with a caption naming what it is. Treat it as the primary language; the rest sets the palette
+   and the pattern vocabulary.
+
+### What is deliberately not taken
+
+- The tool bookmarks. A particle playground and a QR generator are not this site's identity.
+- The saturated-poster colour applied wholesale. Two to four colours per section, per the brief;
+  a project already owns its accent, and that system should absorb the shift rather than be
+  replaced by it.
 
 ## Conflict register
 

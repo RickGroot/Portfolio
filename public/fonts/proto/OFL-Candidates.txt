@@ -1,0 +1,21 @@
+Prototype type candidates — licence note
+========================================
+
+Every face in this directory is licensed under the SIL Open Font License 1.1.
+These are served ONLY to the internal /design/type route for comparison and are
+excluded from the production font budget. public/fonts/proto/ must be empty
+before launch.
+
+  departure-mono.woff2   Departure Mono — Helena Zhang — departuremono.com
+  martian-mono-700       Martian Mono — Roman Shamin / Evil Martians
+  archivo-exp-800        Archivo (width 125) — Omnibus-Type
+  unbounded-800          Unbounded — Nadyanuar / Google Fonts
+  syne-800               Syne — Bonjour Monde / Lucas Descroix
+  orbitron-900           Orbitron — Matt McInerney
+
+Departure Mono and Martian Mono carry their own full OFL text alongside this
+file. The remainder were retrieved through the Google Fonts CSS API, which
+serves OFL-licensed subsets.
+
+IF ANY OF THESE IS CHOSEN, it must ship with its own complete OFL.txt from the
+upstream project before launch. A shortlist note is not a licence.

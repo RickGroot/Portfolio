@@ -24,11 +24,9 @@ interface Candidate {
 	id: string;
 	name: string;
 	licence: string;
-	/** null = not yet downloaded; falls back so the page still renders. */
 	stack: string;
 	why: string;
 	risk: string;
-	installed: boolean;
 	/** Departure Mono ships a single weight; 700 would synthesise a fake bold. */
 	weight?: number | undefined;
 }
@@ -41,7 +39,6 @@ const candidates: Candidate[] = [
 		stack: "'Space Grotesk', var(--font-sans)",
 		why: 'Derives from Space Mono, so it rhymes with the character field. Zero work, already measured for CLS.',
 		risk: 'Named explicitly in the brief as a predictable default to avoid.',
-		installed: true,
 	},
 	{
 		id: 'departure',
@@ -51,7 +48,6 @@ const candidates: Candidate[] = [
 		weight: 400,
 		why: 'A pixel/bitmap monospace. It IS the low-resolution signal language rather than alluding to it, and it ships full box-drawing coverage — which would lift the ASCII-only constraint on the character field ramp, because the glyphs would be guaranteed present rather than hoped for.',
 		risk: 'A bitmap face at 100px display size is a strong commitment. It can read as retro-gaming rather than broadcast engineering if it is used for everything instead of headlines only.',
-		installed: true,
 	},
 	{
 		id: 'martian',
@@ -60,7 +56,42 @@ const candidates: Candidate[] = [
 		stack: "'Martian Mono', var(--font-mono)",
 		why: 'Deliberately brutal and wide, drawn for display rather than for code comfort. It has a sibling grotesque (Martian Grotesk), so display and text could come from one designed system instead of two unrelated families.',
 		risk: 'Wide advance widths mean long titles eat horizontal space fast. CHROMECAST is already the constraint at 6.04em in Space Grotesk.',
-		installed: true,
+	},
+	{
+		id: 'archivo',
+		name: 'Archivo Expanded 800',
+		licence: 'SIL OFL — Omnibus-Type, via Google Fonts',
+		stack: "'Archivo Expanded', var(--font-sans)",
+		why: 'A grotesque drawn with a real width axis, set here at 125. Wide and heavy without being a novelty, which is the classic editorial-poster register — big, flat, unfussy.',
+		risk: 'It is a Google Fonts workhorse. Distinctive at this width, but it will not surprise anyone, which is exactly the objection the brief raised against Space Grotesk.',
+		weight: 800,
+	},
+	{
+		id: 'unbounded',
+		name: 'Unbounded 800',
+		licence: 'SIL OFL — via Google Fonts',
+		stack: "'Unbounded', var(--font-sans)",
+		why: 'Geometric, very wide, and unusual enough to be recognisable on its own. Holds together at enormous sizes, which is where a panel title actually lives.',
+		risk: 'The geometric roundness argues with the hard pixel grid of the character field. Two different ideas of what a shape is.',
+		weight: 800,
+	},
+	{
+		id: 'syne',
+		name: 'Syne 800',
+		licence: 'SIL OFL — Bonjour Monde / Lucas Descroix',
+		stack: "'Syne', var(--font-sans)",
+		why: 'Deliberately odd proportions from a type foundry that works with art institutions. The most authored of the five — nobody reaches for this by default.',
+		risk: 'Strong enough personality to become the site’s whole voice, and it reads art-gallery rather than broadcast engineering.',
+		weight: 800,
+	},
+	{
+		id: 'orbitron',
+		name: 'Orbitron 900',
+		licence: 'SIL OFL — Matt McInerney',
+		stack: "'Orbitron', var(--font-sans)",
+		why: 'Squared geometry drawn specifically for display sizes. The closest of the five to on-screen broadcast and device UI, which is literally the subject matter.',
+		risk: 'It is the sci-fi default. Very easy to read as a 2010s technology cliché rather than as a considered choice.',
+		weight: 900,
 	},
 ];
 
@@ -84,11 +115,11 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 				<div class="cand__meta">
 					<h2>{c.name}</h2>
 					<p class="cand__licence">{c.licence}</p>
-					{!c.installed && <p class="cand__missing">Not installed — showing fallback</p>}
 				</div>
 
 				<div
 					class="cand__specimens"
+					data-specimens
 					style={`--stack:${c.stack}; --stack-weight:${c.weight ?? 700}`}
 				>
 					{specimens.map((s) => (
@@ -96,6 +127,8 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 					))}
 					<p class="cand__meta-line">02 / CONNECTED TV DEVELOPER / TRIPLE / ONGOING SINCE 2023</p>
 				</div>
+
+				<p class="cand__metric" data-metric></p>
 
 				<dl class="cand__notes">
 					<dt>Why</dt>
@@ -108,16 +141,87 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 	</div>
 </BaseLayout>
 
+<script>
+	/*
+	 * Measure, rather than eyeball. "CHROMECAST" is the longest word in the
+	 * content and the constraint on every panel title, so the useful number for
+	 * each face is how many ems it needs. Space Grotesk needs 6.04em; a face
+	 * needing materially more will break mid-word at the same size, which is
+	 * what the reset's overflow-wrap does to a display heading.
+	 *
+	 * Internal prototype page only. Nothing here ships.
+	 */
+	// MUST wait for the webfonts. These are font-display: swap and load async,
+	// so measuring at parse time silently measures the fallback -- which gave
+	// four different faces an identical 6.61em, the exact signature of a
+	// fallback reading rather than a real one.
+	await document.fonts.ready;
+
+	const LONGEST = 'CHROMECAST';
+	for (const box of document.querySelectorAll('[data-specimens]')) {
+		const sample = box.querySelector('p');
+		if (!(sample instanceof HTMLElement)) continue;
+		const cs = getComputedStyle(sample);
+		const probe = document.createElement('span');
+		probe.style.cssText =
+			'position:absolute;visibility:hidden;white-space:nowrap;font-size:100px;' +
+			`font-family:${cs.fontFamily};font-weight:${cs.fontWeight};` +
+			`letter-spacing:${cs.letterSpacing};text-transform:${cs.textTransform};`;
+		probe.textContent = LONGEST;
+		document.body.append(probe);
+		const em = probe.getBoundingClientRect().width / 100;
+		probe.remove();
+
+		// At `font-size: Ncqi` the longest word fits when em * N/100 <= 1, so the
+		// largest usable N is 100/em. The panels currently use 15cqi. A wide face
+		// is not disqualified by this -- it just has to be set smaller.
+		const maxCqi = 100 / em;
+		const fits = maxCqi >= 15;
+		const out = box.parentElement?.querySelector('[data-metric]');
+		if (out instanceof HTMLElement) {
+			out.textContent =
+				`${LONGEST} = ${em.toFixed(2)}em — fits up to ${maxCqi.toFixed(1)}cqi` +
+				(fits ? ' (panels use 15)' : ' — below the 15cqi the panels use');
+			out.dataset.fits = String(fits);
+		}
+	}
+</script>
+
 <style is:global>
 	/*
-	 * Candidate faces, served ONLY to this internal route from fonts/proto/.
-	 * They are excluded from the production font budget on purpose and
-	 * check-assets warns on every run until the directory is empty.
-	 */
+		 * Candidate faces, served ONLY to this internal route from fonts/proto/.
+		 * They are excluded from the production font budget on purpose and
+		 * check-assets warns on every run until the directory is empty.
+		 */
 	@font-face {
 		font-family: 'Departure Mono';
 		src: url('/fonts/proto/departure-mono.woff2') format('woff2');
 		font-weight: 400;
+		font-display: swap;
+	}
+
+	@font-face {
+		font-family: 'Archivo Expanded';
+		src: url('/fonts/proto/archivo-exp-800.woff2') format('woff2');
+		font-weight: 800;
+		font-display: swap;
+	}
+	@font-face {
+		font-family: 'Unbounded';
+		src: url('/fonts/proto/unbounded-800.woff2') format('woff2');
+		font-weight: 800;
+		font-display: swap;
+	}
+	@font-face {
+		font-family: 'Syne';
+		src: url('/fonts/proto/syne-800.woff2') format('woff2');
+		font-weight: 800;
+		font-display: swap;
+	}
+	@font-face {
+		font-family: 'Orbitron';
+		src: url('/fonts/proto/orbitron-900.woff2') format('woff2');
+		font-weight: 900;
 		font-display: swap;
 	}
 
@@ -169,14 +273,6 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		color: var(--c-text-dim);
 	}
 
-	.cand__missing {
-		font-family: var(--font-mono);
-		font-size: var(--t-xs);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-meta);
-		color: var(--c-hot);
-	}
-
 	/* Sized the way the panels size it, so this is a fair comparison and not a
 	   specimen poster: container-relative, capped, uppercase, tight. */
 	.cand__specimens {
@@ -199,6 +295,18 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
 		color: var(--c-text-dim);
+	}
+
+	.cand__metric {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-cool);
+	}
+
+	.cand__metric[data-fits='false'] {
+		color: var(--c-hot);
 	}
 
 	.cand__notes {
