@@ -148,6 +148,9 @@ Nothing on this list may be installed without moving it off the list first.
    rather than grey boxes, and they are meant to be replaced by Rick's photography. Replacing them
    is a file swap plus the import in `src/pages/index.astro`; delete the generator once they are
    gone.
-9. **`src/lib/practice.ts` is placeholder copy.** The three `How I work` cards are written in a
-   plausible voice, not Rick's, and the claims are about this repo. They need his own words before
-   launch — the file says so at the top.
+9. **`/design/*` are internal prototypes and must not launch.** They are noindex, disallowed in
+   `robots.txt` and excluded from the sitemap, but they are still built. Delete the directory once a
+   direction is chosen.
+10. **`src/lib/practice.ts` is placeholder copy.** The three `How I work` cards are written in a
+    plausible voice, not Rick's, and the claims are about this repo. They need his own words before
+    launch — the file says so at the top.

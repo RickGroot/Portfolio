@@ -16,7 +16,11 @@ export default defineConfig({
 	trailingSlash: 'never',
 	build: { format: 'file', inlineStylesheets: 'auto' },
 
-	integrations: [sitemap({ filter: (page) => !page.includes('/404') })],
+	// /design/* are internal prototypes: noindex, disallowed in robots.txt and
+	// kept out of the sitemap. They are tracked for deletion before launch.
+	integrations: [
+		sitemap({ filter: (page) => !page.includes('/404') && !page.includes('/design/') }),
+	],
 
 	image: { responsiveStyles: true },
 

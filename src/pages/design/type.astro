@@ -1,0 +1,196 @@
+---
+import BaseLayout from '@layouts/BaseLayout.astro';
+
+/*
+ * Type candidate comparison. INTERNAL PROTOTYPE -- noindex, disallowed in
+ * robots.txt and excluded from the sitemap. Delete before launch; it is
+ * tracked as an open item in docs/roadmap.md.
+ *
+ * The brief rejects defaulting to "Inter, Space Grotesk, Sora, or another
+ * predictable pairing without a specific reason", and Space Grotesk 700 is
+ * what currently ships. 2xA -- the closest reference of the seven -- runs
+ * exactly two families: a variable monospace against plain Helvetica. So the
+ * question is not "which grotesque" but "which monospace, against what".
+ *
+ * Every candidate must be self-hostable under a licence that covers a public
+ * portfolio. Redaction was the most on-concept face found (its weights ARE
+ * halftone degradation levels) and is NOT listed: redaction.us grants "free
+ * for personal use", which does not clearly cover a site that advertises
+ * professional availability. That gap is exactly the one closed when Archive
+ * Regular was dropped, and it is not worth reopening.
+ */
+
+interface Candidate {
+	id: string;
+	name: string;
+	licence: string;
+	/** null = not yet downloaded; falls back so the page still renders. */
+	stack: string;
+	why: string;
+	risk: string;
+	installed: boolean;
+}
+
+const candidates: Candidate[] = [
+	{
+		id: 'current',
+		name: 'Space Grotesk 700 (current)',
+		licence: 'SIL OFL — already self-hosted, subset, metric-matched',
+		stack: "'Space Grotesk', var(--font-sans)",
+		why: 'Derives from Space Mono, so it rhymes with the character field. Zero work, already measured for CLS.',
+		risk: 'Named explicitly in the brief as a predictable default to avoid.',
+		installed: true,
+	},
+	{
+		id: 'departure',
+		name: 'Departure Mono',
+		licence: 'SIL OFL — Helena Zhang, verified on departuremono.com',
+		stack: "'Departure Mono', var(--font-mono)",
+		why: 'A pixel/bitmap monospace. It IS the low-resolution signal language rather than alluding to it, and it ships full box-drawing coverage — which would lift the ASCII-only constraint on the character field ramp, because the glyphs would be guaranteed present rather than hoped for.',
+		risk: 'A bitmap face at 100px display size is a strong commitment. It can read as retro-gaming rather than broadcast engineering if it is used for everything instead of headlines only.',
+		installed: false,
+	},
+	{
+		id: 'martian',
+		name: 'Martian Mono',
+		licence: 'SIL OFL — Roman Shamin / Evil Martians, via Google Fonts',
+		stack: "'Martian Mono', var(--font-mono)",
+		why: 'Deliberately brutal and wide, drawn for display rather than for code comfort. It has a sibling grotesque (Martian Grotesk), so display and text could come from one designed system instead of two unrelated families.',
+		risk: 'Wide advance widths mean long titles eat horizontal space fast. CHROMECAST is already the constraint at 6.04em in Space Grotesk.',
+		installed: false,
+	},
+];
+
+const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
+---
+
+<BaseLayout title="Type candidates" noindex={true}>
+	<div class="proto">
+		<header class="proto__head">
+			<p class="proto__flag">Internal prototype — noindex, not for launch</p>
+			<h1>Type candidates</h1>
+			<p class="proto__note">
+				The question is which monospace carries the display role, and against what text face. Faces
+				marked <em>not installed</em> fall back to the generic monospace until their files are
+				downloaded, so judge those rows on the argument, not the rendering.
+			</p>
+		</header>
+
+		{candidates.map((c) => (
+			<section class="cand">
+				<div class="cand__meta">
+					<h2>{c.name}</h2>
+					<p class="cand__licence">{c.licence}</p>
+					{!c.installed && <p class="cand__missing">Not installed — showing fallback</p>}
+				</div>
+
+				<div class="cand__specimens" style={`--stack:${c.stack}`}>
+					{specimens.map((s) => (
+						<p class="cand__display">{s}</p>
+					))}
+					<p class="cand__meta-line">02 / CONNECTED TV DEVELOPER / TRIPLE / ONGOING SINCE 2023</p>
+				</div>
+
+				<dl class="cand__notes">
+					<dt>Why</dt>
+					<dd>{c.why}</dd>
+					<dt>Risk</dt>
+					<dd>{c.risk}</dd>
+				</dl>
+			</section>
+		))}
+	</div>
+</BaseLayout>
+
+<style>
+	.proto {
+		display: grid;
+		gap: var(--s-16);
+		padding-block: var(--s-12) var(--s-24);
+	}
+
+	.proto__flag {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-hot);
+	}
+
+	.proto__head {
+		display: grid;
+		gap: var(--s-3);
+	}
+
+	.proto__note {
+		max-width: var(--measure);
+		color: var(--c-text-dim);
+	}
+
+	.cand {
+		display: grid;
+		gap: var(--s-6);
+		padding-block-start: var(--s-8);
+		border-block-start: 1px solid var(--c-line);
+	}
+
+	.cand__licence {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-dim);
+	}
+
+	.cand__missing {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-meta);
+		color: var(--c-hot);
+	}
+
+	/* Sized the way the panels size it, so this is a fair comparison and not a
+	   specimen poster: container-relative, capped, uppercase, tight. */
+	.cand__specimens {
+		container-type: inline-size;
+	}
+
+	.cand__display {
+		font-family: var(--stack);
+		font-weight: 700;
+		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 15cqi);
+		line-height: 0.92;
+		letter-spacing: -0.04em;
+		text-transform: uppercase;
+	}
+
+	.cand__meta-line {
+		margin-block-start: var(--s-4);
+		font-family: var(--stack);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-dim);
+	}
+
+	.cand__notes {
+		display: grid;
+		grid-template-columns: max-content minmax(0, var(--measure));
+		gap: var(--s-2) var(--s-6);
+		align-items: baseline;
+	}
+
+	.cand__notes dt {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--c-text-mute);
+	}
+
+	.cand__notes dd {
+		margin: 0;
+		color: var(--c-text-dim);
+	}
+</style>
