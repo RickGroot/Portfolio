@@ -289,6 +289,26 @@ if (existsSync(fontDir)) {
 	}
 }
 
+/* ---- 10. Placeholder assets ---------------------------------------------- */
+
+/*
+ * Anything named PLACEHOLDER-* is temporary and must not launch. A warning
+ * rather than a failure, because the site has to build while they are in use --
+ * but a loud one on every run, because the portrait is a photograph of a real
+ * person who is not Rick, sitting beside his name. See src/assets/PLACEHOLDERS.md.
+ */
+{
+	const placeholders = distFiles.filter((f) => /placeholder-/i.test(basename(f)));
+	if (placeholders.length > 0) {
+		const total = placeholders.reduce((n, f) => n + statSync(f).size, 0);
+		warn(
+			`${placeholders.length} placeholder asset(s) in the build (${kb(total)}). ` +
+				`The portrait depicts someone who is not Rick -- see src/assets/PLACEHOLDERS.md. ` +
+				`Replace before launch.`,
+		);
+	}
+}
+
 /* ---- report -------------------------------------------------------------- */
 
 if (AS_JSON) {

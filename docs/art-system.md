@@ -160,9 +160,13 @@ Two full-bleed sections sit between the work panels. They are not the character 
 ordinary images under a CSS treatment: greyscaled, pushed down to 42% brightness, parallaxed, and
 screened with a static dot pattern (`.art__dither`).
 
-`scripts/make-art.mjs` generates the placeholders: an interference field and a flow field, both
-deterministic, both obviously not photographs, so there is no licence question while the real
-photography is outstanding.
+The interlude images are now **photographs**, not generated art — the brief rules out generated
+imagery as the site's identity. They are Unsplash placeholders pending Rick's own photography, and
+`src/assets/PLACEHOLDERS.md` records where each came from and why the portrait in particular must
+not launch.
+
+`scripts/make-art.mjs`, which generated interference and flow fields for this slot, has been
+deleted now that its output is unused.
 
 **Screen at display time, not at bake time.** The first version quantised the source through an
 ordered Bayer dither, which looked right in isolation and was wrong twice over. The dot screen is

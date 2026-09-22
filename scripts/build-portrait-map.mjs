@@ -20,7 +20,7 @@ import sharp from 'sharp';
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
-const SOURCE = 'src/assets/portrait-placeholder.png';
+const SOURCE = 'src/assets/PLACEHOLDER-portrait.jpg';
 const OUT = 'src/generated/portrait-map.ts';
 
 /* Tuning. Echoed into the output so the hash covers them. */

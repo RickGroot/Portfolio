@@ -1,7 +1,19 @@
 # The shared renderer — plan
 
-**Status: approved in principle 2026-09-22, not started.** No code has been written and no existing
-rule has been relaxed. This document exists so the first commit is a considered one.
+**Status: approved 2026-09-22, not started.** No renderer code has been written and no existing rule
+has been relaxed yet.
+
+**Priority shift, same day.** Rick: _"It has to be visually stunning this portfolio, so maybe I'll
+start to put less focus on performance."_ Performance is now explicitly subordinate to visual
+ambition. The budgets below stay as instrumentation — they tell us what a choice costs — but they
+are no longer a veto. A change that looks materially better and costs measurably more is now an
+acceptable trade, made knowingly rather than discovered later.
+
+Two things do **not** relax, because neither is a performance concern:
+
+- **Accessibility.** Contrast, keyboard traversal, reduced motion and axe stay gates.
+- **The document.** Content stays in HTML that survives without JavaScript. That is an
+  accessibility and indexing property, not a speed one.
 
 ## What was decided, and what it costs
 
@@ -54,6 +66,10 @@ The portrait becomes a dithered image rendered on the GPU; the character field i
 - Costs the no-JS hero, the reduced-motion hero, 2.6 KB of working art, and the current LCP element.
   Every one of those would need rebuilding as a static poster image, which is the poster-generation
   work that was cut.
+
+**Still open after the priority shift.** Deprioritising performance removes one argument for A but
+not the main one, which is that a canvas hero is blank without JavaScript. Step 2 of the staged
+plan is identical under both, so this is no longer blocking.
 
 **Recommendation: A.** It keeps the properties that are hard to get back and spends the renderer
 where the brief actually wants it — on recognisable human photography transformed through ordered

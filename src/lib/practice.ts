@@ -13,6 +13,11 @@
  * with the real numbers. Every figure below was measured in this repository and
  * can be re-run from the commands given.
  *
+ * Card 01 previously described cutting the WebGL layer. That was true when it
+ * was written and is no longer, because the renderer was reinstated as a
+ * deliberate trade of performance for visual ambition. A page that says its
+ * claims are checkable cannot carry one that the site itself disproves.
+ *
  * Rick: the facts are yours, the sentences are mine. Rewrite them in your own
  * voice — that is the one thing I cannot do for you.
  */
@@ -27,10 +32,10 @@ export interface Practice {
 export const practice: readonly Practice[] = [
 	{
 		index: '01',
-		title: 'Cut the WebGL layer',
-		body: 'A whole phase was planned around a GPU renderer for the hero. Before building it I measured the reference that inspired it, and it turned out to use no canvas at all — the effect is text in a monospace font. The phase was deleted.',
+		title: 'Fixed what the tools missed',
+		body: 'Selecting text on one case study made it harder to read, not easier: the project’s own brand colour was being used raw as the selection background. Automated accessibility checks do not look at ::selection, so twenty-five green tests had nothing to say about it.',
 		proof:
-			'Two stacked <pre> elements render a frame in 2.22ms. One <span> per cell measured 40.71ms, which is 2.5x over budget on a desktop.',
+			'It measured 1.34:1 against the page. Every accent now passes through an OKLCH lightness floor at build time and the worst case is 6.62:1.',
 	},
 	{
 		index: '02',

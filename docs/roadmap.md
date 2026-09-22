@@ -122,15 +122,16 @@ Nothing on this list may be installed without moving it off the list first.
 
 ## Open items
 
-1. **The hero portrait is a generated placeholder.** `src/assets/portrait-placeholder.png` comes from
-   `scripts/make-placeholder.mjs`. A real photo needs: head-and-shoulders, **eyes visible**, strong
-   directional light, plain background, subject filling ≥60% of frame height, roughly square. Swap
-   the file, then run `node scripts/build-portrait-map.mjs`.
+1. **The hero portrait is a photograph of someone who is not Rick.** `PLACEHOLDER-portrait.jpg` is
+   an Unsplash image, used so the Decode pipeline could be proved against real skin, real hair and
+   real directional light — which the generated CG bust could not do. **It must not launch**: see
+   `src/assets/PLACEHOLDERS.md` for why a stock face beside his name is a claim rather than
+   decoration. Swap the file, then run `node scripts/build-portrait-map.mjs`.
 
-   `src/assets/rick.jpg` cannot be used: sunglasses (no eyes, which is the one feature that makes a
+   `src/assets/rick.jpg` still cannot be used: sunglasses (no eyes, the one feature that makes a
    low-resolution face legible), head at ~7% of frame height, foliage at the same luminance as the
-   subject, and identifiable members of the public in the background. It is now unreferenced and
-   does not ship.
+   subject, and identifiable members of the public in the background. It is unreferenced and does
+   not ship.
 
 2. **NOS is held back on image rights.** Its cover was an ANP Kippa press photo. The entry is
    `draft: true` and carries no cover, so nothing ships. Needs an image Rick owns or is licensed to
@@ -142,11 +143,10 @@ Nothing on this list may be installed without moving it off the list first.
 6. **Stale remote branches** (`develop`, `first_site`, `sveltekit`) still to be pruned, which makes
    the old `icov` blobs and the 2021 "fix: remove public info" commit unreachable.
 7. **Firebase console follow-ups** — see `README.md` § Security.
-8. **The art interludes are generated placeholders.** `src/assets/art/signal.webp` and `field.webp`
-   come from `scripts/make-art.mjs`. They exist so the layout can be judged against real images
-   rather than grey boxes, and they are meant to be replaced by Rick's photography. Replacing them
-   is a file swap plus the import in `src/pages/index.astro`; delete the generator once they are
-   gone.
+8. **The art interludes are Unsplash placeholders.** `art/PLACEHOLDER-signal.jpg` and
+   `PLACEHOLDER-field.jpg` replace the generated fields, because the brief rules out generated
+   imagery as the site's identity. `check-assets` warns about every `PLACEHOLDER-` asset on each
+   run. Replacing them is a file swap plus the imports in `src/pages/index.astro`.
 9. **`/design/*` are internal prototypes and must not launch.** They are noindex, disallowed in
    `robots.txt` and excluded from the sitemap, but they are still built. Delete the directory once a
    direction is chosen.
