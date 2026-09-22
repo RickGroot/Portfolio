@@ -12,3 +12,6 @@ test-results/
 
 # Local blocklist for check-assets. Stays on this machine.
 scripts/blocklist.local.txt
+
+# Local dev-server config: holds a machine-specific Node path.
+.claude/launch.json
