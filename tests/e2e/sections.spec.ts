@@ -123,10 +123,22 @@ test.describe('one-page sections', () => {
 							.sort((a, b) => a.d - b.d)[0]?.id ?? '',
 				);
 
+			const scrollY = (): Promise<number> => page.evaluate(() => Math.round(window.scrollY));
+
 			await settle();
 			const visited = [await atTop()];
 			for (let i = 1; i < SECTIONS.length; i++) {
+				const from = await scrollY();
 				await page.keyboard.press('PageDown');
+				// The smooth scroll starts a frame or two after the key press, and
+				// later under load -- so "two equal readings" alone cannot tell "has
+				// not started" from "has finished", and under parallel load it
+				// recorded the same section five times running. Wait for the page to
+				// leave where it was first. A press that never moves it is exactly
+				// the failure this test exists to catch, so that times out loudly.
+				await expect
+					.poll(scrollY, { message: `PageDown ${i} did not move the page at all`, timeout: 8000 })
+					.not.toBe(from);
 				await settle();
 				visited.push(await atTop());
 			}

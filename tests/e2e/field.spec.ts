@@ -158,7 +158,15 @@ test.describe('character field', () => {
 
 		// ~60 renders in 2s at 30fps. Two loops would roughly double it; a lost
 		// throttle would push it to ~120; a dead loop would leave it near zero.
-		expect(renders, `${renders} renders in 2s — expected ~60 (30fps)`).toBeGreaterThan(35);
+		//
+		// The floor catches the DEAD loop, so it sits well above zero and well
+		// below a starved one. It used to be 35, and eight parallel browsers
+		// sharing the CPU measured 32, 34 and 35 -- a live, throttled loop running
+		// at half speed because it was starved, failing a check meant for one that
+		// had stopped. Contention only ever lowers this count, so the ceiling is
+		// unaffected, and two loops are caught by maxPending below, which counts
+		// concurrently scheduled frames and does not move with load.
+		expect(renders, `${renders} renders in 2s — expected ~60 (30fps)`).toBeGreaterThan(15);
 		expect(renders, `${renders} renders in 2s — expected ~60 (30fps)`).toBeLessThan(95);
 		expect(maxPending, 'more than one frame scheduled at a time').toBeLessThanOrEqual(1);
 	});

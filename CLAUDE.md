@@ -78,7 +78,7 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 | Initial JS, homepage        | ≤ 20 KB gzip                                              |
 | Deferred art renderer chunk | ≤ 25 KB gzip — a trip-wire, not an allowance              |
 | Total JS, homepage          | ≤ 45 KB gzip                                              |
-| LCP / CLS                   | < 2.5 s / < 0.1, plus a 1200 ms LCP trip-wire             |
+| LCP / CLS                   | < 2.5 s / < 0.1, plus an 1800 ms LCP trip-wire            |
 | Canvas elements             | **0**, asserted on every route                            |
 | WebGL contexts              | **0** — the art is text; there is no GPU path             |
 | Animation loops             | **exactly 1**, throttled to 30fps, stopped when offscreen |

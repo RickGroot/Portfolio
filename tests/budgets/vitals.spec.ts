@@ -130,12 +130,26 @@ const CLS_BUDGET = 0.1;
 
 /*
  * A trip-wire well under the allowance, so the budget has teeth rather than
- * being decoration -- the same reasoning as the 8 KB field-chunk gate. The
- * Set from observed data: the median at 4x throttle is ~840ms, so this leaves
- * roughly 1.8x of headroom over normal variance while still failing long
- * before the 2500ms budget does.
+ * being decoration -- the same reasoning as the 8 KB field-chunk gate.
+ *
+ * LCP on the homepage is BIMODAL under 4x throttle, and this was first
+ * calibrated against only one of the modes. The LCP element is the character
+ * field, and which of its two layers counts is a race: sometimes the
+ * server-rendered frame (layer a) is the largest paint, sometimes the live
+ * field's first render (layer b) is -- and that one waits for JavaScript.
+ *
+ * Measured 2026-09-23, identical bytes, median-of-3 per run:
+ *   fast mode   ~840-1030ms   (layer a, or an early layer b)
+ *   slow mode  ~1240-1470ms   (layer b after the JS boot)
+ * Swapping the portrait back to the previous one reproduced both modes, and
+ * removing each newly added section did not remove the slow one, so neither is
+ * the cause. The first trip-wire of 1500 sat 28ms above a slow-mode reading --
+ * a gate that close to its own noise fails at random and then gets ignored.
+ *
+ * 1800 sits above the slow mode with margin and still fails well before the
+ * 2500ms budget. The race itself is worth fixing: see docs/roadmap.md.
  */
-const LCP_TRIPWIRE = 1500;
+const LCP_TRIPWIRE = 1800;
 
 /*
  * Tagged @vitals and EXCLUDED from `pnpm test`, which runs 8 workers in
