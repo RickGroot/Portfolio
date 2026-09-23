@@ -147,3 +147,14 @@
 .section[data-overflows] {
 	align-content: start;
 }
+
+/*
+ * A section carrying a full-bleed backdrop image. Isolated so a z-index of -1
+ * on the backdrop lands above the section's own background rather than below
+ * it -- without a stacking context, a negative z-index child paints beneath its
+ * positioned parent's background and simply disappears.
+ */
+.section--backdrop {
+	isolation: isolate;
+	overflow: clip;
+}

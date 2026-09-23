@@ -163,4 +163,4 @@ proved on one photograph and one section before it generalises.
    each step.
 
 Real photography is a prerequisite for step 2 and does not currently exist. The interludes and the
-portrait are generated placeholders, and the brief rules those out as the site's identity.
+portrait are now Rick's own photographs, so step 2 is unblocked.

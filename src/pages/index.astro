@@ -5,8 +5,11 @@ import Section from '@components/Section.astro';
 import WorkPanel from '@components/WorkPanel.astro';
 import ArtSection from '@components/ArtSection.astro';
 import { practice } from '@lib/practice';
-import artSignal from '@assets/art/PLACEHOLDER-signal.jpg';
-import artField from '@assets/art/PLACEHOLDER-field.jpg';
+import { Image } from 'astro:assets';
+import artSignal from '@assets/art/lighthouse.jpg';
+import artField from '@assets/art/tower.jpg';
+import talkPhoto from '@assets/talk.jpg';
+import aboutPhoto from '@assets/about.jpg';
 import TagList from '@components/TagList.astro';
 import SocialLinks from '@components/SocialLinks.astro';
 import { getFeaturedWork, getPublishedWork, formatPeriod } from '@lib/work';
@@ -91,14 +94,31 @@ const rail = [
 	<ArtSection
 		id="interlude-signal"
 		image={artSignal}
-		alt="An interference pattern resolving into concentric structure."
+		alt="A lighthouse and a small group of people silhouetted against a sunset over a bay."
+		focus="40% 50%"
+		brightness={0.68}
 		statement="A TV app has to feel fast on hardware that shipped years before the app did."
 		caption="Interlude / Signal"
 		tone="cool"
 	/>
 
 	{/* ---- How I work ---- */}
-	<Section id="practice" label="How I work" index="03">
+	<Section id="practice" label="How I work" index="03" class="section--backdrop">
+		{/* Rick presenting, standing at the left; his three points sit to his */}
+		{/* right on wide screens, so the cards never cover his face. The slide */}
+		{/* and both audience members are blurred in the source file itself. */}
+		<div class="practice__backdrop">
+			<Image
+				src={talkPhoto}
+				alt="Rick giving a talk about AI-assisted development."
+				widths={[800, 1200, 1600]}
+				sizes="100vw"
+				loading="lazy"
+				decoding="async"
+			/>
+			<span class="practice__dither" aria-hidden="true"></span>
+			<span class="practice__scrim" aria-hidden="true"></span>
+		</div>
 		<p class="practice__lede">
 			Three things that happened while building this site, with the numbers.
 		</p>
@@ -131,8 +151,9 @@ const rail = [
 	<ArtSection
 		id="interlude-field"
 		image={artField}
-		alt="A field of layered contour bands warped into a flowing structure."
-		statement="Every measurement quoted on this site can be re-run from the repository."
+		alt="A stone clock tower against a bright, empty sky."
+		focus="36% 45%"
+		statement="Every measurement quoted on this site can be re‑run from the repository."
 		caption="Interlude / Field"
 		tone="hot"
 	/>
@@ -140,27 +161,40 @@ const rail = [
 	{/* ---- Contact ---- */}
 	<Section id="contact" label="Contact" index="05">
 		<div class="contact">
-			<p class="lede">
-				Email is easiest. Happy to talk about Connected TV work — or the trumpet, if you would
-				rather.
-			</p>
-			<SocialLinks />
+			<div class="contact__text">
+				<p class="lede">
+					Email is easiest. Happy to talk about Connected TV work — or the trumpet, if you would
+					rather.
+				</p>
+				<SocialLinks />
 
-			{also.length > 0 && (
-				<div class="also">
-					<h3 class="also__title">Also shipped</h3>
-					<ul>
-						{also.map((e) => (
-							<li>
-								<a href={`/work/${e.id}`}>{e.data.title}</a>
-								<span>
-									{e.data.role} · {e.data.company} · {formatPeriod(e)}
-								</span>
-							</li>
-						))}
-					</ul>
-				</div>
-			)}
+				{also.length > 0 && (
+					<div class="also">
+						<h3 class="also__title">Also shipped</h3>
+						<ul>
+							{also.map((e) => (
+								<li>
+									<a href={`/work/${e.id}`}>{e.data.title}</a>
+									<span>
+										{e.data.role} · {e.data.company} · {formatPeriod(e)}
+									</span>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</div>
+			<figure class="contact__photo">
+				<Image
+					src={aboutPhoto}
+					alt="Rick Groot, smiling, on a bridge by a canal."
+					widths={[500, 800, 1000]}
+					sizes="(min-width: 52rem) 30vw, 90vw"
+					loading="lazy"
+					decoding="async"
+				/>
+				<span class="contact__dither" aria-hidden="true"></span>
+			</figure>
 		</div>
 	</Section>
 
@@ -261,6 +295,56 @@ const rail = [
 
 	/* ---- How I work: a three-up horizontal grid --------------------------- */
 
+	/* The talk, full-bleed behind the section. Positioned against .section, */
+	/* which is the nearest positioned ancestor; .section--backdrop isolates it */
+	/* so a z-index of -1 lands above the section's own background instead of */
+	/* below it. */
+	.practice__backdrop {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		overflow: clip;
+	}
+
+	.practice__backdrop :global(img) {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		/* Rick sits at ~18% across; on a phone this keeps him in the narrow */
+		/* centre band a cover crop leaves. */
+		object-position: 18% 45%;
+		filter: grayscale(1) contrast(1.15) brightness(0.5);
+	}
+
+	.practice__dither {
+		position: absolute;
+		inset: 0;
+		background-image:
+			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
+			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
+		background-size: 3px 3px;
+		opacity: 0.7;
+	}
+
+	/* Darker where the text is, lighter where Rick is. */
+	.practice__scrim {
+		position: absolute;
+		inset: 0;
+		background:
+			linear-gradient(
+				to bottom,
+				color-mix(in oklab, var(--c-bg) 72%, transparent) 0 24%,
+				transparent 48%
+			),
+			linear-gradient(
+				to right,
+				transparent 0 22%,
+				color-mix(in oklab, var(--c-bg) 62%, transparent) 46%
+			);
+	}
+
 	.practice__lede {
 		font-size: var(--t-lg);
 		color: var(--c-text-dim);
@@ -312,8 +396,8 @@ const rail = [
 		color: var(--c-text-dim);
 	}
 
-	/* The checkable detail. Set apart, because it is the thing that stops the
-	   card being a slogan. */
+	/* The checkable detail. Set apart, because it is the thing that stops the */
+	/* card being a slogan. */
 	.practice__proof {
 		margin-block-start: var(--s-2);
 		padding-block-start: var(--s-3);
@@ -322,9 +406,9 @@ const rail = [
 		color: var(--c-text-mute);
 	}
 
-	/* Three stacked cards will always exceed a phone, and that is fine -- the
-	   advance script scrolls an overflowing section normally before advancing.
-	   Tightened so the overshoot is a short scroll rather than a long one. */
+	/* Three stacked cards will always exceed a phone, and that is fine -- the */
+	/* advance script scrolls an overflowing section normally before advancing. */
+	/* Tightened so the overshoot is a short scroll rather than a long one. */
 	@media (max-width: 51.99rem) {
 		.practice {
 			gap: var(--s-3);
@@ -351,6 +435,50 @@ const rail = [
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 			gap: var(--s-4);
 		}
+
+		.practice__item {
+			padding: var(--s-4);
+			gap: var(--s-2);
+		}
+
+		.practice__title {
+			font-size: var(--t-lg);
+		}
+
+		.practice__body {
+			font-size: var(--t-sm);
+		}
+
+		.practice__proof {
+			font-size: var(--t-xs);
+		}
+	}
+
+	/* Four columns, cards in the last three: the first is left clear for Rick, */
+	/* so he is presenting his three points rather than hidden behind them. Only */
+	/* from 76rem, because below that the cards get too narrow: 1024x768 */
+	/* overran by 60px and 1152x720 by 19px. Tablets get three full-width columns over the backdrop. */
+	@media (min-width: 76rem) {
+		.practice {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+
+		.practice__item:first-child {
+			grid-column: 2;
+		}
+	}
+
+	/* A 720px-tall desktop is the shortest one in common use, and the four-column */
+	/* layout overran it by 21px. Tightened only where the height is actually */
+	/* short, rather than shrinking the type for every screen to pay for it. */
+	@media (min-width: 76rem) and (max-height: 760px) {
+		.practice {
+			margin-block-start: var(--s-4);
+		}
+
+		.practice__item {
+			padding: var(--s-3) var(--s-4);
+		}
 	}
 
 	/* ---- Contact --------------------------------------------------------- */
@@ -358,7 +486,55 @@ const rail = [
 	.contact {
 		display: grid;
 		gap: var(--s-8);
+		align-items: start;
+	}
+
+	.contact__text {
+		display: grid;
+		gap: var(--s-8);
 		max-width: var(--measure);
+	}
+
+	.contact__photo {
+		position: relative;
+		margin: 0;
+		overflow: clip;
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--c-line);
+		aspect-ratio: 4 / 5;
+		/* On a phone the photo stacks under the text; at full width it pushed the */
+		/* last section 104px past the screen. Supporting, not the headline. */
+		max-inline-size: min(16rem, 100%);
+	}
+
+	.contact__photo :global(img) {
+		display: block;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		filter: grayscale(1) contrast(1.1);
+	}
+
+	.contact__dither {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-image:
+			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
+			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
+		background-size: 3px 3px;
+		opacity: 0.55;
+	}
+
+	@media (min-width: 52rem) {
+		.contact {
+			grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+		}
+
+		.contact__photo {
+			justify-self: end;
+			max-inline-size: 26rem;
+		}
 	}
 
 	.also__title {

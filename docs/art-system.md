@@ -157,37 +157,39 @@ written down rather than hidden by disabling the art.
 ## The art interludes
 
 Two full-bleed sections sit between the work panels. They are not the character field — they are
-ordinary images under a CSS treatment: greyscaled, pushed down to 42% brightness, parallaxed, and
-screened with a static dot pattern (`.art__dither`).
+photographs under a CSS treatment: greyscaled, pushed down, parallaxed, and screened with a static
+dot pattern (`.art__dither`).
 
-The interlude images are now **photographs**, not generated art — the brief rules out generated
-imagery as the site's identity. They are Unsplash placeholders pending Rick's own photography, and
-`src/assets/PLACEHOLDERS.md` records where each came from and why the portrait in particular must
-not launch.
+They are Rick's own photographs — a lighthouse at sunset for _Signal_, a clock tower for _Field_ —
+chosen by dithering all twelve candidates rather than looking at them. See `src/assets/IMAGES.md`.
 
-`scripts/make-art.mjs`, which generated interference and flow fields for this slot, has been
-deleted now that its output is unused.
+Two props exist because real photographs are not uniform:
 
-**Screen at display time, not at bake time.** The first version quantised the source through an
-ordered Bayer dither, which looked right in isolation and was wrong twice over. The dot screen is
-already applied in CSS, so baking one in doubled it. And high-frequency noise is the worst possible
-input for a lossy encoder: `check-assets` failed the build at **507 KB** for one backdrop. Removing
-the baked dither took the same image to **67 KB** with no visible difference, because the CSS
-overlay was doing the work anyway — and it does it at a period tied to CSS pixels rather than to
-whichever `srcset` candidate the browser picked.
+- **`brightness`** — how far the image is pushed down, default `0.42`. That default was tuned for
+  generated art that was close to white. A sunset silhouette is already dark, and at `0.42` the sky
+  went black; the lighthouse uses `0.68`.
+- **`focus`** — the `object-position` of the cover crop. A phone shows a narrow centre band of a
+  landscape photograph, so an off-centre subject gets cut away unless the crop is told where to
+  look. The clock tower sits left of centre.
 
-**The source is WebP, not PNG.** Lossless PNG of an interference field is ~1.1 MB; the rings near
-each wave source are genuinely high-frequency and do not compress. These are placeholders bound for
-git history. Astro re-encodes to WebP regardless, and the page then greyscales, darkens and screens
-the result, so q92 generation loss has nothing left to show by the time it reaches the screen.
-1.6 MB of sources became 141 KB with output unchanged.
+**Screen at display time, not at bake time.** An earlier version quantised its source through an
+ordered Bayer dither, which looked right in isolation and was wrong twice over: the dot screen is
+already applied in CSS, so it doubled; and high-frequency noise is the worst input a lossy encoder
+can get — `check-assets` failed the build at **507 KB** for one backdrop that was **67 KB** without
+it. Keep sources photographic and let the page apply the screen.
 
 ## Changing the portrait
 
-1. Replace `src/assets/portrait-placeholder.png`.
+1. Replace `src/assets/portrait.jpg`.
 2. `node scripts/build-portrait-map.mjs`
 3. Commit the regenerated `src/generated/portrait-map.ts`.
 
 The source needs: head-and-shoulders, **eyes visible** (the single feature that makes a
-low-resolution face legible), strong directional light, a plain background well separated in
-luminance, subject filling ≥60% of frame height, roughly square.
+low-resolution face legible), strong directional light, and **a dark or plain background**. That
+last one is not a nicety. Every lit cell gets a glyph, so a mid-tone background turns the portrait
+into a textured rectangle with a face somewhere in it; the face has to come out of empty field.
+
+**Current state: interim.** `portrait.jpg` is a face crop from the talk photo with a soft
+elliptical matte, because its background is lit. The photo worth taking: facing a window after
+dark or on an overcast day, a plain dark wall behind, no cap, one side of the face lit and the other
+in shadow. Two minutes with a phone.

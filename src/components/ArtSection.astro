@@ -10,9 +10,27 @@ interface Props {
 	caption: string;
 	/** Which accent the treatment leans on. */
 	tone?: 'cool' | 'hot' | undefined;
+	/**
+	 * The object-position that keeps the subject in frame. A full-bleed cover
+	 * image on a phone shows a narrow centre band of a landscape photograph, so
+	 * a subject that is off-centre -- the clock tower -- gets cut away unless the
+	 * crop is told where to look.
+	 */
+	focus?: string | undefined;
+	/** How far the photograph is pushed down. Bright images take the default. */
+	brightness?: number | undefined;
 }
 
-const { id, image, alt, statement, caption, tone = 'cool' } = Astro.props;
+const {
+	id,
+	image,
+	alt,
+	statement,
+	caption,
+	tone = 'cool',
+	focus = '50% 50%',
+	brightness = 0.42,
+} = Astro.props;
 ---
 
 <section
@@ -20,7 +38,7 @@ const { id, image, alt, statement, caption, tone = 'cool' } = Astro.props;
 	class="art"
 	aria-labelledby={`${id}-heading`}
 	data-section
-	style={`--art-tone: var(--c-${tone});`}
+	style={`--art-tone: var(--c-${tone}); --art-focus: ${focus}; --art-brightness: ${brightness};`}
 >
 	<h2 id={`${id}-heading`} class="visually-hidden">
 		Interlude
@@ -76,9 +94,10 @@ const { id, image, alt, statement, caption, tone = 'cool' } = Astro.props;
 		inline-size: 100%;
 		block-size: 124%;
 		object-fit: cover;
+		object-position: var(--art-focus);
 		/* Pushed well down and tinted, so it reads as a treated surface rather */
 		/* than a photograph someone forgot to style. */
-		filter: grayscale(1) contrast(1.25) brightness(0.42);
+		filter: grayscale(1) contrast(1.25) brightness(var(--art-brightness));
 	}
 
 	/* Parallax, deeper than the project panels -- an interlude should feel like

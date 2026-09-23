@@ -122,16 +122,9 @@ Nothing on this list may be installed without moving it off the list first.
 
 ## Open items
 
-1. **The hero portrait is a photograph of someone who is not Rick.** `PLACEHOLDER-portrait.jpg` is
-   an Unsplash image, used so the Decode pipeline could be proved against real skin, real hair and
-   real directional light — which the generated CG bust could not do. **It must not launch**: see
-   `src/assets/PLACEHOLDERS.md` for why a stock face beside his name is a claim rather than
-   decoration. Swap the file, then run `node scripts/build-portrait-map.mjs`.
-
-   `src/assets/rick.jpg` still cannot be used: sunglasses (no eyes, the one feature that makes a
-   low-resolution face legible), head at ~7% of frame height, foliage at the same luminance as the
-   subject, and identifiable members of the public in the background. It is unreferenced and does
-   not ship.
+1. **The hero portrait is interim.** `portrait.jpg` is a matted face crop from a photo of Rick giving
+   a talk — real, but not taken for this. A purpose-shot portrait is pending; what it needs is in
+   `docs/art-system.md` § Changing the portrait.
 
 2. **NOS is held back on image rights.** Its cover was an ANP Kippa press photo. The entry is
    `draft: true` and carries no cover, so nothing ships. Needs an image Rick owns or is licensed to
@@ -143,13 +136,19 @@ Nothing on this list may be installed without moving it off the list first.
 6. **Stale remote branches** (`develop`, `first_site`, `sveltekit`) still to be pruned, which makes
    the old `icov` blobs and the 2021 "fix: remove public info" commit unreachable.
 7. **Firebase console follow-ups** — see `README.md` § Security.
-8. **The art interludes are Unsplash placeholders.** `art/PLACEHOLDER-signal.jpg` and
-   `PLACEHOLDER-field.jpg` replace the generated fields, because the brief rules out generated
-   imagery as the site's identity. `check-assets` warns about every `PLACEHOLDER-` asset on each
-   run. Replacing them is a file swap plus the imports in `src/pages/index.astro`.
+8. **A trumpet photo is pending** for the music beat the brief asks for. None of the supplied
+   photographs has one. Rick's own instrument on a dark surface under one lamp; a generated one is
+   the fallback, not the plan.
 9. **`/design/*` are internal prototypes and must not launch.** They are noindex, disallowed in
    `robots.txt` and excluded from the sitemap, but they are still built. Delete the directory once a
    direction is chosen.
 10. **`src/lib/practice.ts` is placeholder copy.** The three `How I work` cards are written in a
     plausible voice, not Rick's, and the claims are about this repo. They need his own words before
     launch — the file says so at the top.
+11. **Homepage LCP is decided by a race.** The LCP element is the character field, and which layer
+    counts varies run to run: the server-rendered frame (layer a) paints early, but the live field's
+    first render (layer b) can cover a larger area and replace it as the LCP candidate once
+    JavaScript has booted. Under 4x throttle that makes LCP bimodal — ~840–1030ms or ~1240–1470ms on
+    identical bytes. The trip-wire sits above the slow mode so the gate is honest, but the real fix
+    is to stop the live render registering as a new, later LCP: keep its painted box no larger than
+    the static frame's.
