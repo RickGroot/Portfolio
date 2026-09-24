@@ -42,25 +42,54 @@ field, its own number. Delivered in stages, each ending with Rick's review.
 
 | Stage                                                                    | State                      |
 | ------------------------------------------------------------------------ | -------------------------- |
-| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done — awaiting review** |
+| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done**                   |
+| 1b. The programme guide — work, case studies, no header, deep grounds    | **Done — awaiting review** |
 | 2. Channels on the DOM — channel readout, tuning wipe, number keys       | Next                       |
 | 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | —                          |
 | 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                          |
 | 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                          |
 | 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | —                          |
 
+**Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
+at all, the case studies did not look good, full-screen red and blue were too bright, and there
+should be no header — it should feel like an app. Of three candidates rendered at full size (a
+lower third per project, a programme guide, a TV home screen) he chose the guide.
+
+- **The work is a TV programme guide** (`src/components/Guide.astro`): one row per channel, one
+  block per programme spanning its time on air, a NOW line at today and a live clock. The programme
+  in focus is previewed above the grid and the whole screen retunes to its channel; arrow keys move
+  through it like a remote. It replaces the three project sections, and it lists every published
+  entry — KIJK included — so the "Also shipped" list and the `featured` flag are gone.
+- **Scrolling steps through the guide first** (Rick's follow-up): each scroll, swipe or Page Down
+  moves to the next programme, and only a scroll past the last one moves the page on; arriving from
+  below starts at the last programme. The section advance asks a section first with a cancelable
+  `section:step` event, so any section can have steps; one trackpad flick is one step. Off under
+  reduced motion and wherever the guide is taller than the screen, where scrolling just scrolls.
+- Deep links land instantly. They used to glide from the top, because smooth scrolling was on
+  before the browser jumped to the fragment, so a case study's Guide link rolled the hero past.
+- **Case studies are programme-information screens** (`WorkLayout.astro`): the key art on a
+  screen, the facts as a labelled block, the story beside them, channel up/down, and the guide
+  strip along the bottom with the current programme lit. Escape or Backspace goes back.
+- **No site header.** The one-pager opens on the hero; a case study carries a Guide button.
+- **Deep grounds.** Full-screen red and blue became crimson and ultramarine; the primaries are signal
+  colours that print the key art's highlights and mark the interface. Photos print as a two-tone,
+  shadows in the ground and highlights in the signal. The yellow interlude and the paper sections
+  stay as they are.
+- Found on the way: the field's IntersectionObserver read `entries[0]`, so under load a fast scroll
+  left the animation loop running offscreen; it now reads the latest entry.
+
 **Stage 1, what changed:**
 
-- **`src/lib/channels.ts` is the only source of colour.** Six channels (ink, paper, yellow, blue,
-  red, navy) on the Broadcast primaries palette. Each channel's mark — ink or paper, whichever reads —
+- **`src/lib/channels.ts` is the only source of colour.** Six channels on the Broadcast primaries
+  palette (since stage 1b: ink, paper, yellow, crimson, ultramarine, navy). Each channel's mark — ink or paper, whichever reads —
   its dimmed mark and its accent are solved at build time, and the build fails below 4.5:1. Mint and
   amber are gone. `src/lib/accent.ts` is deleted.
 - **Everything that darkened the page is deleted**: the grain overlay, per-section washes and
   vignettes, the alternating darker ground, drop shadows, text shadows, and every
   `brightness(0.42–0.68)` on a photograph.
 - **Photos print in their channel's two colours** (`.duo`, CSS `mix-blend-mode`) and come back in
-  their own colours under the pointer. A cover can be printed as a negative (`coverInvert`) where a
-  positive print would come out as a block of the wrong colour.
+  their own colours under the pointer. A cover can be printed as a negative where a positive print
+  would come out as a block of the wrong colour (`coverTone`, since stage 1b).
 - **Text that crosses a picture sits on a plate of the field** — a broadcast lower third — instead
   of a scrim or a shadow.
 - **Martian Mono 700** is the display face, with a measured monospace fallback. Space Grotesk is gone.
@@ -73,7 +102,9 @@ field, its own number. Delivered in stages, each ending with Rick's review.
   loaded; a stale "overflowing" flag could collapse a work panel's picture to nothing; and Astro 7.3
   backgrounds `astro preview` when an AI agent runs it, which broke the test server. All fixed, and
   the first three are now tested.
-- Homepage LCP under 4× throttle: **552 ms** (was bimodal, 840–1470 ms). CLS 0.
+- Homepage LCP under 4× throttle: **552 ms** at the end of stage 1 (was bimodal, 840–1470 ms). CLS 0.
+  After stage 1b it measured 1236–1332 ms: inside the 1800 ms trip-wire, in the slow mode of the race
+  in open item 11. The canvas renderer in stage 3 is expected to settle it.
 
 **Done:**
 
@@ -101,7 +132,8 @@ field, its own number. Delivered in stages, each ending with Rick's review.
 - **Restructured to a one-pager.** Eight full-height sections in one document, with the work detail
   routes kept: `/work/[slug]` still deep-links, shares and renders without JS. `Section.astro` is
   the shell `Chapter.astro` was going to be.
-- Screen-filling work panels with scroll-driven parallax, and two art interludes between them.
+- ~~Screen-filling work panels with scroll-driven parallax~~ (replaced by the programme guide in stage
+  1b), and two art interludes between them.
 - `How I work` — a three-item grid on AI-driven development.
 - Work detail pages rebuilt in the one-pager's language. They were still the Phase 1 layout: an
   untreated colour cover, a sentence-case heading and no accent, so the view transition morphed a

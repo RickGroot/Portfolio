@@ -1,11 +1,20 @@
 ---
 import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
-import TagList from '@components/TagList.astro';
-import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
-import { channelStyle, NEGATIVE_PRINT } from '@lib/channels';
+import Guide from '@components/Guide.astro';
+import { formatPeriod, getPublishedWork, type PublishedWorkEntry } from '@lib/work';
+import { channelStyle, coverPrint } from '@lib/channels';
 import { vt } from '@lib/vt';
 
+/**
+ * A case study, as the programme-information screen of the guide it came from.
+ *
+ * Same channel, same picture, same title -- the view transition carries the
+ * guide's preview straight into this page -- and the guide itself runs along
+ * the bottom with this programme lit, so moving to the next piece of work is
+ * changing channel rather than going back to a list. There is no site header;
+ * the way out is the Guide button, or Escape, like the Back key on a remote.
+ */
 interface Props {
 	entry: PublishedWorkEntry;
 	index: string;
@@ -14,463 +23,476 @@ interface Props {
 }
 
 const { entry, index, prev, next } = Astro.props;
-const { title, role, company, summary, tags, channel, cover, coverAlt, coverInvert, links } =
+const { title, role, company, summary, tags, channel, cover, coverAlt, coverTone, links, status } =
 	entry.data;
+const all = await getPublishedWork();
+const lastYear = entry.data.period.split('–').pop();
+const numberOf = (e: PublishedWorkEntry): string =>
+	String(all.findIndex((w) => w.id === e.id) + 1).padStart(2, '0');
 ---
 
-{/* Two channels: the entry's own for the page and its hero -- the same field */}
-{/* its panel carries on the one-pager, so the cover lands in the colour it */}
-{/* left -- and paper for the reading, where the long text gets 16.65:1. */}
 <BaseLayout title={title} description={summary} channel={channel}>
-	<article class="case">
-		<header class="case__hero" data-channel={channel} style={channelStyle(channel)}>
-			<div class="case__media" style={`view-transition-name:${vt('cover', entry.id)}`}>
-				<span class="case__frame duo" style={coverInvert ? NEGATIVE_PRINT : undefined}>
-					<Image
-						src={cover}
-						alt={coverAlt}
-						widths={[900, 1600, 2400]}
-						sizes="100vw"
-						loading="eager"
-						fetchpriority="high"
-					/>
+	<article class="info" data-channel={channel} style={channelStyle(channel)}>
+		<div class="info__chrome wrap">
+			<a class="info__back" href="/#work" data-back>
+				<span aria-hidden="true">←</span> Guide
+				<span class="keyhint" aria-hidden="true">
+					Esc
 				</span>
-				<span class="case__bracket case__bracket--tl" aria-hidden="true"></span>
-				<span class="case__bracket case__bracket--tr" aria-hidden="true"></span>
-				<span class="case__bracket case__bracket--bl" aria-hidden="true"></span>
-				<span class="case__bracket case__bracket--br" aria-hidden="true"></span>
+			</a>
+			<p class="info__osd" aria-hidden="true">
+				CH {index} <b>{title.split(' ')[0]}</b>
+			</p>
+		</div>
+
+		<header class="info__head wrap">
+			<div
+				class="info__screen duo"
+				style={`view-transition-name:${vt('cover', entry.id)};${coverPrint(channel, coverTone) ?? ''}`}
+			>
+				<Image
+					src={cover}
+					alt={coverAlt}
+					widths={[800, 1280, 1920]}
+					sizes="(min-width: 64rem) 56vw, 100vw"
+					loading="eager"
+					fetchpriority="high"
+				/>
 			</div>
 
-			<div class="case__headline wrap">
-				<p class="case__meta">
-					<span class="case__index" aria-hidden="true">
-						{index}
-					</span>
-					<span class="case__bars" aria-hidden="true">
-						<i></i>
-						<i></i>
-						<i></i>
-						<i></i>
-					</span>
-					<span>{role}</span>
-					<span class="case__sep" aria-hidden="true">
-						/
-					</span>
-					<span>{company}</span>
-					<span class="case__sep" aria-hidden="true">
-						/
-					</span>
-					<span>{formatPeriod(entry)}</span>
+			<div class="info__titles">
+				<p class="info__status">
+					{status === 'ongoing' ? (
+						<span class="onair onair--live">On air</span>
+					) : (
+						<span class="onair onair--ended">Ended {lastYear}</span>
+					)}
 				</p>
-				<div class="case__titlebox">
-					<h1 class="case__title" style={`view-transition-name:${vt('title', entry.id)}`}>
-						<span class="case__plate">{title}</span>
+				<div class="info__titlebox">
+					<h1 class="info__title" style={`view-transition-name:${vt('title', entry.id)}`}>
+						{title}
 					</h1>
 				</div>
+				<p class="info__lede">{summary}</p>
+				{links.length > 0 && (
+					<ul class="info__actions">
+						{links.map((l, i) => (
+							<li>
+								<a
+									class:list={['tvbtn', { 'tvbtn--solid': i === 0 }]}
+									href={l.href}
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									{l.label}
+									<span aria-hidden="true">↗</span>
+									<span class="visually-hidden">(opens in a new tab)</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
 			</div>
 		</header>
 
-		<div class="case__reading" data-channel="paper" style={channelStyle('paper')}>
-			<div class="case__body wrap">
-				<p class="case__lede" data-reveal>
-					{summary}
-				</p>
-				<div data-reveal>
-					<TagList tags={tags} />
+		<div class="info__main wrap">
+			{/* The labelled key/value block, 2xA-style: facts, not prose. */}
+			<dl class="info__facts">
+				<div>
+					<dt>Channel</dt>
+					<dd>{index}</dd>
 				</div>
-
-				<div class="prose" data-reveal>
-					<slot />
+				<div>
+					<dt>Role</dt>
+					<dd>{role}</dd>
 				</div>
+				<div>
+					<dt>Company</dt>
+					<dd>{company}</dd>
+				</div>
+				<div>
+					<dt>On air</dt>
+					<dd>{formatPeriod(entry)}</dd>
+				</div>
+				<div>
+					<dt>Stack</dt>
+					<dd>{tags.join(' / ')}</dd>
+				</div>
+			</dl>
 
-				{links.length > 0 && (
-					<div class="case__links" data-reveal>
-						<h2 class="visually-hidden">Project links</h2>
-						<ul>
-							{links.map((l) => (
-								<li>
-									<a href={l.href} target="_blank" rel="noopener noreferrer">
-										{l.label}
-										<span aria-hidden="true"> ↗</span>
-										<span class="visually-hidden"> (opens in a new tab)</span>
-									</a>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
+			<div class="info__body prose">
+				<slot />
 			</div>
+		</div>
 
-			<nav class="case__nav wrap" aria-label="Work">
-				<a class="case__back" href={`/#${entry.id}`}>
-					<span aria-hidden="true">←</span> Back to the overview
-				</a>
-				<div class="case__sequence">
-					{prev && (
-						<a class="case__step" href={`/work/${prev.id}`} rel="prev">
-							<span class="case__stepplate" style={channelStyle(prev.data.channel)}>
-								<span class="case__steplabel">Previous</span>
-								<span class="case__steptitle">{prev.data.title}</span>
+		{(prev || next) && (
+			<nav class="info__zap wrap" aria-label="Other programmes">
+				{prev && (
+					<a class="info__step" href={`/work/${prev.id}`} rel="prev">
+						<span class="info__plate" style={channelStyle(prev.data.channel)}>
+							<span class="info__steplabel">
+								<span aria-hidden="true">◂</span> CH {numberOf(prev)}
 							</span>
-						</a>
-					)}
-					{next && (
-						<a class="case__step case__step--next" href={`/work/${next.id}`} rel="next">
-							<span class="case__stepplate" style={channelStyle(next.data.channel)}>
-								<span class="case__steplabel">Next</span>
-								<span class="case__steptitle">{next.data.title}</span>
+							<span class="info__steptitle">{prev.data.title}</span>
+						</span>
+					</a>
+				)}
+				{next && (
+					<a class="info__step info__step--next" href={`/work/${next.id}`} rel="next">
+						<span class="info__plate" style={channelStyle(next.data.channel)}>
+							<span class="info__steplabel">
+								CH {numberOf(next)} <span aria-hidden="true">▸</span>
 							</span>
-						</a>
-					)}
-				</div>
+							<span class="info__steptitle">{next.data.title}</span>
+						</span>
+					</a>
+				)}
 			</nav>
+		)}
+
+		<div class="info__guide">
+			<Guide entries={all} form="strip" current={entry.id} />
 		</div>
 	</article>
 </BaseLayout>
 
+<script>
+	/*
+	 * Escape and Backspace go back to the guide, like the Back key on a remote.
+	 * Straight back through history when the visitor came from the one-pager,
+	 * so the guide is where they left it; otherwise to the guide itself.
+	 * Never while typing, and never when something else already took the key.
+	 */
+	const back = document.querySelector<HTMLAnchorElement>('[data-back]');
+
+	function cameFromGuide(): boolean {
+		if (!document.referrer) return false;
+		const ref = new URL(document.referrer);
+		return ref.origin === location.origin && ref.pathname === '/' && history.length > 1;
+	}
+
+	if (back) {
+		back.addEventListener('click', (ev) => {
+			if (!cameFromGuide()) return;
+			ev.preventDefault();
+			history.back();
+		});
+
+		window.addEventListener('keydown', (ev) => {
+			if (ev.key !== 'Escape' && ev.key !== 'Backspace') return;
+			if (ev.defaultPrevented || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+			const el = ev.target as HTMLElement | null;
+			if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+			ev.preventDefault();
+			if (cameFromGuide()) history.back();
+			else location.assign(back.href);
+		});
+	}
+</script>
+
 <style>
-	/* ---- the hero: the same treatment as a panel, at full width ---------- */
+	/* ---- the screen ------------------------------------------------------- */
 
-	/* The same treatment as the panel it came from, at full width: the cover */
-	/* printed in the entry's channel, so the view transition morphs a picture */
-	/* into the same picture rather than into a different treatment of it. */
-	.case__hero {
-		position: relative;
-		display: grid;
-		align-content: end;
-		min-block-size: min(78svh, 720px);
+	/* Full bleed, so the channel's ground runs edge to edge; children re-wrap. */
+	.info {
 		margin-inline: calc(50% - 50vw);
-		padding-block-end: var(--s-12);
-		overflow: clip;
-		isolation: isolate;
+		padding-block: var(--s-6) 0;
 	}
 
-	.case__media {
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-	}
+	/* ---- chrome: the way back, and where you are --------------------------- */
 
-	.case__frame {
-		position: absolute;
-		inset: 0;
-		display: block;
-		overflow: clip;
-	}
-
-	.case__media :global(img) {
-		position: absolute;
-		inset-inline: 0;
-		inset-block-start: -8%;
-		inline-size: 100%;
-		block-size: 116%;
-		object-fit: cover;
-	}
-
-	/* Parallax, matching the panels. Scroll-driven, transform only, zero JS. */
-	@media (prefers-reduced-motion: no-preference) {
-		@supports (animation-timeline: view()) {
-			.case__media :global(img) {
-				animation: case-parallax linear both;
-				animation-timeline: view();
-				animation-range: cover 0% cover 100%;
-			}
-		}
-	}
-
-	@keyframes case-parallax {
-		from {
-			translate: 0 -6%;
-		}
-		to {
-			translate: 0 6%;
-		}
-	}
-
-	.case__bracket {
-		position: absolute;
-		z-index: 2;
-		inline-size: 26px;
-		block-size: 26px;
-		pointer-events: none;
-		border-color: var(--accent);
-		opacity: 0.85;
-	}
-
-	.case__bracket--tl {
-		inset-block-start: 16px;
-		inset-inline-start: 16px;
-		border-block-start: 2px solid;
-		border-inline-start: 2px solid;
-	}
-	.case__bracket--tr {
-		inset-block-start: 16px;
-		inset-inline-end: 16px;
-		border-block-start: 2px solid;
-		border-inline-end: 2px solid;
-	}
-	.case__bracket--bl {
-		inset-block-end: 16px;
-		inset-inline-start: 16px;
-		border-block-end: 2px solid;
-		border-inline-start: 2px solid;
-	}
-	.case__bracket--br {
-		inset-block-end: 16px;
-		inset-inline-end: 16px;
-		border-block-end: 2px solid;
-		border-inline-end: 2px solid;
-	}
-
-	/* ---- headline -------------------------------------------------------- */
-
-	/* The meta line and the title sit on the cover, each on a plate of the */
-	/* field -- a broadcast lower third. The plates replace a scrim that kept */
-	/* them legible by darkening the whole photograph. */
-	.case__headline {
-		position: relative;
-		display: grid;
-		justify-items: start;
-		gap: var(--s-3);
-	}
-
-	.case__meta {
-		inline-size: fit-content;
-		padding: var(--s-2) var(--s-3);
-		background: var(--field);
+	.info__chrome {
 		display: flex;
-		flex-wrap: wrap;
-		gap: var(--s-2) var(--s-3);
 		align-items: center;
+		justify-content: space-between;
+		gap: var(--s-4);
+		min-block-size: 3rem;
+	}
+
+	/* App chrome, not a header: pinned to the corner of the screen, on a plate */
+	/* of the channel so it stays legible over the picture as the page scrolls. */
+	.info__back {
+		position: fixed;
+		z-index: var(--z-nav);
+		inset-block-start: var(--s-4);
+		inset-inline-start: var(--s-4);
+		display: inline-flex;
+		align-items: center;
+		gap: var(--s-3);
+		min-block-size: 44px;
+		padding-inline: var(--s-4);
+		background: var(--field);
+		border: 2px solid var(--mark);
+		color: var(--mark);
 		font-family: var(--font-mono);
-		font-size: var(--t-xs);
+		font-size: var(--t-sm);
+		font-weight: 700;
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--mark-dim);
+		text-decoration: none;
+		transition:
+			background-color var(--speed) var(--ease),
+			color var(--speed) var(--ease);
 	}
 
-	.case__index {
+	.info__back:hover,
+	.info__back:focus-visible {
+		background: var(--mark);
+		color: var(--field);
+	}
+
+	.info__osd {
+		margin-inline-start: auto;
+		font-family: var(--font-display);
 		font-size: var(--t-lg);
-		font-weight: 700;
+		letter-spacing: 0.04em;
+		color: var(--mark);
+	}
+
+	.info__osd b {
+		margin-inline-start: 0.5em;
 		color: var(--accent);
-		line-height: 1;
+		text-transform: uppercase;
 	}
 
-	.case__sep {
-		color: var(--mark-dim);
+	/* ---- head: the picture, and what it is --------------------------------- */
+
+	.info__head {
+		display: grid;
+		gap: var(--s-6);
+		margin-block-start: var(--s-6);
 	}
 
-	/* Same container-query sizing as the panels: an element cannot be its own
-	   container, and `overflow-wrap: break-word` from the reset will split a
-	   word in half rather than let it overflow. */
-	.case__titlebox {
+	.info__screen {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		overflow: clip;
+		border: 2px solid var(--accent);
+	}
+
+	.info__screen :global(img) {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		transition: filter var(--speed-slow) var(--ease-out);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.info__screen :global(img) {
+			animation: info-push 24s ease-in-out infinite alternate;
+		}
+	}
+
+	@keyframes info-push {
+		from {
+			scale: 1.02;
+		}
+		to {
+			scale: 1.1;
+			translate: -1.5% -1%;
+		}
+	}
+
+	.info__screen::before,
+	.info__screen::after {
+		transition: opacity var(--speed-slow) var(--ease-out);
+	}
+
+	.info__screen:hover::before,
+	.info__screen:hover::after {
+		opacity: 0;
+	}
+
+	.info__screen:hover :global(img) {
+		filter: none;
+	}
+
+	.info__titles {
+		display: grid;
+		align-content: end;
+		justify-items: start;
+		gap: var(--s-4);
+		min-inline-size: 0;
+	}
+
+	.info__titlebox {
+		inline-size: 100%;
 		container-type: inline-size;
 	}
 
-	.case__titlebox {
-		inline-size: 100%;
-	}
-
-	/* 14cqi for the same reason as the panel title: CHROMECAST is 6.8em in */
-	/* Martian Mono at -0.02em tracking, plus the plate. */
-	.case__title {
-		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 14cqi);
-		line-height: 0.92;
+	/* 14cqi: CHROMECAST is 6.8em in Martian Mono at the display tracking. */
+	.info__title {
+		font-size: min(clamp(2.75rem, 1rem + 6vw, 7rem), 14cqi);
+		line-height: 0.88;
 		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
 	}
 
-	.case__plate {
-		padding-inline-end: 0.15em;
-		background: var(--field);
-		box-decoration-break: clone;
-		-webkit-box-decoration-break: clone;
-	}
-
-	/* ---- idle signal bars, as on the panels ------------------------------ */
-
-	.case__bars {
-		display: inline-flex;
-		align-items: flex-end;
-		gap: 2px;
-		block-size: 0.9em;
-	}
-
-	.case__bars i {
-		inline-size: 2px;
-		block-size: 100%;
-		background: var(--accent);
-		transform-origin: 50% 100%;
-		scale: 1 0.35;
-		animation: case-bars 2.6s ease-in-out infinite;
-	}
-
-	.case__bars i:nth-child(1) {
-		animation-duration: 1.7s;
-		animation-delay: -0.4s;
-	}
-	.case__bars i:nth-child(2) {
-		animation-duration: 2.3s;
-		animation-delay: -1.1s;
-	}
-	.case__bars i:nth-child(3) {
-		animation-duration: 3.1s;
-		animation-delay: -0.7s;
-	}
-	.case__bars i:nth-child(4) {
-		animation-duration: 1.9s;
-		animation-delay: -1.9s;
-	}
-
-	@keyframes case-bars {
-		0%,
-		100% {
-			scale: 1 0.3;
-		}
-		50% {
-			scale: 1 1;
-		}
-	}
-
-	/* ---- body ------------------------------------------------------------ */
-
-	/* Full bleed, so the paper runs edge to edge; its children re-wrap. */
-	.case__reading {
-		margin-inline: calc(50% - 50vw);
-	}
-
-	.case__body {
-		display: grid;
-		gap: var(--s-6);
-		padding-block: var(--s-12) var(--s-8);
-	}
-
-	.case__lede {
-		max-width: var(--measure);
+	.info__lede {
+		max-inline-size: 40rem;
 		font-size: var(--t-lg);
 		line-height: 1.45;
-		color: var(--mark);
-		border-inline-start: 3px solid var(--mark);
-		padding-inline-start: var(--s-4);
+		text-wrap: pretty;
 	}
 
-	.case__body :global(.prose) {
-		max-width: var(--measure);
-	}
-
-	/* ---- links ----------------------------------------------------------- */
-
-	.case__links ul {
+	.info__actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--s-3);
+		gap: var(--s-4);
 		list-style: none;
 		padding: 0;
+		margin-block-start: var(--s-2);
 	}
 
-	.case__links a {
-		position: relative;
-		display: inline-block;
-		padding: var(--s-3) var(--s-4);
-		border: 1px solid var(--accent);
-		color: var(--accent);
-		text-decoration: none;
-		overflow: clip;
-		transition:
-			background-color var(--speed) var(--ease),
-			color var(--speed) var(--ease),
-			translate var(--speed) var(--ease);
-	}
+	/* ---- main: the facts, and the story ------------------------------------ */
 
-	.case__links a:hover,
-	.case__links a:focus-visible {
-		background: var(--accent);
-		color: var(--field);
-		translate: 0 -2px;
-	}
-
-	/* ---- sequence: this is one of several, not a dead end ---------------- */
-
-	.case__nav {
+	.info__main {
 		display: grid;
-		gap: var(--s-6);
-		padding-block: var(--s-8) var(--s-16);
+		gap: var(--s-8);
+		margin-block-start: var(--s-12);
+		padding-block-start: var(--s-8);
 		border-block-start: 1px solid var(--line);
 	}
 
-	.case__back {
-		font-size: var(--t-sm);
-		color: var(--mark-dim);
-		text-underline-offset: 0.3em;
-	}
-
-	.case__back:hover,
-	.case__back:focus-visible {
-		color: var(--accent);
-	}
-
-	.case__sequence {
+	.info__facts {
 		display: grid;
-		gap: var(--s-4);
-	}
-
-	/* Each step is a preview of the channel it goes to: channel up, channel */
-	/* down. The colours sit on an inner plate, not on the link, so the link's */
-	/* focus ring stays in the reading channel's mark -- a ring in the */
-	/* destination's paper mark would vanish against this paper. */
-	.case__step {
-		display: grid;
-		text-decoration: none;
-		transition: translate var(--speed) var(--ease);
-	}
-
-	.case__stepplate {
-		display: grid;
-		gap: var(--s-1);
-		padding: var(--s-4);
-		background: var(--field);
-		color: var(--mark);
-	}
-
-	.case__step:hover,
-	.case__step:focus-visible {
-		translate: 0 -3px;
-	}
-
-	.case__steplabel {
+		gap: var(--s-3);
+		align-content: start;
+		margin: 0;
 		font-family: var(--font-mono);
+		font-size: var(--t-sm);
+	}
+
+	.info__facts div {
+		display: grid;
+		grid-template-columns: 6.5rem minmax(0, 1fr);
+		gap: var(--s-3);
+		padding-block-end: var(--s-3);
+		border-block-end: 1px solid var(--line);
+	}
+
+	.info__facts dt {
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--mark-dim);
+		color: var(--accent);
+		padding-block-start: 0.15em;
 	}
 
-	.case__steptitle {
+	.info__facts dd {
+		margin: 0;
+		color: var(--mark);
+	}
+
+	.info__body {
+		font-size: var(--t-base);
+		line-height: 1.7;
+	}
+
+	.info__body :global(strong) {
+		color: var(--accent);
+		font-weight: 700;
+	}
+
+	.info__body :global(a) {
+		color: var(--accent);
+	}
+
+	/* ---- zap: channel down, channel up ------------------------------------- */
+
+	.info__zap {
+		display: grid;
+		gap: var(--s-4);
+		margin-block-start: var(--s-16);
+	}
+
+	/* The colours sit on an inner plate, not on the link, so the link's focus */
+	/* ring stays in this page's mark -- a ring in the destination's colours */
+	/* could vanish against this ground. */
+	.info__step {
+		display: grid;
+		text-decoration: none;
+		transition: scale var(--speed) var(--ease);
+	}
+
+	.info__step:hover,
+	.info__step:focus-visible {
+		scale: 1.02;
+	}
+
+	.info__plate {
+		display: grid;
+		gap: var(--s-2);
+		padding: var(--s-4) var(--s-6);
+		background: var(--field);
+		color: var(--mark);
+		border: 2px solid var(--accent);
+	}
+
+	.info__steplabel {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		font-weight: 700;
+		letter-spacing: var(--tracking-meta);
+		color: var(--accent);
+	}
+
+	.info__steptitle {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: var(--t-lg);
+		font-size: var(--t-xl);
+		line-height: 1;
 		letter-spacing: var(--tracking-display);
+		text-transform: uppercase;
 	}
 
-	.case__step--next {
+	.info__step--next {
 		text-align: end;
 	}
 
+	.info__step--next .info__plate {
+		justify-items: end;
+	}
+
+	/* ---- the guide, along the bottom --------------------------------------- */
+
+	.info__guide {
+		margin-block-start: var(--s-12);
+		padding-block: var(--s-8) var(--s-12);
+		border-block-start: 1px solid var(--line);
+	}
+
+	/* ---- wide screens ------------------------------------------------------- */
+
 	@media (min-width: 48rem) {
-		.case__sequence {
+		.info__zap {
 			grid-template-columns: 1fr 1fr;
 		}
 
 		/* A lone "next" belongs on the right, where next always is. */
-		.case__step--next:only-child {
+		.info__step--next:only-child {
 			grid-column: 2;
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.case__bars i {
-			animation: none;
-			scale: 1 0.7;
+	@media (min-width: 64rem) {
+		.info__head {
+			grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+			gap: var(--s-12);
+			align-items: end;
+		}
+
+		.info__main {
+			grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+			gap: var(--s-16);
+		}
+
+		/* The facts stay beside the story as it scrolls. */
+		.info__facts {
+			position: sticky;
+			inset-block-start: var(--s-24);
 		}
 	}
 </style>

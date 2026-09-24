@@ -2,7 +2,7 @@
 import BaseLayout from '@layouts/BaseLayout.astro';
 import CharacterField from '@components/CharacterField.astro';
 import Section from '@components/Section.astro';
-import WorkPanel from '@components/WorkPanel.astro';
+import Guide from '@components/Guide.astro';
 import ArtSection from '@components/ArtSection.astro';
 import { practice } from '@lib/practice';
 import { Image } from 'astro:assets';
@@ -12,16 +12,13 @@ import talkPhoto from '@assets/talk.jpg';
 import aboutPhoto from '@assets/about.jpg';
 import TagList from '@components/TagList.astro';
 import SocialLinks from '@components/SocialLinks.astro';
-import { getFeaturedWork, getPublishedWork, formatPeriod } from '@lib/work';
+import { getPublishedWork } from '@lib/work';
 import { skills } from '@lib/skills';
 import { site } from '@lib/site';
 import { channelStyle } from '@lib/channels';
 
-const featured = await getFeaturedWork();
+// Every published entry: the guide is the complete record.
 const published = await getPublishedWork();
-// Non-featured entries keep their copy somewhere, rather than being orphaned
-// now that the /work index page is gone.
-const also = published.filter((e) => !e.data.featured);
 
 /*
  * The rail mirrors the document order exactly. It is built from one list so the
@@ -30,11 +27,9 @@ const also = published.filter((e) => !e.data.featured);
  */
 const rail = [
 	{ id: 'top', label: 'Top' },
-	{ id: featured[0]?.id ?? 'work', label: featured[0]?.data.title ?? 'Work' },
-	{ id: featured[1]?.id ?? 'work-2', label: featured[1]?.data.title ?? 'Work' },
+	{ id: 'work', label: 'Work' },
 	{ id: 'interlude-signal', label: 'Interlude' },
 	{ id: 'practice', label: 'How I work' },
-	{ id: featured[2]?.id ?? 'work-3', label: featured[2]?.data.title ?? 'Work' },
 	{ id: 'interlude-field', label: 'Interlude' },
 	{ id: 'contact', label: 'Contact' },
 ];
@@ -78,30 +73,8 @@ const rail = [
 		</p>
 	</section>
 
-	{/* ---- Work and interludes, interleaved ---- */}
-	{featured[0] && (
-		<Section
-			id={featured[0].id}
-			label={featured[0].data.title}
-			labelHidden={true}
-			channel={featured[0].data.channel}
-			class="section--work"
-		>
-			<WorkPanel entry={featured[0]} index="01" />
-		</Section>
-	)}
-
-	{featured[1] && (
-		<Section
-			id={featured[1].id}
-			label={featured[1].data.title}
-			labelHidden={true}
-			channel={featured[1].data.channel}
-			class="section--work"
-		>
-			<WorkPanel entry={featured[1]} index="02" />
-		</Section>
-	)}
+	{/* ---- Work: the programme guide ---- */}
+	<Guide entries={published} />
 
 	<ArtSection
 		id="interlude-signal"
@@ -116,7 +89,7 @@ const rail = [
 	/>
 
 	{/* ---- How I work ---- */}
-	<Section id="practice" label="How I work" index="03" class="section--backdrop" channel="paper">
+	<Section id="practice" label="How I work" class="section--backdrop" channel="paper">
 		{/* Rick presenting, standing at the left; his three points sit to his */}
 		{/* right on wide screens, so the cards never cover his face. The slide */}
 		{/* and both audience members are blurred in the source file itself. */}
@@ -148,18 +121,6 @@ const rail = [
 		</ol>
 	</Section>
 
-	{featured[2] && (
-		<Section
-			id={featured[2].id}
-			label={featured[2].data.title}
-			labelHidden={true}
-			channel={featured[2].data.channel}
-			class="section--work"
-		>
-			<WorkPanel entry={featured[2]} index="04" />
-		</Section>
-	)}
-
 	{/* U+2060 WORD JOINER holds "re-run" together at a line end. The non-breaking */}
 	{/* hyphen this used before, U+2011, is not in the Martian Mono subset. */}
 	<ArtSection
@@ -169,11 +130,11 @@ const rail = [
 		focus="36% 45%"
 		statement={'Every measurement quoted on this site can be re-\u2060run from the repository.'}
 		caption="Interlude / Field"
-		channel="blue"
+		channel="ultramarine"
 	/>
 
 	{/* ---- Contact ---- */}
-	<Section id="contact" label="Contact" index="05" channel="paper">
+	<Section id="contact" label="Contact" channel="paper">
 		<div class="contact">
 			<div class="contact__text">
 				<p class="lede">
@@ -181,22 +142,6 @@ const rail = [
 					rather.
 				</p>
 				<SocialLinks />
-
-				{also.length > 0 && (
-					<div class="also">
-						<h3 class="also__title">Also shipped</h3>
-						<ul>
-							{also.map((e) => (
-								<li>
-									<a href={`/work/${e.id}`}>{e.data.title}</a>
-									<span>
-										{e.data.role} · {e.data.company} · {formatPeriod(e)}
-									</span>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
 			</div>
 			<figure class="contact__photo duo">
 				<Image
@@ -566,37 +511,6 @@ const rail = [
 			justify-self: end;
 			inline-size: min(26rem, 100%);
 		}
-	}
-
-	.also__title {
-		font-size: var(--t-sm);
-		letter-spacing: var(--tracking-meta);
-		text-transform: uppercase;
-		color: var(--mark-dim);
-		margin-block-end: var(--s-3);
-	}
-
-	.also ul {
-		display: grid;
-		gap: var(--s-3);
-		list-style: none;
-		padding: 0;
-		border-block-start: 1px solid var(--line);
-		padding-block-start: var(--s-4);
-	}
-
-	.also li {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--s-1) var(--s-3);
-		align-items: baseline;
-	}
-
-	.also span {
-		font-size: var(--t-xs);
-		letter-spacing: var(--tracking-meta);
-		text-transform: uppercase;
-		color: var(--mark-dim);
 	}
 
 	@media (prefers-reduced-motion: reduce) {

@@ -115,10 +115,10 @@ See `docs/art-system.md` before touching `src/lib/field/`.
 
 ## Content rule
 
-> `/work` is the complete record: every non-draft entry renders its full body there.
-> `featured: true` additionally earns a dedicated page at `/work/<slug>`.
+> The programme guide is the complete record: every non-draft entry is a programme on it, and has
+> its own page at `/work/<slug>`.
 
-Adding a featured page also requires updating the guard in `src/pages/work/[id].astro`. That is
+Publishing an entry also requires updating the guard in `src/pages/work/[id].astro`. That is
 deliberate friction.
 
 ## Publishing hygiene

@@ -27,22 +27,6 @@
 	scroll-margin-block-start: 0;
 }
 
-/* Work sections stretch rather than centre, so the panel's 1fr media row
-   actually gets the height. Without this the panel collapses to its content
-   and floats as a small island in a full-screen section. */
-.section--work {
-	align-content: stretch;
-	/* Tighter than a text section: every pixel not spent on padding goes to */
-	/* the image, which is the point of the panel. */
-	padding-block: var(--s-8) var(--s-6);
-}
-
-.section--work .section__inner {
-	block-size: 100%;
-	grid-template-rows: auto minmax(0, 1fr);
-	min-block-size: 0;
-}
-
 .section__inner {
 	display: grid;
 	gap: var(--s-8);
@@ -146,18 +130,6 @@
  */
 .section[data-overflows] {
 	align-content: start;
-}
-
-/*
- * ...except a work section, which stretches instead. An overflowing section
- * has no free space for either value to distribute, so the two only differ when
- * the flag is stale -- set at one viewport size and not yet cleared at the next
- * -- and for a work panel `start` is the wrong one: its image row is a 1fr
- * track, and without the stretch it collapses to nothing. Seen at 1440x900
- * after a resize: all three work panels with no picture in them.
- */
-.section--work[data-overflows] {
-	align-content: stretch;
 }
 
 /*

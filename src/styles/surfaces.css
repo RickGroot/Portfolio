@@ -26,28 +26,32 @@
 /*
  * A photograph printed in exactly the channel's two colours.
  *
- * The image goes grey and the field is laid over it with `--duo-blend`:
- * multiply where the mark is dark, so the photograph prints in ink on the
- * field; screen where the mark is light, so it prints in paper. Either way the
- * result is made of the channel's own colours and nothing else, so it cannot
- * read as a darkened photograph laid on a colour -- which is exactly what the
- * previous treatment was.
+ * The image goes grey, then two flat layers print it: the highlight colour
+ * multiplied (white becomes `--duo-hi`, black stays black) and the shadow
+ * colour screened (black becomes `--duo-lo`). On a light channel that is ink
+ * on the field; on a deep channel it is the field in the shadows and the
+ * channel's signal colour in the highlights -- a red NLZIET logo out of
+ * crimson. Either way the result is made of the channel's own colours and
+ * nothing else, so it cannot read as a darkened photograph laid on a colour,
+ * which is exactly what the treatment before the redesign was.
  *
  * This is the no-WebGL image treatment. Put `.duo` on the positioned element
  * that directly holds the <img>.
  *
  * Three levers, set per photograph where it needs them:
- *   --duo-invert    1 prints the photograph as a negative. For a logo on a
- *                   dark background on a multiply channel, where a positive
- *                   print is a dark block with a faint logo in it.
+ *   --duo-invert    1 prints the photograph as a negative: a cover whose tone
+ *                   is the opposite of its field, which would otherwise print
+ *                   as a block of the wrong colour. coverPrint() in
+ *                   src/lib/channels.ts decides; the content only says whether
+ *                   the picture is light or dark.
  *   --duo-lift      brightness before the print. Above 1 pushes mid-tones
- *                   toward the field on a multiply channel, so a sunset sky
- *                   prints as yellow rather than olive.
+ *                   toward the highlight colour, so a sunset sky prints as
+ *                   yellow rather than olive.
  *   --duo-contrast  how hard the two colours separate.
  */
 .duo {
 	isolation: isolate;
-	background: var(--field);
+	background: var(--duo-lo);
 }
 
 .duo img {
@@ -55,14 +59,23 @@
 		contrast(var(--duo-contrast, 1.1));
 }
 
+.duo::before,
 .duo::after {
 	content: '';
 	position: absolute;
 	inset: 0;
 	z-index: 1;
 	pointer-events: none;
-	background: var(--field);
-	mix-blend-mode: var(--duo-blend);
+}
+
+.duo::before {
+	background: var(--duo-hi);
+	mix-blend-mode: multiply;
+}
+
+.duo::after {
+	background: var(--duo-lo);
+	mix-blend-mode: screen;
 }
 
 /* Forced colours swaps the field for a system colour, and a system colour
@@ -72,6 +85,7 @@
 		filter: none;
 	}
 
+	.duo::before,
 	.duo::after {
 		display: none;
 	}

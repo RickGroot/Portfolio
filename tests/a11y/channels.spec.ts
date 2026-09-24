@@ -108,3 +108,18 @@ test('the page chrome changes channel with the section in view, even with reduce
 	await expect.poll(async () => (await chrome()).field).toBe(PALETTE.yellow);
 	expect((await chrome()).theme).toBe(PALETTE.yellow);
 });
+
+test('moving through the programme guide retunes the page chrome', async ({ page }) => {
+	// The guide changes channel while you look at it: the whole screen takes
+	// the colours of the programme in focus, and the fixed chrome has to follow
+	// or it is drawn in a channel that is no longer on screen.
+	await page.goto('/#work');
+	const field = () =>
+		page.evaluate(() => document.documentElement.style.getPropertyValue('--field').trim());
+
+	await expect.poll(field).toBe(PALETTE.crimson);
+	await page.locator('#work [data-block="chromecast"]').hover();
+	await expect.poll(field).toBe(PALETTE.ultramarine);
+	await page.locator('#work [data-block="vamp"]').hover();
+	await expect.poll(field).toBe(PALETTE.navy);
+});

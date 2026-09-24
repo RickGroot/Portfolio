@@ -4,7 +4,7 @@
  * Every full-screen section is a channel with one flat colour field. The
  * "mark" -- the colour of everything drawn on it -- is SOLVED here at build
  * time, never picked by eye, and the build fails if a channel cannot reach
- * WCAG AA. Saturated fields make this non-negotiable: ink on electric blue
+ * WCAG AA. Saturated colours make this non-negotiable: ink on electric blue
  * measures 2.99:1 and paper on the NLZIET red 3.29:1, so a field's mark is
  * not a matter of taste.
  *
@@ -105,12 +105,18 @@ export function mix(a: string, b: string, t: number): string {
 /* ---- the palette ---------------------------------------------------------- */
 
 /**
- * Broadcast primaries: flat fields taken from Rick's own reference video --
- * halftone on yellow, dither on electric blue, the red of a broadcast poster --
- * plus warm paper, ink, and brass for the music work.
+ * Broadcast primaries, from Rick's own reference video -- halftone on yellow,
+ * dither on electric blue, the red of a broadcast poster -- plus warm paper,
+ * ink, and brass for the music work.
  *
- * `red` is NLZIET's own brand colour, so the NLZIET channel is the one place
- * the palette and a client's identity are the same colour.
+ * The saturated primaries are SIGNAL colours, not wallpaper. Full-screen red
+ * and full-screen blue were too bright to live with (Rick, 2026-09-24), so the
+ * channels that carry those hues use a deep ground -- crimson, ultramarine --
+ * and the primary prints the highlights of the picture and marks the interface,
+ * the way a broadcast lower third puts one hot colour over footage.
+ *
+ * `red` is NLZIET's own brand colour: pink on a dark ground is the NLZIET look,
+ * and the crimson channel is the one place the palette and a client meet.
  */
 export const PALETTE = {
 	ink: '#0e0e0e',
@@ -120,17 +126,21 @@ export const PALETTE = {
 	red: '#ff145b',
 	navy: '#0b1233',
 	brass: '#e0a526',
+	/** OKLCH L 0.22 at the red's hue, at the most chroma sRGB allows there. */
+	crimson: '#3a000d',
+	/** OKLCH L 0.22 at the blue's hue, likewise. */
+	ultramarine: '#05005e',
 } as const;
 
-export const CHANNELS = ['ink', 'paper', 'yellow', 'blue', 'red', 'navy'] as const;
+export const CHANNELS = ['ink', 'paper', 'yellow', 'crimson', 'ultramarine', 'navy'] as const;
 export type Channel = (typeof CHANNELS)[number];
 
 const FIELDS: Record<Channel, string> = {
 	ink: PALETTE.ink,
 	paper: PALETTE.paper,
 	yellow: PALETTE.yellow,
-	blue: PALETTE.blue,
-	red: PALETTE.red,
+	crimson: PALETTE.crimson,
+	ultramarine: PALETTE.ultramarine,
 	navy: PALETTE.navy,
 };
 
@@ -144,6 +154,11 @@ const ACCENTS: Partial<Record<Channel, string>> = {
 	ink: PALETTE.yellow,
 	paper: PALETTE.blue,
 	navy: PALETTE.brass,
+	// 4.64:1 -- the NLZIET pink only just clears AA on its own deep ground,
+	// which the solver below re-checks on every build.
+	crimson: PALETTE.red,
+	// None: electric blue on ultramarine is 2.78:1. White on blue it is, which
+	// is also what the reference frame is -- white dither on electric blue.
 };
 
 /** WCAG AA for body text. */
@@ -163,12 +178,17 @@ export interface ChannelColours {
 	line: string;
 	lineLoud: string;
 	/**
-	 * How a photograph takes the channel's two colours. A dark mark multiplies
-	 * (the photo prints in ink on the field); a light mark screens (it prints in
-	 * paper). Either way the image is made of exactly the channel's colours, so
-	 * it can never read as a darkened photo laid on a colour.
+	 * The two ends of a photograph's print (src/styles/surfaces.css .duo):
+	 * shadows print in `duoLo`, highlights in `duoHi`. On a light field the
+	 * photo prints in ink on the field; on a dark field its shadows are the field
+	 * and its highlights the channel's signal colour. Either way the image is
+	 * made of the channel's own colours, so it can never read as a darkened
+	 * photograph laid on a colour.
 	 */
-	blend: 'multiply' | 'screen';
+	duoHi: string;
+	duoLo: string;
+	/** True when the field is the dark end: light marks on a deep ground. */
+	dark: boolean;
 }
 
 function solve(name: Channel): ChannelColours {
@@ -211,6 +231,7 @@ function solve(name: Channel): ChannelColours {
 		);
 	}
 
+	const dark = luminance(mark) > luminance(field);
 	return {
 		field,
 		mark,
@@ -218,7 +239,9 @@ function solve(name: Channel): ChannelColours {
 		accent,
 		line: mix(mark, field, 0.72),
 		lineLoud: mix(mark, field, 0.45),
-		blend: luminance(mark) < 0.5 ? 'multiply' : 'screen',
+		duoHi: dark ? accent : field,
+		duoLo: dark ? field : mark,
+		dark,
 	};
 }
 
@@ -243,18 +266,29 @@ export function channelStyle(name: Channel): string {
 		`--accent:${c.accent}`,
 		`--line:${c.line}`,
 		`--line-loud:${c.lineLoud}`,
-		`--duo-blend:${c.blend}`,
+		`--duo-hi:${c.duoHi}`,
+		`--duo-lo:${c.duoLo}`,
 	].join(';');
 }
 
+/** Whether a picture is mostly light or mostly dark -- see coverPrint(). */
+export type Tone = 'light' | 'dark';
+
 /**
- * How a cover marked `coverInvert` is printed (src/styles/surfaces.css .duo):
- * as a negative, with the contrast pushed harder than a positive print. A logo's
- * dark background only inverts to a light grey, and a light grey multiplied by
- * the field is a duller version of the field -- the extra contrast takes it the
- * rest of the way to the field itself.
+ * How a cover prints on a channel. A print should come out mostly as the
+ * FIELD, and a cover whose tone is the field's opposite would not: a white app
+ * screenshot on a deep ground prints as a bright block, a logo on black on a
+ * light ground as a dark one. Those print as negatives, with the contrast
+ * pushed harder -- a negative's background only inverts to a grey, and the
+ * extra contrast takes it the rest of the way to the field.
+ *
+ * The content says what the picture IS (`coverTone`); this decides what to do
+ * about it, so moving an entry to another channel cannot leave a stale flag.
  */
-export const NEGATIVE_PRINT = '--duo-invert:1;--duo-contrast:1.6';
+export function coverPrint(name: Channel, tone: Tone): string | undefined {
+	const negative = SOLVED[name].dark ? tone === 'light' : tone === 'dark';
+	return negative ? '--duo-invert:1;--duo-contrast:1.45' : undefined;
+}
 
 /** The palette as custom properties, for the <html> element. */
 export function paletteStyle(): string {

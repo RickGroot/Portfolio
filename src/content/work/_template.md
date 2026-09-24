@@ -8,14 +8,15 @@ period: '2024' # or '2022–2025'. First-to-last year, NOT a claim of continuous
 status: completed # or ongoing -> renders as "Ongoing since <period>"
 summary: One sentence, 50-180 characters. This becomes the meta description, so write it for a search result.
 tags: ['Tag one', 'Tag two'] # 1-4. The card layout breaks past four.
-channel: paper # ink, paper, yellow, blue, red or navy. See src/lib/channels.ts.
+channel: crimson # ink, paper, yellow, crimson, ultramarine or navy. See src/lib/channels.ts.
 cover: ../../assets/work/your-image.jpg
 coverAlt: What is actually in the image, for someone who cannot see it.
+coverTone: dark # or light: is the picture mostly dark or mostly light?
 order: 99
-# featured: true   # uncomment to ALSO give this a page at /work/<slug>.
-#                  # You must update the guard in src/pages/work/[id].astro too.
 # draft: true      # hides it everywhere. Use this instead of commenting entries out.
+#                  # Publishing an entry also means updating the guard in
+#                  # src/pages/work/[id].astro -- deliberately.
 ---
 
-The full case study goes here, in Markdown. `/work` renders this body in full for every
-non-draft entry, so nothing you write here is wasted even if the project is not featured.
+The full case study goes here, in Markdown. Every non-draft entry is a programme on the guide
+and renders this body in full on its own page at /work/<slug>.

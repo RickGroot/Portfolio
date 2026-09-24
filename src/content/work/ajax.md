@@ -6,7 +6,7 @@ period: '2021'
 status: completed
 summary: Front-end work on the Ajax webshop during my internship at Triple, and my first real exposure to React and TypeScript in a multidisciplinary team.
 tags: ['React', 'TypeScript', 'Webshop']
-channel: red
+channel: crimson
 # cover removed: src/assets/work/ajax.jpg still needs a provenance check before it
 #   can ship. Restore `cover` + `coverAlt` when cleared, then drop `draft: true`.
 order: 6

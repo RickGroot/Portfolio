@@ -47,8 +47,3 @@ export async function getPublishedWork(): Promise<PublishedWorkEntry[]> {
 
 	return (entries as PublishedWorkEntry[]).sort((a, b) => a.data.order - b.data.order);
 }
-
-/** The subset that earns a dedicated page at /work/<slug>. */
-export async function getFeaturedWork(): Promise<PublishedWorkEntry[]> {
-	return (await getPublishedWork()).filter((e) => e.data.featured);
-}

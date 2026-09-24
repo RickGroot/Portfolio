@@ -6,10 +6,10 @@ period: '2022–2025'
 status: completed
 summary: A responsive Smart TV app experience for the KIJK streaming platform across multiple TV brands, built in Svelte with THEOplayer and advertising integration.
 tags: ['Connected TV', 'Advertisements', 'THEOplayer']
-channel: yellow
+channel: ink
 cover: ../../assets/work/kijk.jpg
 coverAlt: The KIJK logo, an eye shape, on a purple to blue gradient.
-coverInvert: true # a logo on a dark background, on a light channel
+coverTone: dark # a logo on a dark gradient
 order: 4
 ---
 

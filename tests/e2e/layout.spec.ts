@@ -17,9 +17,8 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 	const main = await left('main#main');
 	const h1 = await left('.hero__copy h1');
 	const lede = await left('.hero .lede');
-	// The section's content column, not the panel title -- the title sits in
-	// the right column of a two-column panel and is inset by design.
-	const nlziet = await left('#nlziet .section__inner');
+	// The guide's content column.
+	const work = await left('#work .guide__inner');
 	// Also the content column: the section's '04' index marker sits before the
 	// heading, so the h2 itself is inset by design.
 	const contact = await left('#contact .section__inner');
@@ -27,7 +26,7 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 	for (const [name, x] of [
 		['hero h1', h1],
 		['hero lede', lede],
-		['NLZIET section column', nlziet],
+		['Work guide column', work],
 		['Contact', contact],
 	] as const) {
 		expect(
@@ -89,7 +88,7 @@ test.describe('skip link', () => {
 		await page.goto('/');
 		// Suppressing the ring on the skip destination must not leak to anything
 		// a user can actually operate.
-		for (const selector of ['nav a', 'footer a']) {
+		for (const selector of ['#work [data-block]', 'footer a']) {
 			const style = await page
 				.locator(selector)
 				.first()
@@ -158,7 +157,7 @@ test.describe('display titles fit their column', () => {
 			await page.setViewportSize({ width: v.w, height: v.h });
 
 			await page.goto('/');
-			expect(await offenders(page, '.panel__title'), `one-pager at ${v.w}px`).toEqual([]);
+			expect(await offenders(page, '.guide__title'), `one-pager at ${v.w}px`).toEqual([]);
 
 			for (const slug of ['nlziet', 'chromecast', 'vamp', 'kijk']) {
 				await page.goto(`/work/${slug}`);

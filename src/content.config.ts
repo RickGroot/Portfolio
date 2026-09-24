@@ -66,23 +66,23 @@ const work = defineCollection({
 				coverAlt: z.string().min(1).optional(),
 
 				/**
-				 * Print the cover as a negative. Covers are printed in their
-				 * channel's two colours (src/styles/surfaces.css .duo), and a cover
-				 * should come out mostly as the FIELD. A dark cover on a light
-				 * channel does not: a logo on black prints on the red channel as a
-				 * dark block with a faint logo in it, and a white app screenshot
-				 * prints on the navy channel as a white page. As negatives, both
-				 * print mostly in the channel's own colour.
+				 * Whether the cover is mostly light or mostly dark. Covers are
+				 * printed in their channel's two colours, and a cover whose tone
+				 * is the opposite of its field prints as a negative so it comes
+				 * out mostly as the field -- a white screenshot on a deep ground
+				 * would otherwise be a bright block. This field says what the
+				 * picture IS; coverPrint() in src/lib/channels.ts decides what to
+				 * do about it, so changing an entry's channel cannot leave a
+				 * stale flag behind.
 				 */
-				coverInvert: z.boolean().default(false),
+				coverTone: z.enum(['light', 'dark']).default('dark'),
 
 				links: z
 					.array(z.object({ label: z.string().min(1), href: z.url() }))
 					.max(3)
 					.default([]),
 
-				// `/work` is the complete record. `featured` additionally earns a page.
-				featured: z.boolean().default(false),
+				// The order programmes take on the guide, and their channel numbers.
 				order: z.number().int().nonnegative(),
 
 				// Replaces commenting entries out. Filtered from every getCollection.

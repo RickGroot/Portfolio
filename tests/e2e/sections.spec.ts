@@ -4,16 +4,7 @@ test.use({ viewport: { width: 1280, height: 800 } });
 
 // Document order. The rail is built from the same list in index.astro, so a
 // mismatch here means a rail dot points at an id that moved.
-const SECTIONS = [
-	'top',
-	'nlziet',
-	'chromecast',
-	'interlude-signal',
-	'practice',
-	'vamp',
-	'interlude-field',
-	'contact',
-];
+const SECTIONS = ['top', 'work', 'interlude-signal', 'practice', 'interlude-field', 'contact'];
 
 test.describe('one-page sections', () => {
 	test('every section fills the viewport', async ({ page }) => {
@@ -93,7 +84,7 @@ test.describe('one-page sections', () => {
 				.toBeLessThan(120);
 		});
 
-		test('every section is reachable one advance at a time', async ({ page }) => {
+		test('every section and every programme is reachable one press at a time', async ({ page }) => {
 			await page.goto('/');
 
 			// A fixed wait per press raced the advance script's own 620ms settle:
@@ -115,37 +106,54 @@ test.describe('one-page sections', () => {
 					.toBe(true);
 			};
 
-			const atTop = (): Promise<string> =>
-				page.evaluate(
-					() =>
+			// Where the page is: the section at the top, and on the guide, the
+			// programme in focus -- the guide takes one press per programme before
+			// the page moves on.
+			const where = (): Promise<string> =>
+				page.evaluate(() => {
+					const top =
 						[...document.querySelectorAll<HTMLElement>('[data-section]')]
 							.map((el) => ({ id: el.id, d: Math.abs(el.getBoundingClientRect().top) }))
-							.sort((a, b) => a.d - b.d)[0]?.id ?? '',
-				);
+							.sort((a, b) => a.d - b.d)[0]?.id ?? '';
+					if (top !== 'work') return top;
+					const on = document.querySelector<HTMLElement>('#work [data-preview][data-active]');
+					return `work:${on?.dataset.preview ?? '?'}`;
+				});
 
-			const scrollY = (): Promise<number> => page.evaluate(() => Math.round(window.scrollY));
+			const expected = [
+				'top',
+				'work:nlziet',
+				'work:chromecast',
+				'work:vamp',
+				'work:kijk',
+				...SECTIONS.slice(2),
+			];
 
 			await settle();
-			const visited = [await atTop()];
-			for (let i = 1; i < SECTIONS.length; i++) {
-				const from = await scrollY();
+			const visited = [await where()];
+			for (let i = 1; i < expected.length; i++) {
+				const from = await where();
 				await page.keyboard.press('PageDown');
 				// The smooth scroll starts a frame or two after the key press, and
 				// later under load -- so "two equal readings" alone cannot tell "has
 				// not started" from "has finished", and under parallel load it
 				// recorded the same section five times running. Wait for the page to
-				// leave where it was first. A press that never moves it is exactly
+				// leave where it was first. A press that changes nothing is exactly
 				// the failure this test exists to catch, so that times out loudly.
 				await expect
-					.poll(scrollY, { message: `PageDown ${i} did not move the page at all`, timeout: 8000 })
+					.poll(where, { message: `PageDown ${i} changed nothing`, timeout: 8000 })
 					.not.toBe(from);
 				await settle();
-				visited.push(await atTop());
+				visited.push(await where());
+				// A step through the guide settles sooner than a scroll; wait it out
+				// so the next press is not swallowed by the lock.
+				await page.waitForTimeout(450);
 			}
 
 			// Stronger than "did we get to the end": one press must advance exactly
-			// one section, so the walk has to name every section in document order.
-			expect(visited, 'one press did not advance exactly one section').toEqual(SECTIONS);
+			// one step, so the walk has to name every section and every programme
+			// in order.
+			expect(visited, 'one press did not advance exactly one step').toEqual(expected);
 		});
 
 		test('typing in a field is never hijacked', async ({ page }) => {
@@ -162,7 +170,19 @@ test.describe('one-page sections', () => {
 			// smooth, so let that finish before sampling -- otherwise the tail of
 			// the focus scroll is misread as the key press moving the page.
 			// Polled rather than fixed: the document grew and a fixed wait no
-			// longer covers the travel.
+			// longer covers the travel. And first until the input is actually on
+			// screen: under load the focus scroll starts late, and two equal
+			// readings taken before it starts looked exactly like it had finished.
+			await expect
+				.poll(
+					() =>
+						page.evaluate(() => {
+							const r = document.getElementById('probe')?.getBoundingClientRect();
+							return !!r && r.top >= 0 && r.bottom <= window.innerHeight;
+						}),
+					{ message: 'the focused input never scrolled into view', timeout: 8000 },
+				)
+				.toBe(true);
 			let settled = -1;
 			await expect
 				.poll(
@@ -211,89 +231,193 @@ test.describe('one-page sections', () => {
 		expect(unnamed, 'rail dots without an accessible name').toBe(0);
 	});
 
-	test('deep links still land on the right section', async ({ page }) => {
-		await page.goto('/#vamp');
-		await expect
-			.poll(
-				async () =>
-					page.evaluate(() => {
-						const el = document.getElementById('vamp');
-						return el ? Math.abs(Math.round(el.getBoundingClientRect().top)) : 99999;
-					}),
-				{ message: '/#vamp did not land on the VAMP section', timeout: 6000 },
-			)
-			.toBeLessThan(140);
+	// Instantly, not eventually: the page used to glide to the fragment from the
+	// top, because smooth scrolling was switched on before the browser jumped.
+	// A case study's Guide link rolled the whole hero past on the way back.
+	test('deep links land on the right section, instantly', async ({ page }) => {
+		for (const id of ['practice', 'work']) {
+			// A fresh load each time: a goto that only changes the hash is an
+			// in-page jump, which is meant to be smooth.
+			await page.goto('about:blank');
+			await page.goto(`/#${id}`);
+			const top = await page.evaluate(
+				(target) =>
+					Math.abs(
+						Math.round(document.getElementById(target)?.getBoundingClientRect().top ?? 99999),
+					),
+				id,
+			);
+			expect(top, `/#${id} did not land on its section at load`).toBeLessThan(140);
+		}
 	});
 });
 
-test.describe('work panels', () => {
-	test('the cover comes back in its own colours on hover and on keyboard focus', async ({
-		page,
-	}) => {
-		await page.goto('/#nlziet');
-		await page.waitForTimeout(600);
+/**
+ * The programme guide: every piece of work as a programme on a TV guide.
+ * Focus follows the pointer and the keyboard, the screen retunes to the
+ * programme in focus, and the arrow keys move through it like a remote.
+ */
+test.describe('programme guide', () => {
+	const active = (page: import('@playwright/test').Page) =>
+		page.evaluate(() => ({
+			preview: document.querySelector<HTMLElement>('#work [data-preview][data-active]')?.dataset
+				.preview,
+			channel: document.getElementById('work')?.dataset.channel,
+			focus: document.querySelector<HTMLElement>('#work [data-block][data-focus]')?.dataset.block,
+		}));
 
-		// At rest the cover is printed in the channel's two colours: a grey
-		// image under a field-coloured overlay (surfaces.css .duo). Revealed,
-		// the overlay is gone and the image is back in colour.
-		const frame = page.locator('#nlziet .panel__frame').first();
-		const state = async (): Promise<{ overlay: number; filter: string }> =>
-			frame.evaluate((el) => ({
-				overlay: Number(getComputedStyle(el, '::after').opacity),
+	test('lists every published programme, each linking to its own case study', async ({ page }) => {
+		await page.goto('/');
+		const hrefs = await page
+			.locator('#work [data-block]')
+			.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+		// KIJK never had a panel and still gets a programme: the guide is the
+		// complete record, which the old one-pager needed a separate list for.
+		expect(hrefs).toEqual(['/work/nlziet', '/work/chromecast', '/work/vamp', '/work/kijk']);
+	});
+
+	test('the preview and the channel follow the pointer and the keyboard', async ({ page }) => {
+		await page.goto('/#work');
+		expect(await active(page)).toEqual({ preview: 'nlziet', channel: 'crimson', focus: 'nlziet' });
+
+		await page.locator('#work [data-block="chromecast"]').hover();
+		expect(await active(page)).toEqual({
+			preview: 'chromecast',
+			channel: 'ultramarine',
+			focus: 'chromecast',
+		});
+
+		// Keyboard parity: focus does exactly what hover does.
+		await page.mouse.move(0, 0);
+		await page.locator('#work [data-block="kijk"]').focus();
+		expect(await active(page)).toEqual({ preview: 'kijk', channel: 'ink', focus: 'kijk' });
+	});
+
+	test('arrow keys move between programmes like a remote', async ({ page }) => {
+		await page.goto('/#work');
+		await page.locator('#work [data-block="nlziet"]').focus();
+		const focused = () =>
+			page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.block);
+
+		await page.keyboard.press('ArrowDown');
+		expect(await focused()).toBe('chromecast');
+		await page.keyboard.press('ArrowDown');
+		expect(await focused()).toBe('vamp');
+		await page.keyboard.press('ArrowUp');
+		expect(await focused()).toBe('chromecast');
+		// Moving through the guide is not advancing the page.
+		expect(
+			await page.evaluate(() =>
+				Math.abs(Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 999)),
+			),
+		).toBeLessThan(140);
+	});
+
+	test('scrolling steps through the programmes before the page moves on', async ({ page }) => {
+		await page.goto('/#work');
+		await page.mouse.move(640, 60);
+		const top = () =>
+			page.evaluate(() =>
+				Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 9999),
+			);
+
+		for (const id of ['chromecast', 'vamp', 'kijk']) {
+			await page.mouse.wheel(0, 120);
+			await expect.poll(async () => (await active(page)).preview).toBe(id);
+			expect(await top(), `the page moved while stepping to ${id}`).toBe(0);
+			await page.waitForTimeout(500);
+		}
+
+		// Past the last programme the page moves on to the next section.
+		await page.mouse.wheel(0, 120);
+		await expect.poll(top, { timeout: 6000 }).toBeLessThan(-400);
+	});
+
+	test('coming back up from below starts at the last programme', async ({ page }) => {
+		await page.goto('/#interlude-signal');
+		await page.mouse.move(640, 60);
+		await page.mouse.wheel(0, -120);
+		await expect
+			.poll(() =>
+				page.evaluate(() =>
+					Math.abs(
+						Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 9999),
+					),
+				),
+			)
+			.toBeLessThan(4);
+		expect((await active(page)).preview).toBe('kijk');
+
+		await page.waitForTimeout(800);
+		await page.mouse.wheel(0, -120);
+		await expect.poll(async () => (await active(page)).preview).toBe('vamp');
+	});
+
+	test('the picture comes back in its own colours under the pointer', async ({ page }) => {
+		await page.goto('/#work');
+		const screen = page.locator('#work [data-preview][data-active] .guide__screen');
+		const state = () =>
+			screen.evaluate((el) => ({
+				print: Number(getComputedStyle(el, '::before').opacity),
 				filter: getComputedStyle(el.querySelector('img') as Element).filter,
 			}));
 
 		const rest = await state();
-		expect(rest.overlay, 'the duotone overlay should be on at rest').toBeGreaterThan(0.9);
-		expect(rest.filter, 'the cover should be grey at rest').toContain('grayscale(1)');
+		expect(rest.print, 'the two-tone print should be on at rest').toBeGreaterThan(0.9);
+		expect(rest.filter, 'the picture should be grey at rest').toContain('grayscale(1)');
 
-		await page.locator('#nlziet .panel__title a').first().hover();
+		await screen.hover();
 		await page.waitForTimeout(700);
-		let now = await state();
-		expect(now.overlay, 'the duotone did not clear on hover').toBeLessThan(0.1);
-		expect(now.filter, 'the cover stayed grey on hover').toBe('none');
-
-		// Keyboard parity: focusing the title must do the same thing.
-		await page.mouse.move(0, 0);
-		await page.waitForTimeout(700);
-		await page.locator('#nlziet .panel__title a').first().focus();
-		await page.waitForTimeout(700);
-		now = await state();
-		expect(now.overlay, 'the duotone did not clear on focus').toBeLessThan(0.1);
-		expect(now.filter, 'the cover stayed grey on focus').toBe('none');
+		const revealed = await state();
+		expect(revealed.print, 'the print did not come off on hover').toBeLessThan(0.1);
+		expect(revealed.filter, 'the picture stayed grey on hover').toBe('none');
 	});
 
-	// The overflow flag is set at one viewport size and cleared at the next, so
-	// for a moment it can be stale. On a work section a stale flag once switched
-	// the grid from stretch to start, and the picture's 1fr row collapsed to
-	// nothing: three panels with no picture in them after a resize.
-	test('a work panel keeps its picture even while flagged as overflowing', async ({ page }) => {
+	// The overflow flag can be stale for a moment after a resize. On the old
+	// work panels a stale flag collapsed the picture to nothing.
+	test('the preview keeps its picture even while flagged as overflowing', async ({ page }) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
-		await page.goto('/#nlziet');
+		await page.goto('/#work');
 		const height = await page.evaluate(() => {
-			const section = document.getElementById('nlziet');
+			const section = document.getElementById('work');
 			if (!section) return 0;
 			section.dataset.overflows = '';
-			return section.querySelector('.panel__media')?.getBoundingClientRect().height ?? 0;
+			return (
+				section.querySelector('[data-preview][data-active] .guide__screen')?.getBoundingClientRect()
+					.height ?? 0
+			);
 		});
-		// Above the 300px floor the media always keeps: this is the stretch, not the floor.
-		expect(height, 'the panel picture collapsed under a stale overflow flag').toBeGreaterThan(400);
+		expect(height, 'the preview picture collapsed under a stale overflow flag').toBeGreaterThan(
+			250,
+		);
 	});
 
-	test('the decorative media link is hidden from assistive technology', async ({ page }) => {
-		await page.goto('/#nlziet');
-		const media = page.locator('#nlziet .panel__media').first();
-		// Two links to one destination is noise for a screen reader; the title
-		// is the real one.
-		await expect(media).toHaveAttribute('aria-hidden', 'true');
-		await expect(media).toHaveAttribute('tabindex', '-1');
-	});
-
-	test('each panel still links to its own deep-linkable case study', async ({ page }) => {
-		await page.goto('/');
-		for (const id of ['nlziet', 'chromecast', 'vamp']) {
-			const href = await page.locator(`#${id} .panel__title a`).first().getAttribute('href');
-			expect(href, `${id} panel does not link to its case study`).toBe(`/work/${id}`);
+	test('the decorative picture link is hidden from assistive technology', async ({ page }) => {
+		await page.goto('/#work');
+		// Two links to one destination is noise for a screen reader; the block
+		// on the guide, and the Case study button, are the real ones.
+		for (const screen of await page.locator('#work .guide__screen').all()) {
+			await expect(screen).toHaveAttribute('aria-hidden', 'true');
+			await expect(screen).toHaveAttribute('tabindex', '-1');
 		}
+	});
+
+	test('NOW is today, not the day the site was built', async ({ page }) => {
+		await page.clock.setFixedTime(new Date('2027-01-01T12:00:00Z'));
+		await page.goto('/#work');
+		const now = await page.evaluate(() =>
+			Number(
+				getComputedStyle(document.getElementById('work') as HTMLElement).getPropertyValue('--now'),
+			),
+		);
+		// Built in 2026: by 2027 the line has moved on, and it never leaves the axis.
+		const built = await page.evaluate(() => {
+			const el = document.getElementById('work') as HTMLElement;
+			const start = Number(el.dataset.guideStart);
+			const end = Number(el.dataset.guideEnd);
+			return { start, end };
+		});
+		expect(now).toBeGreaterThan((2026.7 - built.start) / (built.end - built.start));
+		expect(now).toBeLessThanOrEqual(1);
 	});
 });

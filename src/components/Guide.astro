@@ -1,0 +1,701 @@
+---
+import { Image } from 'astro:assets';
+import { buildGuide } from '@lib/guide';
+import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
+import { channelStyle, coverPrint } from '@lib/channels';
+import { vt } from '@lib/vt';
+
+/**
+ * The programme guide: every published piece of work as a programme on a TV
+ * guide. One row per channel, one block per programme spanning its time on
+ * air, and a line for NOW.
+ *
+ * Two forms. On the one-pager it is a full screen: the programme in focus is
+ * previewed above the grid, and the whole screen retunes to its channel. On a
+ * case study it is the strip along the bottom, with the programme you are
+ * reading lit -- the same guide, so a case study is a place in the app rather
+ * than a page at the end of a link.
+ *
+ * Without JavaScript every block is still a link to its case study and the
+ * first programme is previewed; src/scripts/guide.ts only adds focus-follows-
+ * preview, arrow keys and the clock.
+ */
+interface Props {
+	entries: readonly PublishedWorkEntry[];
+	/** `screen` on the one-pager, `strip` under a case study. */
+	form?: 'screen' | 'strip' | undefined;
+	/** The programme that starts in focus. Defaults to the first. */
+	current?: string | undefined;
+}
+
+const { entries, form = 'screen', current } = Astro.props;
+const guide = buildGuide(entries);
+const focusId = current ?? entries[0]?.id;
+const focus = entries.find((e) => e.id === focusId) ?? entries[0];
+if (!focus) throw new Error('Guide: no published work to show');
+
+const number = (i: number): string => String(i + 1).padStart(2, '0');
+const shortName = (title: string): string => title.split(' ')[0] ?? title;
+const lastYear = (e: PublishedWorkEntry): string => e.data.period.split('–').pop() ?? e.data.period;
+
+const axis = `--now:${guide.now.toFixed(4)}`;
+const Tag = form === 'screen' ? 'section' : 'nav';
+---
+
+<Tag
+	id={form === 'screen' ? 'work' : undefined}
+	class:list={['guide', `guide--${form}`, { section: form === 'screen' }]}
+	aria-labelledby={form === 'screen' ? 'work-heading' : undefined}
+	aria-label={form === 'strip' ? 'Programme guide' : undefined}
+	data-guide
+	data-guide-start={guide.start}
+	data-guide-end={guide.end}
+	data-section={form === 'screen' ? '' : undefined}
+	data-steps={form === 'screen' ? '' : undefined}
+	data-channel={form === 'screen' ? focus.data.channel : undefined}
+	style={form === 'screen' ? `${channelStyle(focus.data.channel)};${axis}` : axis}
+>
+	<div class="guide__inner wrap">
+		<header class="guide__bar">
+			{form === 'screen' ? (
+				<h2 id="work-heading" class="guide__label">
+					Work <span>Programme guide</span>
+				</h2>
+			) : (
+				<p class="guide__label">
+					On the guide <span>Every programme</span>
+				</p>
+			)}
+			<p class="guide__hint" aria-hidden="true">
+				<span class="keyhint">▲</span>
+				<span class="keyhint">▼</span> Scroll to browse
+			</p>
+			<p class="guide__clock" data-guide-clock hidden></p>
+		</header>
+
+		{form === 'screen' && (
+			<div class="guide__previews">
+				{entries.map((e, i) => (
+					<article
+						class="guide__preview"
+						data-preview={e.id}
+						data-active={e.id === focus.id ? '' : undefined}
+						data-tone={e.data.channel}
+						style={`${channelStyle(e.data.channel)};--vt-title:${vt('title', e.id)};--vt-cover:${vt('cover', e.id)}`}
+					>
+						<div class="guide__info">
+							<p class="guide__status">
+								<span class="guide__num">CH {number(i)}</span>
+								{e.data.status === 'ongoing' ? (
+									<span class="onair onair--live">On air</span>
+								) : (
+									<span class="onair onair--ended">Ended {lastYear(e)}</span>
+								)}
+							</p>
+							<div class="guide__titlebox">
+								<h3 class="guide__title">{e.data.title}</h3>
+							</div>
+							<p class="guide__meta">
+								{e.data.role}
+								<i>/</i>
+								{e.data.company}
+								<i>/</i>
+								{formatPeriod(e)}
+							</p>
+							<p class="guide__syn" id={`synopsis-${e.id}`}>
+								{e.data.summary}
+							</p>
+							<p class="guide__actions">
+								<a class="tvbtn tvbtn--solid" href={`/work/${e.id}`}>
+									<span aria-hidden="true">▶</span> Case study
+								</a>
+								{e.data.links[0] && (
+									<a
+										class="tvbtn"
+										href={e.data.links[0].href}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										{e.data.links[0].label} <span aria-hidden="true">↗</span>
+										<span class="visually-hidden">(opens in a new tab)</span>
+									</a>
+								)}
+							</p>
+						</div>
+
+						<a
+							class="guide__screen duo"
+							href={`/work/${e.id}`}
+							tabindex="-1"
+							aria-hidden="true"
+							style={coverPrint(e.data.channel, e.data.coverTone)}
+						>
+							<Image
+								src={e.data.cover}
+								alt=""
+								widths={[640, 960, 1400]}
+								sizes="(min-width: 60rem) 52vw, 92vw"
+								loading={e.id === focus.id ? 'eager' : 'lazy'}
+								decoding="async"
+							/>
+							<span class="guide__static" data-guide-static></span>
+						</a>
+					</article>
+				))}
+			</div>
+		)}
+
+		<div class="guide__grid">
+			<div class="guide__scale" aria-hidden="true">
+				{guide.ticks.map((t) => (
+					<span class="guide__tick" style={`--at:${t.at.toFixed(4)}`}>
+						<i>{t.year}</i>
+					</span>
+				))}
+				<span class="guide__now">
+					<i>Now</i>
+				</span>
+			</div>
+
+			<ol class="guide__rows">
+				{guide.programmes.map((p, i) => (
+					<li
+						class="guide__row"
+						style={`${channelStyle(p.entry.data.channel)};--from:${p.from.toFixed(4)};--to:${p.ongoing ? 'var(--now)' : p.to.toFixed(4)};--i:${i}`}
+					>
+						<span class="guide__ch" aria-hidden="true">
+							<b>{number(i)}</b> {shortName(p.entry.data.title)}
+						</span>
+						<span class="guide__lane">
+							<a
+								class:list={['guide__block', { 'guide__block--live': p.ongoing }]}
+								href={`/work/${p.entry.id}`}
+								data-block={p.entry.id}
+								data-focus={p.entry.id === focus.id ? '' : undefined}
+								aria-current={form === 'strip' && p.entry.id === focus.id ? 'page' : undefined}
+								aria-describedby={form === 'screen' ? `synopsis-${p.entry.id}` : undefined}
+							>
+								<span class="guide__blocktitle">{p.entry.data.title}</span>
+								<span class="guide__blocktime">{formatPeriod(p.entry)}</span>
+							</a>
+							{p.ongoing && <span class="guide__tail" aria-hidden="true"></span>}
+						</span>
+					</li>
+				))}
+			</ol>
+		</div>
+	</div>
+</Tag>
+
+<script>
+	import { boot } from '../scripts/guide';
+	boot();
+</script>
+
+<style>
+	/* ---- the screen ------------------------------------------------------- */
+
+	.guide {
+		/* The label column of the grid. Everything on the time axis is measured */
+		/* from its right edge. */
+		--label: 11rem;
+		--row: 3.25rem;
+		--axis: 1.75rem;
+		--screen-h: 46svh;
+		transition: background-color var(--speed-slow) var(--ease);
+	}
+
+	.guide--screen {
+		padding-block: var(--s-8);
+		align-content: stretch;
+	}
+
+	.guide__inner {
+		display: grid;
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		gap: var(--s-6);
+		block-size: 100%;
+		min-block-size: 0;
+	}
+
+	.guide--strip .guide__inner {
+		grid-template-rows: auto auto;
+		gap: var(--s-4);
+	}
+
+	/* ---- the bar: what this is, and what time it is ------------------------ */
+
+	.guide__bar {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--s-4);
+		padding-block-end: var(--s-3);
+		border-block-end: 1px solid var(--line);
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+	}
+
+	.guide__label {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		line-height: var(--lh-body);
+		text-transform: uppercase;
+		color: var(--mark);
+	}
+
+	.guide__label span {
+		color: var(--mark-dim);
+		margin-inline-start: 1.2em;
+	}
+
+	/* Only true when the section advance is on: without it, or on a screen */
+	/* where the guide scrolls by itself, scrolling just scrolls. */
+	.guide__hint {
+		display: none;
+		align-items: center;
+		gap: 0.4em;
+		margin-inline-start: auto;
+		color: var(--mark-dim);
+		white-space: nowrap;
+	}
+
+	:global(:root[data-sections='on']) .guide--screen:not([data-overflows]) .guide__hint {
+		display: inline-flex;
+	}
+
+	.guide__clock {
+		color: var(--accent);
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
+	}
+
+	/* ---- the previews ------------------------------------------------------ */
+
+	/* All of them sit in one cell; only the programme in focus is shown. */
+	.guide__previews {
+		display: grid;
+		min-block-size: 0;
+	}
+
+	.guide__preview {
+		grid-area: 1 / 1;
+		display: grid;
+		grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+		gap: var(--s-8);
+		align-items: center;
+		min-block-size: 0;
+		/* The preview carries its own channel's colours inline, but the screen */
+		/* behind it already retunes to the same channel, so it needs no */
+		/* background of its own. */
+		visibility: hidden;
+		opacity: 0;
+		transition:
+			opacity var(--speed) var(--ease),
+			visibility 0s linear var(--speed);
+	}
+
+	.guide__preview[data-active] {
+		visibility: visible;
+		opacity: 1;
+		transition: opacity var(--speed-slow) var(--ease-out);
+	}
+
+	.guide__info {
+		display: grid;
+		justify-items: start;
+		gap: var(--s-3);
+		min-inline-size: 0;
+	}
+
+	.guide__status {
+		display: flex;
+		align-items: center;
+		gap: var(--s-4);
+	}
+
+	.guide__num {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		font-weight: 700;
+		letter-spacing: var(--tracking-meta);
+		color: var(--mark);
+	}
+
+	/* Sized against its own column: CHROMECAST is 6.8em in Martian Mono at the */
+	/* display tracking, so 14cqi holds it. */
+	.guide__titlebox {
+		inline-size: 100%;
+		container-type: inline-size;
+	}
+
+	.guide__title {
+		font-size: min(clamp(2.75rem, 1rem + 5vw, 6.5rem), 14cqi);
+		line-height: 0.88;
+		letter-spacing: var(--tracking-display);
+		text-transform: uppercase;
+	}
+
+	.guide__preview[data-active] .guide__title {
+		view-transition-name: var(--vt-title);
+	}
+
+	.guide__meta {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--mark-dim);
+	}
+
+	.guide__meta i {
+		font-style: normal;
+		color: var(--accent);
+		padding-inline: 0.7em;
+	}
+
+	.guide__syn {
+		max-inline-size: 38rem;
+		font-size: var(--t-lg);
+		line-height: 1.45;
+		text-wrap: pretty;
+	}
+
+	.guide__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-4);
+		margin-block-start: var(--s-3);
+	}
+
+	/* The picture, as a screen: a hard frame in the channel's signal colour. */
+	/* Its width is capped by the height the screen can spare, so on a short */
+	/* laptop the guide still fits on one screen: the picture shrinks, the */
+	/* listings do not. */
+	.guide__screen {
+		position: relative;
+		display: block;
+		justify-self: end;
+		inline-size: min(100%, calc(var(--screen-h) * 16 / 9));
+		aspect-ratio: 16 / 9;
+		overflow: clip;
+		border: 2px solid var(--accent);
+	}
+
+	.guide__preview[data-active] .guide__screen {
+		view-transition-name: var(--vt-cover);
+	}
+
+	.guide__screen :global(img) {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		transition: filter var(--speed-slow) var(--ease-out);
+	}
+
+	/* Idle: the picture on the screen breathes, a slow push that never stops */
+	/* and never hurries. The one dominant motion on this screen. */
+	@media (prefers-reduced-motion: no-preference) {
+		.guide__preview[data-active] .guide__screen :global(img) {
+			animation: guide-push 22s ease-in-out infinite alternate;
+		}
+	}
+
+	@keyframes guide-push {
+		from {
+			scale: 1.02;
+		}
+		to {
+			scale: 1.12;
+			translate: -2% -1%;
+		}
+	}
+
+	/* Under the pointer the print comes off and the picture is its own colours. */
+	.guide__screen::before,
+	.guide__screen::after {
+		transition: opacity var(--speed-slow) var(--ease-out);
+	}
+
+	.guide__screen:hover::before,
+	.guide__screen:hover::after {
+		opacity: 0;
+	}
+
+	.guide__screen:hover :global(img) {
+		filter: none;
+	}
+
+	/* The tuning burst: a flash of static when the screen changes channel. */
+	/* Opacity only, animated from guide.ts; at rest it is invisible. */
+	.guide__static {
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		opacity: 0;
+		pointer-events: none;
+		background-color: var(--field);
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.2 -0.9'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+		background-size: 160px;
+	}
+
+	/* ---- the grid ---------------------------------------------------------- */
+
+	.guide__grid {
+		position: relative;
+		padding-block-start: var(--axis);
+	}
+
+	/* The time axis: year ticks and NOW, laid over the lanes. */
+	.guide__scale {
+		position: absolute;
+		inset-block: 0;
+		inset-inline: var(--label) 0;
+		pointer-events: none;
+		z-index: 2;
+	}
+
+	.guide__tick,
+	.guide__now {
+		position: absolute;
+		inset-block: 0;
+		border-inline-start: 1px solid var(--line);
+	}
+
+	.guide__tick {
+		inset-inline-start: calc(var(--at) * 100%);
+	}
+
+	.guide__tick i,
+	.guide__now i {
+		position: absolute;
+		inset-block-start: 0;
+		padding-inline-start: 0.45em;
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		font-style: normal;
+		letter-spacing: var(--tracking-meta);
+		line-height: var(--axis);
+		color: var(--mark-dim);
+		white-space: nowrap;
+	}
+
+	.guide__now {
+		inset-inline-start: calc(var(--now) * 100%);
+		border-inline-start: 2px solid var(--accent);
+	}
+
+	.guide__now i {
+		color: var(--accent);
+		font-weight: 700;
+		text-transform: uppercase;
+	}
+
+	.guide__rows {
+		display: grid;
+		gap: 3px;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	/* Each row is drawn in its own channel's colours, so the guide is a stack */
+	/* of the channels it lists. */
+	.guide__row {
+		display: grid;
+		grid-template-columns: var(--label) minmax(0, 1fr);
+		block-size: var(--row);
+		background: color-mix(in oklab, var(--mark) 7%, var(--field));
+		color: var(--mark);
+	}
+
+	.guide__ch {
+		display: flex;
+		align-items: center;
+		gap: var(--s-3);
+		padding-inline: var(--s-3);
+		background: var(--field);
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		white-space: nowrap;
+		overflow: clip;
+	}
+
+	.guide__ch b {
+		color: var(--accent);
+	}
+
+	.guide__lane {
+		position: relative;
+		display: block;
+	}
+
+	.guide__block {
+		position: absolute;
+		inset-block: 5px;
+		inset-inline-start: calc(var(--from) * 100%);
+		inline-size: calc((var(--to) - var(--from)) * 100%);
+		min-inline-size: 3.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--s-3);
+		padding-inline: var(--s-3);
+		overflow: clip;
+		container-type: inline-size;
+		background: var(--field);
+		border: 1px solid color-mix(in oklab, var(--accent) 55%, var(--field));
+		color: var(--mark);
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		text-decoration: none;
+		white-space: nowrap;
+		z-index: 3;
+		transition:
+			background-color var(--speed) var(--ease),
+			color var(--speed) var(--ease),
+			scale var(--speed) var(--ease);
+		transform-origin: 0 50%;
+	}
+
+	/* In focus: filled with the channel's signal colour, like the highlighted */
+	/* programme on a real guide. */
+	.guide__block[data-focus],
+	.guide__block:hover,
+	.guide__block:focus-visible {
+		background: var(--accent);
+		color: var(--field);
+		border-color: var(--accent);
+	}
+
+	.guide__block:focus-visible {
+		outline: 3px solid var(--mark);
+		outline-offset: 3px;
+	}
+
+	.guide__blocktitle {
+		font-weight: 700;
+		overflow: clip;
+		text-overflow: ellipsis;
+	}
+
+	@container (inline-size < 16rem) {
+		.guide__blocktime {
+			display: none;
+		}
+	}
+
+	/* An ongoing programme carries on past NOW. */
+	.guide__tail {
+		position: absolute;
+		inset-block-start: 50%;
+		inset-inline: calc(var(--now) * 100%) 0;
+		block-size: 2px;
+		translate: 0 -50%;
+		background: repeating-linear-gradient(90deg, var(--accent) 0 6px, transparent 6px 12px);
+		z-index: 2;
+	}
+
+	/* ---- first sight: the guide draws itself ------------------------------- */
+
+	/* Each programme runs out along its row, one row after another, the first */
+	/* time the guide comes on screen -- a guide loading its listings. Keyed off */
+	/* an attribute guide.ts sets, so without JavaScript nothing waits on it, */
+	/* and a time-based animation rather than a scroll-driven one: tied to the */
+	/* scroll, the rows at the bottom of the screen never finished drawing. */
+	@media (prefers-reduced-motion: no-preference) {
+		.guide[data-drawing] .guide__block,
+		.guide[data-drawing] .guide__tail {
+			animation: guide-draw 720ms var(--ease-out) both;
+			animation-delay: calc(var(--i) * 90ms);
+		}
+	}
+
+	@keyframes guide-draw {
+		from {
+			scale: 0 1;
+		}
+	}
+
+	/* ---- narrow screens ---------------------------------------------------- */
+
+	/* A 720px-tall laptop is the shortest desktop in common use. Everything */
+	/* tightens a step so the preview and all four rows share one screen. */
+	@media (min-width: 60rem) and (max-height: 820px) {
+		.guide {
+			--row: 2.75rem;
+			--axis: 1.5rem;
+			--screen-h: 40svh;
+		}
+
+		.guide--screen {
+			padding-block: var(--s-6);
+		}
+
+		.guide__inner {
+			gap: var(--s-4);
+		}
+
+		.guide__syn {
+			font-size: var(--t-base);
+		}
+
+		.guide__title {
+			font-size: min(clamp(2.5rem, 1rem + 4vw, 5rem), 14cqi);
+		}
+	}
+
+	@media (max-width: 59.99rem) {
+		.guide__preview {
+			grid-template-columns: minmax(0, 1fr);
+			gap: var(--s-4);
+			align-items: start;
+		}
+
+		.guide__screen {
+			order: -1;
+			justify-self: stretch;
+			inline-size: auto;
+		}
+
+		.guide__syn {
+			font-size: var(--t-base);
+		}
+	}
+
+	@media (max-width: 47.99rem) {
+		.guide {
+			--label: 0rem;
+			--row: auto;
+		}
+
+		/* One line for the bar: what it is, and the time. */
+		.guide__label span {
+			display: none;
+		}
+
+		/* The label moves above its lane, so the time axis gets the full width. */
+		.guide__row {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto 2.5rem;
+		}
+
+		.guide__ch {
+			padding-block: var(--s-2) 0;
+			background: none;
+		}
+
+		.guide__tick {
+			border-inline-start-color: transparent;
+		}
+	}
+</style>

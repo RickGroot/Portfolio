@@ -1,19 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-test('homepage renders identity and featured work', async ({ page }) => {
+test('homepage renders identity and the work', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toHaveText('Rick Groot');
-	await expect(page.locator('#nlziet .panel__title a')).toBeVisible();
-	await expect(page.locator('#vamp .panel__title a')).toBeVisible();
+	await expect(page.locator('#work [data-block="nlziet"]')).toBeVisible();
+	await expect(page.locator('#work [data-block="vamp"]')).toBeVisible();
 });
 
-test('the one-pager is the complete record, including non-featured entries', async ({ page }) => {
+test('the one-pager is the complete record, including KIJK', async ({ page }) => {
 	await page.goto('/');
-	// KIJK earns no section on the one-pager, so the contact section must at
-	// least name it and link to its case study -- otherwise the copy is
-	// orphaned, which is exactly what happened when /work was removed.
-	await expect(page.getByRole('link', { name: 'KIJK' })).toBeVisible();
-	await expect(page.getByRole('link', { name: 'KIJK' })).toHaveAttribute('href', '/work/kijk');
+	// KIJK never had a section of its own, and it is a programme on the guide with a
+	// link to its case study -- otherwise the copy is orphaned, which is
+	// exactly what happened when the /work index was removed.
+	const kijk = page.getByRole('link', { name: /KIJK/ });
+	await expect(kijk).toBeVisible();
+	await expect(kijk).toHaveAttribute('href', '/work/kijk');
 });
 
 test('drafts never escape the collection', async ({ page }) => {

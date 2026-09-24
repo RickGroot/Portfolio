@@ -10,6 +10,7 @@
 @import './sections.css';
 @import './motion.css';
 @import './cursor.css';
+@import './controls.css';
 
 /*
  * The footer sits on the bottom of the screen even when the page is shorter

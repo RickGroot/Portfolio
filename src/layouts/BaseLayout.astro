@@ -1,6 +1,5 @@
 ---
 import BaseHead from '@components/BaseHead.astro';
-import Nav from '@components/Nav.astro';
 import Footer from '@components/Footer.astro';
 import ScrollProgress from '@components/ScrollProgress.astro';
 import { site } from '@lib/site';
@@ -15,9 +14,9 @@ interface Props {
 	ogImage?: string | undefined;
 	noindex?: boolean | undefined;
 	/**
-	 * The page's own channel. Everything outside a section -- the nav, the
-	 * rail, the cursor, the progress bar -- is drawn in it, and it is what the
-	 * browser's own chrome shows. The one-pager's sections each carry their own
+	 * The page's own channel. Everything outside a section -- the rail, the
+	 * cursor, the progress bar -- is drawn in it, and it is what the browser's
+	 * own chrome shows. The one-pager's sections each carry their own
 	 * channel, and src/scripts/channel.ts re-points <html> at whichever is in
 	 * view; a page that is about one thing sets it once, here.
 	 */
@@ -43,9 +42,9 @@ const { title, description = site.description, ogImage, noindex, channel = 'ink'
 			Skip to content
 		</a>
 		<ScrollProgress />
-		<header class="wrap" style="view-transition-name: nav">
-			<Nav />
-		</header>
+		{/* No site header. This is meant to feel like an app, and an app has no */}
+		{/* masthead: the one-pager opens on the hero, and a case study carries */}
+		{/* its own way back to the guide. */}
 		<main id="main" class="wrap" tabindex="-1">
 			<slot />
 		</main>

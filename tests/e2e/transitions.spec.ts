@@ -22,14 +22,20 @@ test('no duplicate view-transition-name on any route', async ({ page }) => {
 });
 
 test('the names actually pair up between the one-pager and each detail page', async ({ page }) => {
-	await page.goto('/');
-	const onHome = await page.evaluate(() =>
-		[...document.querySelectorAll<HTMLElement>('*')]
-			.map((el) => getComputedStyle(el).viewTransitionName)
-			.filter((n) => n && n !== 'none'),
-	);
+	const names = () =>
+		page.evaluate(() =>
+			[...document.querySelectorAll<HTMLElement>('*')]
+				.map((el) => getComputedStyle(el).viewTransitionName)
+				.filter((n) => n && n !== 'none'),
+		);
 
-	for (const id of ['nlziet', 'chromecast', 'vamp']) {
+	for (const id of ['nlziet', 'chromecast', 'vamp', 'kijk']) {
+		// Only the programme in focus carries names -- one set per document,
+		// or the browser skips the whole transition -- and it is the one you
+		// click, because focus follows the pointer. So focus it first.
+		await page.goto('/');
+		await page.locator(`#work [data-block="${id}"]`).hover();
+		const onHome = await names();
 		// A morph only happens if BOTH documents carry the same name. Naming one
 		// side only is the other silent failure mode.
 		expect(onHome, `the one-pager is missing cover-${id}`).toContain(`cover-${id}`);

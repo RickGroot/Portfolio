@@ -6,7 +6,7 @@
  * build time and fails the build below WCAG AA. It emits them as inline custom
  * properties: the palette and the page's default channel on <html> (see
  * BaseLayout), and each section's own channel on that section.
- * src/scripts/sections.ts then publishes the channel in view onto :root, so the
+ * src/scripts/channel.ts then publishes the channel in view onto :root, so the
  * fixed chrome -- rail, cursor, progress bar -- takes the colours of the
  * channel you are on.
  *
@@ -17,7 +17,8 @@
  *   --accent     small details and links; equal to --mark on saturated fields
  *   --line       decorative hairlines only
  *   --line-loud  a hairline that has to survive a photograph behind it
- *   --duo-blend  multiply or screen: how a photograph takes the two colours
+ *   --duo-hi     the colour a photograph's highlights print in
+ *   --duo-lo     the colour its shadows print in (see .duo in surfaces.css)
  *
  * The previous dark-mode set (--c-bg, --c-text, the mint and amber accents) is
  * gone rather than aliased. A custom property that references another is

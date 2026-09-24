@@ -58,11 +58,23 @@ test.describe('routing', () => {
 		}
 	});
 
-	test('the homepage nav knows it is on the homepage', async ({ page }) => {
-		await page.goto('/');
-		const nav = page.getByRole('navigation', { name: 'Primary' });
-		await expect(nav.getByRole('link', { name: /Overview/ })).toHaveCount(0);
-		await expect(nav.locator('a[aria-current="page"]')).toHaveCount(1);
+	// It should feel like an app, and an app has no masthead. A case study
+	// carries its own way back instead.
+	test('no page has a site header, and a case study has a way back', async ({ page }) => {
+		for (const path of ['/', '/work/nlziet', '/definitely-not-a-page']) {
+			await page.goto(path);
+			await expect(page.locator('body > header'), `${path} has a site header`).toHaveCount(0);
+		}
+		await page.goto('/work/nlziet');
+		const back = page.locator('[data-back]');
+		await expect(back).toBeVisible();
+		await expect(back).toHaveAttribute('href', '/#work');
+	});
+
+	test('Escape on a case study goes back to the guide', async ({ page }) => {
+		await page.goto('/work/chromecast');
+		await page.keyboard.press('Escape');
+		await expect(page).toHaveURL(/\/#work$/);
 	});
 
 	test('every page has exactly one h1', async ({ page }) => {

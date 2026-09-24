@@ -23,7 +23,8 @@ const VARS = [
 	'--accent',
 	'--line',
 	'--line-loud',
-	'--duo-blend',
+	'--duo-hi',
+	'--duo-lo',
 ] as const;
 
 export function boot(): void {
@@ -34,8 +35,8 @@ export function boot(): void {
 	const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 	let current: HTMLElement | undefined;
 
-	function publish(region: HTMLElement): void {
-		if (region === current) return;
+	function publish(region: HTMLElement, force = false): void {
+		if (region === current && !force) return;
 		current = region;
 		const cs = getComputedStyle(region);
 		for (const name of VARS) {
@@ -60,4 +61,12 @@ export function boot(): void {
 		{ rootMargin: '-50% 0px -50% 0px' },
 	);
 	for (const region of channels) io.observe(region);
+
+	// A region can change channel while you look at it -- the programme guide
+	// retunes its whole screen to the programme in focus. It announces that
+	// with this event, and if it is the region on screen the chrome follows.
+	document.addEventListener('channel:update', (ev) => {
+		const region = ev.target;
+		if (region instanceof HTMLElement && region === current) publish(region, true);
+	});
 }

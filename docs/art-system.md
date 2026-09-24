@@ -158,10 +158,18 @@ written down rather than hidden by disabling the art.
 
 ## The art interludes
 
-Two full-bleed sections sit between the work panels. They are not the character field — they are
-photographs printed in their channel's two colours: greyed, then the field laid over them with
-`multiply` (a dark mark: the photo prints in ink on the field) or `screen` (a light mark: it prints
-in paper). That is `.duo` in `src/styles/surfaces.css`, and every photograph on the site uses it.
+Two full-bleed sections sit on the one-pager. They are not the character field — they are
+photographs printed in their channel's two colours: greyed, then two flat layers laid over them — the
+highlight colour multiplied (`--duo-hi`) and the shadow colour screened (`--duo-lo`). On a light
+channel that prints the photo in ink on the field; on a deep channel its shadows are the field and
+its highlights the channel's signal colour — the NLZIET logo in red out of crimson. That is `.duo`
+in `src/styles/surfaces.css`, and every photograph on the site uses it, the guide's key art and
+the case studies' included.
+
+A picture whose tone is the opposite of its field prints as a negative, so it comes out mostly as
+the field rather than as a bright or dark block: a white screenshot on the navy channel, say. The
+content only says whether a cover is `light` or `dark` (`coverTone`); `coverPrint()` in
+`src/lib/channels.ts` decides.
 
 The previous treatment greyscaled each photograph, pushed it down to 42–68% brightness and laid a dot
 screen over it in the page colour. Every image came out as a darkened photo on a dark page, which is
@@ -174,7 +182,7 @@ chosen by dithering all twelve candidates rather than looking at them. See `src/
 Three props exist because real photographs are not uniform:
 
 - **`lift`** — brightness before the print (`--duo-lift`). A photograph that is mostly mid-tones
-  prints muddy on a multiply channel; lifting it sends the mid-tones to the field. The lighthouse
+  prints muddy on a light channel; lifting it sends the mid-tones to the field. The lighthouse
   sunset printed olive at 1 and prints yellow at `1.45`.
 - **`contrast`** — how hard the two colours separate (`--duo-contrast`, default `1.1`).
 - **`focus`** — the `object-position` of the cover crop. A phone shows a narrow centre band of a
