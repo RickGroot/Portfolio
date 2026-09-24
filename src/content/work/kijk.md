@@ -1,7 +1,7 @@
 ---
 title: KIJK
 role: Connected TV developer
-company: Triple
+company: Hypersolid
 period: '2022–2025'
 status: completed
 summary: A responsive Smart TV app experience for the KIJK streaming platform across multiple TV brands, built in Svelte with THEOplayer and advertising integration.

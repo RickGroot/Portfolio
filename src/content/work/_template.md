@@ -3,7 +3,7 @@
 # and fill in every field. See docs/content-guide.md for what each one is for.
 title: Project name
 role: Your role on it
-company: Triple # or Independent
+company: Hypersolid # or Independent
 period: '2024' # or '2022–2025'. First-to-last year, NOT a claim of continuous work.
 status: completed # or ongoing -> renders as "Ongoing since <period>"
 summary: One sentence, 50-180 characters. This becomes the meta description, so write it for a search result.

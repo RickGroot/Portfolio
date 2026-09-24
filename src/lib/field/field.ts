@@ -36,6 +36,14 @@ const ENERGY_TAU = 350;
 const P_TAU = 260;
 /** Length of the load-time scatter-and-decode sequence. */
 const ENTRY_MS = 3200;
+/**
+ * The darkest map level belongs to the field, not the portrait: where the
+ * photograph is black, the live field shows through. As portrait, those
+ * cells resolved to spaces, and the face sat in an empty box cut out of the
+ * field. On the current map that is exactly the matte around the head; the
+ * darkest feature inside the face is level 1.
+ */
+const FIELD_LEVEL = 0;
 
 export interface FieldHandle {
 	destroy(): void;
@@ -137,7 +145,8 @@ export function mountField(host: HTMLElement): FieldHandle {
 		const cellAspect = m.cellW / m.rowH;
 
 		// The portrait occupies a box, not the whole grid: a face emerging from
-		// a still-live field reads far better than a rectangle appearing.
+		// a still-live field reads far better than a rectangle appearing. And
+		// only the lit part of the box is portrait: see FIELD_LEVEL.
 		const portRows = Math.round(rows * 0.82);
 		const portCols = Math.min(Math.round(portRows / cellAspect), Math.round(cols * 0.9), 110);
 		const ox = Math.floor((cols - portCols) / 2);
@@ -164,7 +173,7 @@ export function mountField(host: HTMLElement): FieldHandle {
 					const sx = Math.min(MAP_SIZE - 1, Math.floor((bx / portCols) * MAP_SIZE));
 					const sy = Math.min(MAP_SIZE - 1, Math.floor((by / portRows) * MAP_SIZE));
 					const level = ALPHABET.indexOf(MAP[sy * MAP_SIZE + sx] as string);
-					if (level >= 0) {
+					if (level > FIELD_LEVEL) {
 						portrait[i] = level;
 						lum = level / (MAP_LEVELS - 1);
 					}

@@ -1,7 +1,7 @@
 ---
 title: NH Nieuws / AT5
 role: Front-end developer
-company: Triple
+company: Hypersolid
 period: '2021'
 status: completed
 summary: Front-end development for the NH Nieuws and AT5 regional news platforms, built in React and TypeScript for a Dutch regional news provider.

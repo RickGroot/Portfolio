@@ -21,7 +21,7 @@ export type PublishedWorkEntry = WorkEntry & {
 /**
  * Renders the period honestly.
  *
- * Client work at Triple is project-based and runs intermittently, so a bare
+ * Client work at Hypersolid is project-based and runs intermittently, so a bare
  * range like "2022–2025" would imply continuous engagement that did not happen.
  * `ongoing` therefore reads as "Ongoing since 2022" rather than "2022–present".
  */

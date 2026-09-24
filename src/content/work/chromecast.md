@@ -1,7 +1,7 @@
 ---
 title: Chromecast receivers
 role: Connected TV developer
-company: Triple
+company: Hypersolid
 period: '2023'
 status: ongoing
 summary: Custom Chromecast receivers for multiple projects, plus a TypeScript boilerplate covering media playback, error handling and Cast SDK integration.

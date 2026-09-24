@@ -127,6 +127,76 @@ test.describe('character field', () => {
 			.toBeGreaterThan(0.9);
 	});
 
+	// Rick: "does there have to be like this empty square before I show up?"
+	// The portrait sits in a box in the middle of the field, and the box's dark
+	// background used to count as portrait: resolved, it printed as spaces, and
+	// the face sat in an empty rectangle cut out of the field. The corners of
+	// the face's bounding box are that background, so they must be live field.
+	test('the face comes out of the field, not out of an empty box', async ({ page }) => {
+		await recordResolve(page);
+		await page.goto('/');
+		// The whole entry sequence first: scattered, then resolved. The field's
+		// first published value is already 1.00, and waiting on that alone read
+		// the layers mid-decode under load, where the corners are half-built.
+		const trail = (): Promise<number[]> =>
+			page.evaluate(() => (window as unknown as { __resolve: number[] }).__resolve);
+		await expect
+			.poll(async () => Math.min(...(await trail()), Infinity), { timeout: 12000 })
+			.toBeLessThan(0.35);
+		await expect
+			.poll(async () => (await trail()).at(-1) ?? -1, {
+				message: 'the field never resolved into the portrait',
+				timeout: 12000,
+			})
+			.toBeGreaterThan(0.95);
+
+		const { a, b } = await layers(page);
+		const rowsA = a.split('\n');
+		const rowsB = b.split('\n');
+
+		// The face's bounding box: every cell the portrait layer draws.
+		let top = Infinity;
+		let bottom = -1;
+		let left = Infinity;
+		let right = -1;
+		rowsB.forEach((row, y) => {
+			for (let x = 0; x < row.length; x++) {
+				if (row[x] === ' ') continue;
+				top = Math.min(top, y);
+				bottom = Math.max(bottom, y);
+				left = Math.min(left, x);
+				right = Math.max(right, x);
+			}
+		});
+		expect(bottom, 'the portrait layer drew nothing').toBeGreaterThan(top);
+
+		// Its four corners, a fifth of the box each way: outside the oval of the
+		// head, so background.
+		const cw = Math.max(2, Math.floor((right - left + 1) / 5));
+		const ch = Math.max(2, Math.floor((bottom - top + 1) / 5));
+		let cells = 0;
+		let blank = 0;
+		for (const [y0, x0] of [
+			[top, left],
+			[top, right - cw + 1],
+			[bottom - ch + 1, left],
+			[bottom - ch + 1, right - cw + 1],
+		] as const) {
+			for (let y = y0; y < y0 + ch; y++) {
+				for (let x = x0; x < x0 + cw; x++) {
+					cells += 1;
+					if (rowsA[y]?.[x] === ' ' && rowsB[y]?.[x] === ' ') blank += 1;
+				}
+			}
+		}
+		// The field has troughs of its own, about one cell in ten; the empty box
+		// was every cell.
+		expect(
+			blank / cells,
+			`${blank} of ${cells} corner cells are empty: the face sits in a box`,
+		).toBeLessThan(0.5);
+	});
+
 	test('exactly one animation loop, throttled to 30fps', async ({ page }) => {
 		await instrument(page);
 		await page.goto('/');

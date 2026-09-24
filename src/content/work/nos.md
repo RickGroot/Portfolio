@@ -1,7 +1,7 @@
 ---
 title: NOS
 role: Connected TV developer
-company: Triple
+company: Hypersolid
 period: '2023'
 status: completed
 summary: The Smart TV app for Dutch broadcaster NOS, focused on a maintainable Svelte UI built for remote-control navigation, with THEOplayer for live and on-demand playback.

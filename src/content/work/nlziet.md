@@ -1,7 +1,7 @@
 ---
 title: NLZIET
 role: Connected TV developer
-company: Triple
+company: Hypersolid
 period: '2022'
 status: ongoing
 summary: Building the NLZIET streaming app across Smart TV platforms in Svelte and TypeScript, including chapters, search and the Bitmovin player.

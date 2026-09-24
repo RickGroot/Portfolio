@@ -112,6 +112,12 @@ static frame** rather than shipping a sheared grid.
 Grid capped at 6000 cells. The portrait occupies a centred box rather than the whole grid — a face
 emerging from a still-live field reads far better than a rectangle appearing.
 
+Only the lit part of the box is portrait. **The map's darkest level belongs to the field**
+(`FIELD_LEVEL` in `field.ts`): where the photograph is black, the live field shows through. The box's
+dark background used to count as portrait, and resolved it printed as spaces, so the face sat in
+an empty rectangle cut out of the field. On the current map level 0 is exactly the matte around
+the head; the darkest feature inside the face is level 1.
+
 ## The image pipeline
 
 `scripts/build-portrait-map.mjs` uses sharp at build time to emit an 80×80, 12-level luminance map

@@ -20,7 +20,7 @@ const work = defineCollection({
 			.object({
 				title: z.string().min(1).max(60),
 				role: z.string().min(1).max(60),
-				company: z.enum(['Triple', 'Independent']),
+				company: z.enum(['Hypersolid', 'Independent']),
 
 				/**
 				 * First-to-last year of involvement -- NOT a claim of continuous work.

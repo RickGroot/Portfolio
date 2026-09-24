@@ -63,7 +63,7 @@ const rail = [
 				<span>Rick</span> <span>Groot</span>
 			</h1>
 			<p class="lede">
-				I build Connected TV apps at Triple — NLZIET on Smart TVs, Chromecast receivers, and the
+				I build Connected TV apps at Hypersolid — NLZIET on Smart TVs, Chromecast receivers, and the
 				video players underneath them. Most of it is performance work: the devices they run on are
 				older and slower than the machine I write on.
 			</p>
@@ -260,8 +260,11 @@ const rail = [
 			inset-inline-start: 40%;
 		}
 
+		/* 41vw: at 1280 wide the lede needs 510px for five lines, and at 38vw */
+		/* its sixth made the hero taller than a 720px screen. It still ends */
+		/* well short of the face, which sits in the middle of the field. */
 		.hero__copy > :global(:not(h1)) {
-			max-width: min(36rem, 38vw);
+			max-width: min(36rem, 41vw);
 		}
 	}
 

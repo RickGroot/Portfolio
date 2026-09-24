@@ -98,6 +98,19 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   still walks everything. Corrected: `/` **1484 ms** (the live field layer, the slow mode of the
   race in open item 11), `/work/chromecast` **444 ms**, CLS 0.
 
+**Then:**
+
+- Rick: _"does there have to be like this empty square before I show up?"_ No. The portrait's box
+  counted its own dark background as portrait, which resolved to spaces, so the face sat in an
+  empty rectangle cut out of the field. The darkest level now belongs to the field, and a test
+  holds the corners of the face to it.
+- Triple is now called **Hypersolid**. Every mention on the site and in the docs has changed, the
+  content schema's `company` enum with it. The longer name cost the hero's lede a sixth line at
+  1280 wide, which took the hero past a 720px screen again, so its measure went from 38 to 41vw.
+- In progress: the portrait in the field's own blue, told apart by denser characters and a lighter
+  tint rather than yellow, with the field's motion running through it. Three candidates are with
+  Rick.
+
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
 should be no header — it should feel like an app. Of three candidates rendered at full size (a

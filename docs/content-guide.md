@@ -26,7 +26,7 @@ happens because a `draft` flag got flipped.
 | ----------- | ------------------------------- | ------------------------------------------------------------------------------ |
 | `title`     | ≤ 60 chars                      | Past 60 the card wraps and the search-result title truncates.                  |
 | `role`      | ≤ 60 chars                      | Rendered in the meta line, so the prose does not have to repeat it.            |
-| `company`   | `Triple` or `Independent`       | An enum costs nothing and prevents `triple` / `Triple ` drift.                 |
+| `company`   | `Hypersolid` or `Independent`   | An enum costs nothing and prevents `hypersolid` / `Hypersolid ` drift.         |
 | `period`    | `2023` or `2022–2025` (en dash) | First-to-last year of involvement. **See the note below.**                     |
 | `status`    | `ongoing` or `completed`        | `ongoing` renders as "Ongoing since 2022". See below.                          |
 | `summary`   | 50–180 chars                    | This becomes the `<meta name="description">`. Write it for a search result.    |
@@ -41,7 +41,7 @@ happens because a `draft` flag got flipped.
 
 ### Dates: `period` + `status`, not a range
 
-Client work at Triple is project-based and runs **intermittently**. A bare range like `2022–2025`
+Client work at Hypersolid is project-based and runs **intermittently**. A bare range like `2022–2025`
 would imply continuous engagement that did not happen, so `status: ongoing` renders as
 _"Ongoing since 2022"_ rather than _"2022–present"_, and `/work` carries one clarifying line saying
 engagements run intermittently.
