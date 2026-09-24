@@ -27,10 +27,12 @@
  */
 :root {
 	/* ---- Art --------------------------------------------------------------
-	 * The hero field's two layers. Blue is the signal still in noise, yellow
-	 * the portrait resolving out of it -- both straight from the palette. */
+	 * The hero field's two layers, one blue at two strengths: the field in the
+	 * palette's signal blue, and the lit portrait in a tint of it halfway to
+	 * paper, so the face reads as the field brightening (Rick, 2026-09-24:
+	 * "let the blue background seep into the art of my picture"). */
 	--art-noise: var(--signal-blue);
-	--art-signal: var(--signal-yellow);
+	--art-signal: color-mix(in oklab, var(--signal-blue) 50%, var(--paper));
 
 	--art-cell: clamp(10px, 1.25vw, 17px);
 

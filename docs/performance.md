@@ -123,9 +123,11 @@ The art renders as text. `src/lib/field/` owns it; see `docs/art-system.md`.
 - **One `requestAnimationFrame` loop on the site**, in `src/lib/field/loop.ts`. Everything else
   subscribes. `eslint.config.js` restricts `requestAnimationFrame` everywhere else, so this is
   enforced rather than requested.
-- **Throttled to 30fps.** Character art has no sub-cell motion — a glyph either changes or it does
-  not — so the perceptual gap to 60 is far smaller than for continuous motion, and 30 divides evenly
-  into 60/90/120, which is what makes a stepped cadence read as intentional rather than dropped.
+- **Throttled to 60fps.** It was 30, on the reasoning that character art has no sub-cell motion — a
+  glyph either changes or it does not — so the gap to 60 would be small. On screen the field's roll
+  and the face's shimmer stepped, and Rick asked for smooth (2026-09-24). The cap still matters on a
+  120Hz display, which would otherwise double the work; `tests/e2e/field.spec.ts` drives
+  `requestAnimationFrame` at 120Hz to hold it.
 - **Never read layout inside the tick.** `textContent = s` alone is ~0.0 ms; adding a forced read
   like `offsetHeight` makes it 0.3–0.9 ms. Resolve progress comes from `IntersectionObserver`
   thresholds, never `getBoundingClientRect`.

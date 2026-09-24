@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
  * one would have to be a deliberate edit to this file rather than something
  * that slipped in. Phase 2 makes that edit: the character field runs exactly one
  * loop. The RAF assertion moves to `tests/e2e/field.spec.ts`, which measures the
- * thing that actually matters -- one loop, throttled to 30fps, stopped when
+ * thing that actually matters -- one loop, throttled to 60fps, stopped when
  * offscreen -- rather than a raw call count.
  *
  * The canvas assertions get STRONGER here, not weaker. The signature treatment

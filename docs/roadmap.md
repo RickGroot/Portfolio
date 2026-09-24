@@ -107,9 +107,17 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
 - Triple is now called **Hypersolid**. Every mention on the site and in the docs has changed, the
   content schema's `company` enum with it. The longer name cost the hero's lede a sixth line at
   1280 wide, which took the hero past a 720px screen again, so its measure went from 38 to 41vw.
-- In progress: the portrait in the field's own blue, told apart by denser characters and a lighter
-  tint rather than yellow, with the field's motion running through it. Three candidates are with
-  Rick.
+- Rick: _"Can't we somehow let the blue background seep into the art of my picture?"_ Of three
+  candidates (Tint, Swell, Scanline) he chose **Tint**: the portrait in a tint of the field's own
+  blue instead of yellow, developing out of the field rather than swapping in, with the field's
+  motion running through the face. And **60fps** instead of 30, for smooth motion; the cap stays,
+  so a 120Hz display does not double the work, and a test drives the loop at 120Hz to hold it.
+- What 60fps costs, measured on the same code at both rates: at full speed the idle hero keeps the
+  main thread **33%** busy against **22%** at 30fps. On a 4× slowed CPU both are saturated — about 28
+  renders a second, the main thread 100% busy — so there it costs nothing, but that saturation was
+  already there at 30fps: open item 12.
+- LCP against HEAD, interleaved on one server: **1836 ms** against **1980 ms**, medians of 8, with the
+  machine at 35–55% load from other work. The vitals run's 2308 ms was that load; the trip-wire stays.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
@@ -174,7 +182,7 @@ lower third per project, a programme guide, a TV home screen) he chose the guide
 - ~~`src/lib/accent.ts` — OKLCH lightness floor per work accent.~~ Replaced by `src/lib/channels.ts`. Fixes a shipped bug where
   `::selection` used the raw accent and measured **1.34:1** on `/work/chromecast`. Every entry now
   clears AA, worst case 6.62:1.
-- The character-field hero: two stacked `<pre>`, 30fps, decode-on-load, pointer-reactive. The
+- The character-field hero: two stacked `<pre>`, 60fps (30 until stage 2), decode-on-load, pointer-reactive. The
   portrait is a 0.62 KB build-time luminance map; the resolved frame is server-rendered, so no-JS
   and reduced-motion visitors get the real thing rather than an empty box.
 - `reset.css` scroll-timeline exception — a time-valued `animation-duration` breaks scroll-linked
@@ -238,7 +246,7 @@ listeners survive dismissal · reduced motion yields a static frame.
 Where the Connected-TV thesis is actually earned; it cannot be faked in a lab. Real Smart TV
 browser, an old Android device, a throttled connection.
 
-**Gate:** a recorded trace per device class · the character grid holds 30fps or narrows its grid ·
+**Gate:** a recorded trace per device class · the character grid holds 60fps or narrows its grid ·
 a browser profile carrying the **old** service worker receives the new site.
 
 ---
@@ -288,3 +296,9 @@ Nothing on this list may be installed without moving it off the list first.
     identical bytes. The trip-wire sits above the slow mode so the gate is honest, but the real fix
     is to stop the live render registering as a new, later LCP: keep its painted box no larger than
     the static frame's.
+12. **On a slow CPU the character field fills the main thread.** At 4× throttle the idle hero keeps
+    it 100% busy and manages about 28 renders a second, at 30fps or 60. Most of that is the
+    browser laying out and painting two full-screen `<pre>` of up to 6000 characters, not the
+    script (about a fifth). Worth an adaptive step: the loop measures its own frames and narrows
+    the grid, or halves its rate, when they run long. Phase 6's gate already says "holds 60fps or
+    narrows its grid".

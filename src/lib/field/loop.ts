@@ -14,12 +14,18 @@ export type Tick = (now: number, dtMs: number) => void;
 
 const subscribers = new Set<Tick>();
 
-/** 30fps deliberately. Character art has no sub-cell motion -- a glyph either
- *  changes or it does not -- so the perceptual gap to 60 is far smaller than
- *  for continuous motion, and 30 divides evenly into 60/90/120, which is what
- *  makes a stepped cadence read as intentional rather than dropped. */
-const TARGET_FPS = 30;
+/** 60fps, and no faster. It was 30: a glyph either changes or it does not,
+ *  so the gap to 60 looked small on paper, but on screen the field's roll and
+ *  the face's shimmer stepped, and Rick asked for smooth (2026-09-24). The cap
+ *  still matters on a 120Hz display, which would otherwise double the work. */
+const TARGET_FPS = 60;
 const INTERVAL = 1000 / TARGET_FPS;
+/**
+ * Frame timestamps on a 60Hz display land either side of 16.67ms. Without some
+ * slack, the ones that land a hair early are skipped and the loop runs at a
+ * ragged 30-60.
+ */
+const SLACK_MS = 1.5;
 
 let handle: number | null = null;
 let last = 0;
@@ -29,9 +35,10 @@ function frame(now: number): void {
 	handle = requestAnimationFrame(frame);
 
 	const dt = now - last;
-	if (dt < INTERVAL) return;
-	// Keep the phase rather than snapping to `now`, so cadence stays even.
-	last = now - (dt % INTERVAL);
+	if (dt < INTERVAL - SLACK_MS) return;
+	// Keep the phase rather than snapping to `now`, so cadence stays even. A
+	// frame let in by the slack is not a full interval late: take it as on time.
+	last = dt >= INTERVAL ? now - (dt % INTERVAL) : now;
 
 	for (const tick of subscribers) tick(now, dt);
 }

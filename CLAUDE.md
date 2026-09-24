@@ -98,7 +98,7 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 | LCP / CLS                   | < 2.5 s / < 0.1, plus an 1800 ms LCP trip-wire            |
 | Canvas elements             | **0**, asserted on every route                            |
 | WebGL contexts              | **0** — the art is text; there is no GPU path             |
-| Animation loops             | **exactly 1**, throttled to 30fps, stopped when offscreen |
+| Animation loops             | **exactly 1**, throttled to 60fps, stopped when offscreen |
 
 INP is field-only. Use TBT as the lab proxy; do not claim Lighthouse measures INP.
 

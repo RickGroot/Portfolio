@@ -1,9 +1,14 @@
 /**
  * The character field.
  *
- * Renders a grid of characters into two stacked <pre> elements -- one per accent
- * colour -- recomputed at 30fps and written as two strings. No canvas, no WebGL,
+ * Renders a grid of characters into two stacked <pre> elements -- one per
+ * colour -- recomputed at 60fps and written as two strings. No canvas, no WebGL,
  * no graphics context to lose.
+ *
+ * One blue, two strengths: the field in the palette's signal blue, and the lit
+ * part of the portrait in a lighter tint of it (--art-signal), so the face reads
+ * as the field brightening, not as a second picture laid over it. The field's
+ * motion carries on through the face as a shimmer.
  *
  * Measured on this approach (120x60 = 7200 cells, forced layout every frame):
  *   one <pre>, single colour      1.18 ms/frame
@@ -11,8 +16,8 @@
  *   one <span> per cell            40.71 ms/frame  <- 2.5x over a 60fps budget
  *
  * The colour split is free because it IS the resolve state: a cell that has
- * resolved into the portrait goes to layer B, one still in noise goes to layer
- * A, and each writes a space to the other. At rest one layer is entirely spaces
+ * developed into the lit portrait goes to layer B, anything else to layer A,
+ * and each writes a space to the other. At rest one layer is entirely spaces
  * and its write is skipped, so the field spends almost all its life at
  * single-layer cost.
  */
@@ -36,6 +41,8 @@ const ENERGY_TAU = 350;
 const P_TAU = 260;
 /** Length of the load-time scatter-and-decode sequence. */
 const ENTRY_MS = 3200;
+/** How much of the resolve a cell takes to develop, in units of p. */
+const DEVELOP = 0.14;
 /**
  * The darkest map level belongs to the field, not the portrait: where the
  * photograph is black, the live field shows through. As portrait, those
@@ -239,25 +246,38 @@ export function mountField(host: HTMLElement): FieldHandle {
 			let a = '';
 			let b = '';
 			for (let x = 0; x < cols; x++) {
-				let v: number;
 				const pv = portrait[i] as number;
-				const resolved = pv >= 0 && p > (thresh[i] as number);
 
-				if (resolved) {
-					v = pv / (MAP_LEVELS - 1);
-				} else {
-					// Abstract field. Cheap, periodic, and deliberately digital.
-					v = 0.5 + 0.22 * (Math.sin(x * 0.19 + t) + Math.cos(y * 0.31 - t * 0.8));
-					if (energy > 0.01) {
-						const dx = x - px;
-						const dy = y - py;
-						v += Math.sin((dx * dx + dy * dy) * 0.012 - t * 6) * energy * 0.5;
-					}
-					v *= 0.55; // the field sits below the portrait in weight
+				// The field. Broad and slow, so it rolls rather than flickers.
+				// Cheap, periodic, and deliberately digital.
+				let fv = 0.5 + 0.22 * (Math.sin(x * 0.13 + t * 0.7) + Math.cos(y * 0.23 - t * 0.55));
+				if (energy > 0.01) {
+					const dx = x - px;
+					const dy = y - py;
+					fv += Math.sin((dx * dx + dy * dy) * 0.012 - t * 6) * energy * 0.5;
 				}
 
+				// How far this cell has developed into the portrait: eased across a
+				// band of p rather than switched, so the face develops out of the
+				// field instead of being stamped onto it. Scaled so every cell is
+				// fully developed at p = 1 (thresholds reach 1.0).
+				let w = 0;
+				let lum = 0;
+				if (pv >= 0) {
+					lum = pv / (MAP_LEVELS - 1);
+					const d = (p * (1 + DEVELOP) - (thresh[i] as number)) / DEVELOP;
+					w = d <= 0 ? 0 : d >= 1 ? 1 : d * d * (3 - 2 * d);
+				}
+
+				// The field runs on through the face as a faint shimmer, so the two
+				// read as one surface. The field sits below the portrait in weight.
+				const shimmer = 0.07 * Math.sin(x * 0.13 + y * 0.09 - t * 1.1);
+				const v = (1 - w) * fv * 0.55 + w * clamp(lum + shimmer, 0, 1);
 				const ch = RAMP[clamp((v * RAMP.length) | 0, 0, RAMP_MAX)] as string;
-				if (resolved) {
+
+				// The lit face takes the portrait's tint; its darkest cells stay in
+				// the field's own blue.
+				if (w > 0.5 && lum > 0.1) {
 					a += ' ';
 					b += ch;
 					anyB = true;

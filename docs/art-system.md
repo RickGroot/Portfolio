@@ -5,7 +5,7 @@ interaction-triggered.
 
 ## What it is
 
-A grid of characters recomputed 30 times a second and written into two stacked `<pre>` elements.
+A grid of characters recomputed 60 times a second and written into two stacked `<pre>` elements.
 **No canvas, no WebGL, no graphics context.** The whole thing is 2.9 KB gzip.
 
 It idles as an abstract field, decodes into a portrait on load, and dissolves again as the hero
@@ -27,8 +27,11 @@ Against a 16.7 ms budget, even 20,000 cells uses under a fifth of a frame.
 
 ## Two layers, because colour is the resolve state
 
-The field uses two palette colours — signal yellow for the resolved portrait, electric blue for the
-noise it resolves out of (`--art-signal`, `--art-noise`) — which means per-cell colour. Measured at
+The field uses one blue at two strengths — the palette's electric blue for the field, and a tint of
+it halfway to paper for the lit portrait (`--art-noise`, `--art-signal`) — which means per-cell
+colour. The portrait was yellow until 2026-09-24, when Rick asked for the blue to "seep into the art
+of my picture": in one hue the face reads as the field brightening, not as a second picture laid
+over it. Measured at
 120×60:
 
 | Strategy                            | ms/frame  |
@@ -39,8 +42,8 @@ noise it resolves out of (`--art-signal`, `--art-noise`) — which means per-cel
 
 Span-per-cell is 2.5× over a 60fps budget _on a desktop_. Settled.
 
-The split costs nothing extra because it **is** the resolve state: a resolved cell goes to the signal
-layer, a cell still in noise to the noise layer, and each writes a space to the other. At rest one
+The split costs nothing extra because it **is** the resolve state: a cell developed into the lit
+portrait goes to the tint layer, anything else to the field's, and each writes a space to the other. At rest one
 layer is entirely spaces and its write is skipped — so the field spends almost all its life at
 single-layer cost and only pays the double during the ~1 s decode.
 
@@ -49,15 +52,19 @@ the colour budget.** A third layer colour is not affordable on mobile.
 
 ## The resolve
 
-Per cell, a hard swap on a precomputed threshold:
+Per cell, a precomputed threshold, and an eased development past it rather than a hard swap:
 
 ```
 threshold[i] = 0.50 * radialFromCentre(x, y)   // resolves centre-out
              + 0.30 * hash(x, y)                // organic dissolve texture
              + 0.20 * (1 - portraitLuminance)   // bright features first
 
-resolved = portrait[i] >= 0 && p > threshold[i]
+w = smoothstep((p * 1.14 - threshold[i]) / 0.14)   // 0 = field, 1 = portrait
+value = (1 - w) * field + w * (luminance + shimmer)
 ```
+
+The face develops out of the field instead of being stamped onto it, and at rest the field's motion
+carries on through it as a faint shimmer, so the two read as one surface.
 
 **Not an ordered Bayer matrix.** Bayer assumes its period falls below perceptual threshold, but here
 one matrix cell _is_ one character cell, so a 4×4 matrix has a ~36×64 px period that tiles visibly

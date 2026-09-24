@@ -33,8 +33,8 @@ async function recordResolve(page: Page): Promise<void> {
 		w.__resolve = [];
 		// A poll, not a MutationObserver: an init script runs before the document
 		// has a documentElement, so there is nothing to observe yet and setting
-		// the observer up throws. The field publishes in 0.05 steps at 30fps, so
-		// 25ms cannot miss a step.
+		// the observer up throws. The field publishes in 0.05 steps, and its
+		// fastest stretch, the scatter, takes ~55ms a step, so 25ms cannot miss one.
 		let last = '';
 		setInterval(() => {
 			const v = document.querySelector('[data-character-field]')?.getAttribute('data-resolve');
@@ -197,7 +197,54 @@ test.describe('character field', () => {
 		).toBeLessThan(0.5);
 	});
 
-	test('exactly one animation loop, throttled to 30fps', async ({ page }) => {
+	// At 60fps the cap cannot be seen on a 60Hz display -- every frame is a
+	// render either way. It is there for a 120Hz one, which would otherwise
+	// double the work, so drive requestAnimationFrame at 120Hz and count.
+	test('the loop stays at 60fps on a 120Hz display', async ({ page }) => {
+		await page.addInitScript(() => {
+			let next = 0;
+			const timers = new Map<number, number>();
+			window.requestAnimationFrame = (cb: FrameRequestCallback): number => {
+				next += 1;
+				const handle = next;
+				timers.set(
+					handle,
+					window.setTimeout(() => {
+						timers.delete(handle);
+						cb(performance.now());
+					}, 1000 / 120),
+				);
+				return handle;
+			};
+			window.cancelAnimationFrame = (handle: number): void => {
+				window.clearTimeout(timers.get(handle));
+				timers.delete(handle);
+			};
+		});
+		await page.goto('/');
+		await page.waitForTimeout(700);
+		const renders = await page.evaluate(
+			() =>
+				new Promise<number>((resolve) => {
+					let n = 0;
+					const target = document.querySelector('[data-layer="a"]');
+					if (!target) return resolve(-1);
+					const mo = new MutationObserver((records) => {
+						n += records.length;
+					});
+					mo.observe(target, { characterData: true, childList: true, subtree: true });
+					setTimeout(() => {
+						mo.disconnect();
+						resolve(n);
+					}, 2000);
+				}),
+		);
+		// Capped, ~120 renders in 2s; uncapped at 120Hz, ~240.
+		expect(renders, `${renders} renders in 2s at 120Hz — expected ~120 (60fps)`).toBeLessThan(170);
+		expect(renders, `${renders} renders in 2s at 120Hz — the loop is dead`).toBeGreaterThan(30);
+	});
+
+	test('exactly one animation loop, throttled to 60fps', async ({ page }) => {
 		await instrument(page);
 		await page.goto('/');
 		await page.waitForTimeout(700);
@@ -226,18 +273,20 @@ test.describe('character field', () => {
 			() => (window as unknown as { __maxPending: number }).__maxPending,
 		);
 
-		// ~60 renders in 2s at 30fps. Two loops would roughly double it; a lost
-		// throttle would push it to ~120; a dead loop would leave it near zero.
+		// ~120 renders in 2s at 60fps; a dead loop would leave it near zero. A
+		// lost throttle cannot show here, because 60fps is every frame at 60Hz:
+		// the 120Hz test above covers it.
 		//
 		// The floor catches the DEAD loop, so it sits well above zero and well
-		// below a starved one. It used to be 35, and eight parallel browsers
-		// sharing the CPU measured 32, 34 and 35 -- a live, throttled loop running
-		// at half speed because it was starved, failing a check meant for one that
-		// had stopped. Contention only ever lowers this count, so the ceiling is
-		// unaffected, and two loops are caught by maxPending below, which counts
-		// concurrently scheduled frames and does not move with load.
-		expect(renders, `${renders} renders in 2s — expected ~60 (30fps)`).toBeGreaterThan(15);
-		expect(renders, `${renders} renders in 2s — expected ~60 (30fps)`).toBeLessThan(95);
+		// below a starved one. At 30fps it was 35 of an expected 60, and eight
+		// parallel browsers sharing the CPU measured 32, 34 and 35 -- a live loop
+		// running at half speed because it was starved, failing a check meant
+		// for one that had stopped. Contention only ever lowers this count, so
+		// the ceiling is unaffected, and two loops are caught by maxPending
+		// below, which counts concurrently scheduled frames and does not move
+		// with load.
+		expect(renders, `${renders} renders in 2s — expected ~120 (60fps)`).toBeGreaterThan(30);
+		expect(renders, `${renders} renders in 2s — expected ~120 (60fps)`).toBeLessThan(190);
 		expect(maxPending, 'more than one frame scheduled at a time').toBeLessThanOrEqual(1);
 	});
 
