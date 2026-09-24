@@ -25,4 +25,14 @@ export default defineConfig({
 	image: { responsiveStyles: true },
 
 	prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+
+	// esbuild, not Lightning CSS, minifies the CSS. Lightning CSS folds
+	// `animation-timeline` into the `animation` shorthand
+	// (`animation: linear both reveal view()`), which no browser accepts: the
+	// declaration is dropped and every scroll-driven animation on the site --
+	// reveals, section arrivals, the progress bar, the parallax -- silently
+	// never ran in a production build while working in `astro dev`, which does
+	// not minify. tests/e2e/motion.spec.ts runs against the build and fails if
+	// it comes back.
+	vite: { build: { cssMinify: 'esbuild' } },
 });

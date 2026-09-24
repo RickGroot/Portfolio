@@ -21,9 +21,24 @@ interface Props {
 	 * view; a page that is about one thing sets it once, here.
 	 */
 	channel?: Channel | undefined;
+	/**
+	 * The page is made of full-width bands that each carry their own column:
+	 * the one-pager's sections, a case study. Otherwise <main> is the column.
+	 * A band used to escape a column-wide <main> with `calc(50% - 50vw)`, but
+	 * vw counts a classic scrollbar: on Windows every band was 15px wider than
+	 * the page, and the page scrolled sideways.
+	 */
+	bleed?: boolean | undefined;
 }
 
-const { title, description = site.description, ogImage, noindex, channel = 'ink' } = Astro.props;
+const {
+	title,
+	description = site.description,
+	ogImage,
+	noindex,
+	channel = 'ink',
+	bleed = false,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -45,7 +60,7 @@ const { title, description = site.description, ogImage, noindex, channel = 'ink'
 		{/* No site header. This is meant to feel like an app, and an app has no */}
 		{/* masthead: the one-pager opens on the hero, and a case study carries */}
 		{/* its own way back to the guide. */}
-		<main id="main" class="wrap" tabindex="-1">
+		<main id="main" class:list={[{ wrap: !bleed }]} tabindex="-1">
 			<slot />
 		</main>
 		<Footer />

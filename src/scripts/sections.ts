@@ -8,8 +8,10 @@
  *   - A section taller than the viewport scrolls NORMALLY until you reach its
  *     end; only then does the next gesture advance. Otherwise its bottom would
  *     be unreachable, which is the classic failure of this pattern.
- *   - Keyboard keeps working: PageUp/PageDown, Home/End and arrows all move
- *     between sections, and Tab moves focus normally without hijacking.
+ *   - Past the last section, the footer is an ordinary scroll.
+ *   - Ctrl + wheel and a trackpad pinch still zoom.
+ *   - Keyboard keeps working: PageUp/PageDown, Space, Home/End and arrows all
+ *     move between sections, and Tab moves focus normally without hijacking.
  *   - Deep links (`/#work`) land on the right section.
  *   - A section can have steps of its own. The programme guide takes each
  *     scroll as a step through its programmes, and the page only moves on
@@ -31,10 +33,22 @@ const STEP_MS = 420;
  * without this the tail of one flick was a second step.
  */
 const QUIET_MS = 160;
-/** Wheel deltas below this are trackpad drift, not intent. */
+/**
+ * Wheel movement has to add up to this before it counts as intent. Added up,
+ * not judged event by event: a slow trackpad scroll is a stream of 1-5px
+ * deltas, and when each was let through as drift, the page crept past the edge
+ * of a channel.
+ */
 const WHEEL_THRESHOLD = 12;
+/** A pause this long between wheel events starts a new gesture. */
+const WHEEL_GAP_MS = 240;
+/** A wheel "line" in px, for a mouse that reports lines (Firefox). */
+const LINE_PX = 16;
 /** Vertical swipe distance that counts as intent. */
 const SWIPE_THRESHOLD = 48;
+/** Where Space presses the thing in focus rather than paging. */
+const CONTROLS =
+	'button, summary, audio, video, [role="button"], [role="checkbox"], [role="switch"], [role="tab"], [role="option"], [role="menuitem"]';
 
 export function boot(): void {
 	const sections = [...document.querySelectorAll<HTMLElement>('[data-section]')];
@@ -54,10 +68,18 @@ export function boot(): void {
 	const rail = document.querySelector<HTMLElement>('[data-rail]');
 	const dots = rail ? [...rail.querySelectorAll<HTMLAnchorElement>('a')] : [];
 
-	/** Mark which sections are taller than the viewport, so we can let them scroll. */
+	/**
+	 * Mark which sections are taller than the viewport, so we can let them scroll.
+	 *
+	 * The section's own box, not its scrollHeight. scrollHeight counts the
+	 * transformed overflow of its children, and the parallax layers and
+	 * arrival animations translate children past the edge on purpose: with
+	 * scrollHeight every full-screen section measured a few px too tall, was
+	 * handed to native scrolling, and one PageDown skipped a section.
+	 */
 	function measure(): void {
 		for (const section of sections) {
-			const overflows = section.scrollHeight > window.innerHeight + 8;
+			const overflows = section.getBoundingClientRect().height > window.innerHeight + 8;
 			if (overflows) section.dataset.overflows = '';
 			else delete section.dataset.overflows;
 		}
@@ -122,7 +144,10 @@ export function boot(): void {
 		// its first step, from below at its last.
 		if (i !== index) {
 			target.dispatchEvent(
-				new CustomEvent('section:enter', { detail: { from: i > index ? 'above' : 'below' } }),
+				new CustomEvent('section:enter', {
+					bubbles: true,
+					detail: { from: i > index ? 'above' : 'below' },
+				}),
 			);
 		}
 
@@ -137,27 +162,73 @@ export function boot(): void {
 	}
 
 	/**
-	 * True when the current section still has somewhere to scroll in `dir`.
-	 * This is what stops a tall section from becoming a trap.
+	 * How far the current section can still scroll in `dir`, in px; 0 when it
+	 * cannot. This is what stops a tall section from becoming a trap.
 	 */
-	function canScrollWithin(dir: number): boolean {
+	function roomWithin(dir: number): number {
 		const section = sections[index];
-		if (!section || !('overflows' in section.dataset)) return false;
+		if (!section || !('overflows' in section.dataset)) return 0;
 		const rect = section.getBoundingClientRect();
-		return dir > 0 ? rect.bottom > window.innerHeight + 4 : rect.top < -4;
+		const room = dir > 0 ? rect.bottom - window.innerHeight : -rect.top;
+		return room > 4 ? room : 0;
 	}
 
+	function canScrollWithin(dir: number): boolean {
+		return roomWithin(dir) > 0;
+	}
+
+	/**
+	 * True when this move is past the last section, into the footer: an
+	 * ordinary scroll. With every other wheel event taken, nothing else would
+	 * reach it.
+	 */
+	function pastTheEnd(dir: number): boolean {
+		return dir > 0 && index === sections.length - 1;
+	}
+
+	/** One step of intent: a step inside the section, or the next channel. */
+	function advance(dir: number): void {
+		if (stepWithin(dir)) {
+			lock(STEP_MS);
+			return;
+		}
+		// Coming back up from the footer: the last section first, whole.
+		const top = sections[index]?.getBoundingClientRect().top ?? 0;
+		go(dir < 0 && top < -4 ? index : index + dir);
+	}
+
+	let wheelSum = 0;
+	let wheelAt = 0;
+
 	function onWheel(ev: WheelEvent): void {
-		if (Math.abs(ev.deltaY) < WHEEL_THRESHOLD) return;
-		const dir = ev.deltaY > 0 ? 1 : -1;
-		if (canScrollWithin(dir)) return; // let the section scroll itself
+		// Ctrl + wheel is the browser's zoom, and a trackpad pinch arrives as
+		// one. Neither is a scroll.
+		if (ev.ctrlKey) return;
+		const dy =
+			ev.deltaMode === 1
+				? ev.deltaY * LINE_PX
+				: ev.deltaMode === 2
+					? ev.deltaY * window.innerHeight
+					: ev.deltaY;
+		if (dy === 0) return; // sideways
+		const dir = dy > 0 ? 1 : -1;
+		if (canScrollWithin(dir) || pastTheEnd(dir)) {
+			wheelSum = 0;
+			return; // let the page scroll itself
+		}
+		// Every wheel event over a channel is ours, however small: one let
+		// through is a pixel of drift, and a slow scroll is hundreds of them.
 		ev.preventDefault();
 		if (locked) {
 			extendLock();
 			return;
 		}
-		if (stepWithin(dir)) lock(STEP_MS);
-		else go(index + dir);
+		if (ev.timeStamp - wheelAt > WHEEL_GAP_MS || Math.sign(wheelSum) !== dir) wheelSum = 0;
+		wheelAt = ev.timeStamp;
+		wheelSum += dy;
+		if (Math.abs(wheelSum) < WHEEL_THRESHOLD) return;
+		wheelSum = 0;
+		advance(dir);
 	}
 
 	function onKey(ev: KeyboardEvent): void {
@@ -172,7 +243,12 @@ export function boot(): void {
 		let dir: number;
 		if (ev.key === 'PageDown' || ev.key === 'ArrowDown') dir = 1;
 		else if (ev.key === 'PageUp' || ev.key === 'ArrowUp') dir = -1;
-		else if (ev.key === 'Home') {
+		else if (ev.key === ' ') {
+			// Space pages like PageDown, and Shift+Space like PageUp -- except on
+			// a control, where Space presses it.
+			if (el?.closest(CONTROLS)) return;
+			dir = ev.shiftKey ? -1 : 1;
+		} else if (ev.key === 'Home') {
 			ev.preventDefault();
 			go(0);
 			return;
@@ -182,11 +258,23 @@ export function boot(): void {
 			return;
 		} else return;
 
-		if (canScrollWithin(dir)) return;
+		if (pastTheEnd(dir)) return;
+		const room = roomWithin(dir);
+		if (room) {
+			// A native page is most of the viewport. In a section only a little
+			// taller than the screen it carried the view past the section's end
+			// and 150px into the next one, which then took over misaligned. Page
+			// by at most what is left; the next press changes channel.
+			if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') {
+				ev.preventDefault();
+				const page = Math.min(room, window.innerHeight * 0.875);
+				window.scrollTo({ top: window.scrollY + dir * page, behavior: 'smooth' });
+			}
+			return;
+		}
 		ev.preventDefault();
 		if (locked) return;
-		if (stepWithin(dir)) lock(STEP_MS);
-		else go(index + dir);
+		advance(dir);
 	}
 
 	let touchY = 0;
@@ -198,9 +286,8 @@ export function boot(): void {
 		const delta = touchY - endY;
 		if (Math.abs(delta) < SWIPE_THRESHOLD) return;
 		const dir = delta > 0 ? 1 : -1;
-		if (canScrollWithin(dir) || locked) return;
-		if (stepWithin(dir)) lock(STEP_MS);
-		else go(index + dir);
+		if (canScrollWithin(dir) || pastTheEnd(dir) || locked) return;
+		advance(dir);
 	}
 
 	/** Keep `index` honest when something else moves the page (deep link, rail). */

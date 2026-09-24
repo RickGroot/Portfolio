@@ -6,7 +6,7 @@ interaction-triggered.
 ## What it is
 
 A grid of characters recomputed 30 times a second and written into two stacked `<pre>` elements.
-**No canvas, no WebGL, no graphics context.** The whole thing is 2.6 KB gzip.
+**No canvas, no WebGL, no graphics context.** The whole thing is 2.9 KB gzip.
 
 It idles as an abstract field, decodes into a portrait on load, and dissolves again as the hero
 leaves the viewport. Fast pointer movement disturbs it.
@@ -134,7 +134,7 @@ The script also emits a **fully resolved static frame** which is server-rendered
 | Non-monospace font       | Same — the renderer refuses to mount                 | —        |
 | Print / forced-colors    | `display: none`. It is decoration.                   | CSS only |
 | Offscreen / tab hidden   | Loop unsubscribes, RAF cancelled — it does not idle  | —        |
-| Full                     | Decode on load, pointer-reactive, dissolve on scroll | 2.6 KB   |
+| Full                     | Decode on load, pointer-reactive, dissolve on scroll | 2.9 KB   |
 
 The gates run **before** the dynamic import, so a visitor who will never see the animation never
 downloads it. JS only ever takes over an element that is already correct — the inverse of the usual
@@ -189,11 +189,41 @@ Three props exist because real photographs are not uniform:
   landscape photograph, so an off-centre subject gets cut away unless the crop is told where to
   look. The clock tower sits left of centre.
 
+The statement crosses the photograph — the lighthouse's tower, at most sizes — so it sits on a plate
+of the field, one band per line (`box-decoration-break: clone`). On the field the plate cannot be
+seen; it shows only where the picture is dark. The plates are cut to Martian Mono's metrics, so
+they meet without one covering the descenders of the line above; the numbers are in the comment on
+`.art__plate`.
+
 **Treat at display time, not at bake time.** An earlier version quantised its source through an
 ordered Bayer dither, which looked right in isolation and was wrong twice over: the page applied
 its own screen on top, so it doubled; and high-frequency noise is the worst input a lossy encoder
 can get — `check-assets` failed the build at **507 KB** for one backdrop that was **67 KB** without
 it. Keep sources photographic and let the page apply the treatment.
+
+## Depth and decoding
+
+**Depth** (`src/styles/depth.css`). Each section is a named view timeline, `--channel`, and its
+layers ride it at their own depth: `--depth × --depth-unit` (14vh, 7vh on a phone) one way on entry
+and the other way on exit. At rest a section sits at 50% of its timeline, where every depth is 0,
+so a settled channel is exactly its layout and the parallax exists only in motion. Pictures sit
+behind (negative), copy in front (positive), and the name is two planes, GROOT nearer than RICK.
+Pictures that travel are oversized so the travel never shows an edge. The keyframes animate
+`transform`, not `translate`, so they compose with the `translate` other animations set on the same
+element. Phones move the pictures only; reduced motion, or no `animation-timeline`, moves nothing.
+
+It depends on esbuild minifying the CSS (`astro.config.mjs`). Lightning CSS folds
+`animation-timeline` into the `animation` shorthand, which is invalid; the browser drops the whole
+declaration, and every scroll-driven animation on the site was dead in the production build while
+the dev server, which does not minify, looked fine.
+
+**Decoding** (`src/lib/decode.ts`). A headline scrambles into its real text when its channel comes
+on: the readout's name, a section's heading, the guide's programme titles and the interludes'
+statements (`data-decode`). It runs on the one animation loop (`subscribe` from `loop.ts`) and
+never starts its own. While it runs, the element's `aria-label` holds the real text, so a screen
+reader is never read noise. The noise glyphs are in the Martian Mono subset and the face is
+monospaced, so nothing reflows. Whitespace, and the zero-width characters that hold a word
+together, are left alone. Under reduced motion nothing scrambles.
 
 ## Changing the portrait
 

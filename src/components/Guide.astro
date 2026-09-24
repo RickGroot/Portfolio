@@ -52,9 +52,11 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 	data-guide-end={guide.end}
 	data-section={form === 'screen' ? '' : undefined}
 	data-steps={form === 'screen' ? '' : undefined}
+	data-osd={form === 'screen' ? 'Guide' : undefined}
 	data-channel={form === 'screen' ? focus.data.channel : undefined}
 	style={form === 'screen' ? `${channelStyle(focus.data.channel)};${axis}` : axis}
 >
+	{form === 'screen' && <span class="guide__wipe" data-guide-wipe aria-hidden="true" />}
 	<div class="guide__inner wrap">
 		<header class="guide__bar">
 			{form === 'screen' ? (
@@ -93,7 +95,9 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 								)}
 							</p>
 							<div class="guide__titlebox">
-								<h3 class="guide__title">{e.data.title}</h3>
+								<h3 class="guide__title" data-decode>
+									{e.data.title}
+								</h3>
 							</div>
 							<p class="guide__meta">
 								{e.data.role}
@@ -202,7 +206,16 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 		--row: 3.25rem;
 		--axis: 1.75rem;
 		--screen-h: 46svh;
-		transition: background-color var(--speed-slow) var(--ease);
+	}
+
+	/* The next channel's ground, wiping over the current one (guide.ts). It */
+	/* sits between the section's own background and everything on it. */
+	.guide__wipe {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		opacity: 0;
+		pointer-events: none;
 	}
 
 	.guide--screen {
@@ -211,6 +224,8 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 	}
 
 	.guide__inner {
+		position: relative;
+		z-index: 1;
 		display: grid;
 		grid-template-rows: auto minmax(0, 1fr) auto;
 		gap: var(--s-6);
@@ -651,6 +666,30 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 
 		.guide__title {
 			font-size: min(clamp(2.5rem, 1rem + 4vw, 5rem), 14cqi);
+		}
+	}
+
+	/* A laptop screen less the browser's own chrome: 1366x768 leaves 657px and */
+	/* 1280x720 leaves 630. Another step, or the guide is taller than the screen, */
+	/* scrolls by itself, and stops taking a scroll as a programme step. The */
+	/* title's svh term is for CHROMECAST RECEIVERS, the one two-line title, */
+	/* which sets the height of the cell every preview shares. */
+	@media (min-width: 60rem) and (max-height: 700px) {
+		.guide {
+			--row: 2.5rem;
+			--axis: 1.25rem;
+		}
+
+		.guide--screen {
+			padding-block: var(--s-4);
+		}
+
+		.guide__inner {
+			gap: var(--s-3);
+		}
+
+		.guide__title {
+			font-size: min(clamp(2.5rem, 1rem + 4vw, 5rem), 14cqi, 9svh);
 		}
 	}
 

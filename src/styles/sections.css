@@ -12,14 +12,11 @@
 	min-block-size: 100svh;
 
 	/*
-	 * Full bleed, escaping main's wrap.
-	 *
-	 * Without this, .section__inner re-applies the wrap formula INSIDE an
-	 * already-inset parent and every section ends up one gutter (48px) right
-	 * of the hero. It also means a section can carry a full-width background
-	 * later without fighting the layout.
+	 * Full width because <main> is, on a page of bands (BaseLayout's `bleed`):
+	 * .section__inner draws the column. Inside a column-wide <main> the inner
+	 * would re-apply the wrap formula inside an already-inset parent, and the
+	 * section would sit one gutter right of the hero.
 	 */
-	margin-inline: calc(50% - 50vw);
 	display: grid;
 	align-content: center;
 	padding-block: var(--s-16);
@@ -32,6 +29,22 @@
 	gap: var(--s-8);
 	width: min(100% - var(--gutter) * 2, var(--wrap));
 	margin-inline: auto;
+}
+
+/*
+ * A laptop screen less the browser's own chrome: 1366x768 leaves 657px and
+ * 1280x720 leaves 630. At full padding the practice and contact sections were
+ * 60-90px taller than that, scrolled by themselves, and no longer changed
+ * channel in one move.
+ */
+@media (max-height: 700px) {
+	.section {
+		padding-block: var(--s-8);
+	}
+
+	.section__inner {
+		gap: var(--s-4);
+	}
 }
 
 .section__head {

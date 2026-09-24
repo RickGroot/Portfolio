@@ -1,0 +1,170 @@
+/*
+ * Depth: parallax, as one map.
+ *
+ * Every layer here moves against the page as its section scrolls. --depth > 0
+ * comes forward -- it travels faster than the page -- and --depth < 0 sits
+ * back and lags behind it. Because the section advance scrolls, every change of
+ * channel is a layered move: the name's two words pulling apart, the portrait
+ * falling behind, the guide's listings rising past its screen.
+ *
+ * All layers in a section run on that SECTION's view timeline, not their own.
+ * A section at rest fills the screen and sits exactly halfway through its
+ * timeline, and halfway is where every layer is at zero -- so at rest the
+ * composition is exactly what the layout says, and only movement moves it.
+ *
+ * Scroll-driven and transform-only: no JavaScript, no animation loop, and it
+ * runs on the compositor. `transform` rather than `translate`, so it composes
+ * with the reveals and hovers that use `translate`. Off under reduced motion;
+ * where animation-timeline is unsupported the page is simply still.
+ *
+ * One map, so the depths can be tuned against each other in one place.
+ */
+
+@property --depth {
+	syntax: '<number>';
+	inherits: false;
+	initial-value: 0;
+}
+
+:root {
+	/* How far a layer at --depth 1 travels either side of rest. */
+	--depth-unit: 14vh;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: view()) {
+		[data-section] {
+			view-timeline-name: --channel;
+		}
+
+		/* ---- the layers ---- */
+		.hero .field,
+		.hero__eyebrow,
+		.hero__copy h1 > span,
+		.hero .lede,
+		.hero__copy > .tags,
+		.guide--screen .guide__bar,
+		.guide--screen .guide__info,
+		.guide--screen .guide__screen,
+		.guide--screen .guide__grid,
+		.art__media img,
+		.art__copy,
+		[data-section] .section__head,
+		.practice__backdrop img,
+		.practice__lede,
+		.practice__item,
+		.contact__photo,
+		.contact__photo img {
+			animation: depth linear both;
+			animation-timeline: --channel;
+			animation-range: cover 0% cover 100%;
+		}
+
+		/* ---- the depths ---- */
+
+		/* The masthead: the portrait falls behind, and the name's two words
+		   pull apart as it leaves -- two planes, not one line of type. */
+		.hero .field {
+			--depth: -0.5;
+		}
+		.hero__eyebrow {
+			--depth: 0.25;
+		}
+		.hero__copy h1 > span:first-child {
+			--depth: 0.4;
+		}
+		.hero__copy h1 > span:last-child {
+			--depth: 0.85;
+		}
+		.hero .lede {
+			--depth: 0.18;
+		}
+		.hero__copy > .tags {
+			--depth: 0.1;
+		}
+
+		/* The guide: its screen sits back, its listings come forward. */
+		.guide--screen .guide__bar {
+			--depth: 0.12;
+		}
+		.guide--screen .guide__info {
+			--depth: 0.3;
+		}
+		.guide--screen .guide__screen {
+			--depth: -0.35;
+		}
+		.guide--screen .guide__grid {
+			--depth: 0.6;
+		}
+
+		/* The interludes: a deep picture under a statement that comes forward. */
+		.art__media img {
+			--depth: -0.55;
+		}
+		.art__copy {
+			--depth: 0.45;
+		}
+
+		/* How I work: the talk sits back, the three cards cascade. */
+		[data-section] .section__head {
+			--depth: 0.2;
+		}
+		.practice__backdrop img {
+			--depth: -0.45;
+		}
+		.practice__lede {
+			--depth: 0.15;
+		}
+		.practice__item:nth-child(1) {
+			--depth: 0.28;
+		}
+		.practice__item:nth-child(2) {
+			--depth: 0.42;
+		}
+		.practice__item:nth-child(3) {
+			--depth: 0.56;
+		}
+
+		/* Contact: the frame comes forward, the picture inside it holds back --
+		   a window rather than a card. */
+		.contact__photo {
+			--depth: 0.3;
+		}
+		.contact__photo img {
+			--depth: -0.3;
+		}
+
+		/* A phone scrolls tall sections by hand, and type drifting across other
+		   type while you read it is not depth, it is noise. The pictures keep
+		   theirs, at half the travel. */
+		@media (max-width: 47.99rem) {
+			:root {
+				--depth-unit: 7vh;
+			}
+
+			.hero__eyebrow,
+			.hero__copy h1 > span,
+			.hero .lede,
+			.hero__copy > .tags,
+			.guide--screen .guide__bar,
+			.guide--screen .guide__info,
+			.guide--screen .guide__grid,
+			.art__copy,
+			[data-section] .section__head,
+			.practice__lede,
+			.practice__item,
+			.contact__photo {
+				animation: none;
+			}
+		}
+	}
+}
+
+@keyframes depth {
+	from {
+		transform: translate3d(0, calc(var(--depth) * var(--depth-unit)), 0);
+	}
+	to {
+		transform: translate3d(0, calc(var(--depth) * var(--depth-unit) * -1), 0);
+	}
+}

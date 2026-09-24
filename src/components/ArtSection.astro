@@ -54,6 +54,7 @@ const levels = [
 	aria-labelledby={`${id}-heading`}
 	data-section
 	data-channel={channel}
+	data-osd={caption.split('/').pop()?.trim()}
 	style={`${channelStyle(channel)};--art-focus:${focus}`}
 >
 	<h2 id={`${id}-heading`} class="visually-hidden">
@@ -73,23 +74,22 @@ const levels = [
 	</div>
 
 	<div class="art__copy wrap">
-		<p class="art__statement">{statement}</p>
+		<p class="art__statement" data-decode>
+			<span class="art__plate">{statement}</span>
+		</p>
 		<p class="art__caption">{caption}</p>
 	</div>
 </section>
 
 <style>
-	/*
-	 * An interlude: no navigation, no links, nothing to do. It exists to give
-	 * the narrative a breath between projects, which is the one thing a
-	 * wall-to-wall sequence of case studies cannot do for itself.
-	 */
+	/* An interlude: no navigation, no links, nothing to do. It exists to give */
+	/* the narrative a breath between projects, which is the one thing a */
+	/* wall-to-wall sequence of case studies cannot do for itself. */
 	.art {
 		position: relative;
 		min-block-size: 100svh;
 		display: grid;
 		align-content: end;
-		margin-inline: calc(50% - 50vw);
 		overflow: clip;
 		padding-block-end: var(--s-24);
 		isolation: isolate;
@@ -114,26 +114,9 @@ const levels = [
 		object-position: var(--art-focus);
 	}
 
-	/* Parallax, deeper than the project panels -- an interlude should feel like
-	   it sits further back. Scroll-driven, transform only. */
-	@media (prefers-reduced-motion: no-preference) {
-		@supports (animation-timeline: view()) {
-			.art__media :global(img) {
-				animation: art-parallax linear both;
-				animation-timeline: view();
-				animation-range: cover 0% cover 100%;
-			}
-		}
-	}
-
-	@keyframes art-parallax {
-		from {
-			translate: 0 -11%;
-		}
-		to {
-			translate: 0 11%;
-		}
-	}
+	/* Its parallax -- deeper than anything else on the page, so an interlude */
+	/* sits further back -- is in the depth map, src/styles/depth.css. The */
+	/* picture is oversized above so the travel never shows an edge. */
 
 	/* The statement sits on the bottom of the photograph, so the photograph */
 	/* runs out into the field there. The field, not a darker shade: on the */
@@ -157,9 +140,29 @@ const levels = [
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: clamp(1.75rem, 0.9rem + 3.2vw, 3.25rem);
-		line-height: 1.08;
+		/* Not the display's usual 1.08: at 1.16 the lines' plates can meet */
+		/* without one painting over the descenders above it. */
+		line-height: 1.16;
 		letter-spacing: var(--tracking-display);
 		text-wrap: balance;
+	}
+
+	/* On a plate of the field, line by line. The statement crosses the */
+	/* photograph -- the lighthouse's tower, at most sizes -- and text never */
+	/* sits on a picture bare. On the field the plate cannot be seen; it only */
+	/* shows where the picture is dark, as a band of the channel's colour. */
+	/* Martian Mono's line box is 1.192em (1.000 up, 0.192 down), and its */
+	/* descenders reach 0.231em. Each plate runs from 0.91em above its baseline */
+	/* to 0.262em below: the padding takes it past the descenders, and the */
+	/* background leaves off the top 0.09em, so at the 1.16 pitch it overlaps */
+	/* the plate above by a hair -- no seam -- and clears that line's descenders. */
+	.art__plate {
+		padding: 0 0.12em 0.07em;
+		margin-inline: -0.12em;
+		background: linear-gradient(var(--field), var(--field)) bottom / 100% calc(100% - 0.09em)
+			no-repeat;
+		-webkit-box-decoration-break: clone;
+		box-decoration-break: clone;
 	}
 
 	.art__caption {

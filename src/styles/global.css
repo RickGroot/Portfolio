@@ -11,6 +11,8 @@
 @import './motion.css';
 @import './cursor.css';
 @import './controls.css';
+@import './depth.css';
+@import './zap.css';
 
 /*
  * The footer sits on the bottom of the screen even when the page is shorter
@@ -108,8 +110,31 @@ main {
 	animation-timing-function: var(--ease-out);
 }
 
-/* A short root cross-fade under a slightly longer element morph. */
-::view-transition-old(root),
+/*
+ * Changing page is changing channel. The old page rolls away with a flash, the
+ * new one rolls in and settles, while the picture and the title morph across
+ * on their own. One flash per navigation, never a strobe.
+ */
+::view-transition-old(root) {
+	animation: vt-zap-out 240ms steps(4, end) both;
+}
+
 ::view-transition-new(root) {
-	animation-duration: 180ms;
+	animation: vt-zap-in 380ms var(--ease-out) both;
+}
+
+@keyframes vt-zap-out {
+	to {
+		opacity: 0;
+		transform: translateY(-3vh);
+		filter: brightness(1.7) contrast(1.2);
+	}
+}
+
+@keyframes vt-zap-in {
+	from {
+		opacity: 0;
+		transform: translateY(4vh);
+		filter: brightness(1.6);
+	}
 }

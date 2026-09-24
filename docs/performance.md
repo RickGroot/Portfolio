@@ -2,18 +2,18 @@
 
 ## Budgets
 
-| Budget                | Limit               | How it is measured                      |
-| --------------------- | ------------------- | --------------------------------------- |
-| Initial JS, homepage  | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`         |
-| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 2.6 KB              |
-| Total JS, homepage    | ≤ 45 KB gzip        | measured 4.7 KB                         |
-| LCP                   | < 2.5 s             | Lighthouse CI on built output (Phase 2) |
-| CLS                   | < 0.1               | Lighthouse CI (Phase 2)                 |
-| INP                   | < 200 ms            | **Field only** — see below              |
-| Canvas elements       | **0**               | `tests/budgets/payload.spec.ts`         |
-| WebGL contexts        | **0**               | `tests/budgets/payload.spec.ts`         |
-| Animation loops       | 1, paused when idle | `tests/budgets/payload.spec.ts`         |
-| Character grid        | ≤ 6000 cells        | `tests/e2e/field.spec.ts`               |
+| Budget                | Limit               | How it is measured                                             |
+| --------------------- | ------------------- | -------------------------------------------------------------- |
+| Initial JS, homepage  | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`                                |
+| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 2.9 KB (2026-09-24)                        |
+| Total JS, homepage    | ≤ 45 KB gzip        | measured 10.7 KB, 0.9 KB of it inline (2026-09-24)             |
+| LCP                   | < 2.5 s             | `tests/budgets/vitals.spec.ts`, 4× CPU, read before any scroll |
+| CLS                   | < 0.1               | `tests/budgets/vitals.spec.ts`, 4× CPU, the whole page walked  |
+| INP                   | < 200 ms            | **Field only** — see below                                     |
+| Canvas elements       | **0**               | `tests/budgets/payload.spec.ts`                                |
+| WebGL contexts        | **0**               | `tests/budgets/payload.spec.ts`                                |
+| Animation loops       | 1, paused when idle | `tests/budgets/payload.spec.ts`                                |
+| Character grid        | ≤ 6000 cells        | `tests/e2e/field.spec.ts`                                      |
 
 ### Two honesty notes
 
@@ -32,7 +32,7 @@ they arrive. So the plan replaced it with three bounded numbers.
 
 Then the exemption stopped mattering. The signature treatment renders as **text in two `<pre>`
 elements** — no canvas, no WebGL, no shader compile, no texture upload. The whole art system
-measures **2.6 KB gzip**, against the 25 KB a GPU renderer would have taken on its own.
+measures **2.9 KB gzip**, against the 25 KB a GPU renderer would have taken on its own.
 
 For calibration on what was avoided: the realistic tree-shaken OGL subset for a fullscreen textured
 quad measures 25.5 KB gzip unminified, roughly 12–16 KB minified — plus a quality governor,
@@ -41,14 +41,14 @@ string assignment produces.
 
 ## Baseline vs now
 
-|                      | Old site (measured live)               | Now                                          |
-| -------------------- | -------------------------------------- | -------------------------------------------- |
-| Total JS             | 26 KB gzip                             | **4.7 KB gzip** (incl. the whole art system) |
-| Homepage images      | **5.7 MB**                             | none — the hero is text                      |
-| Fonts                | 1.1 MB of TTF, none of which loaded    | 45 KB of WOFF2                               |
-| Third-party requests | 2 render-blocking Google Fonts imports | **0**                                        |
-| Repo assets          | 6.9 MB                                 | ~1 MB                                        |
-| `dist`               | —                                      | 0.49 MB                                      |
+|                      | Old site (measured live)               | Now                                           |
+| -------------------- | -------------------------------------- | --------------------------------------------- |
+| Total JS             | 26 KB gzip                             | **10.7 KB gzip** (incl. the whole art system) |
+| Homepage images      | **5.7 MB**                             | none — the hero is text                       |
+| Fonts                | 1.1 MB of TTF, none of which loaded    | 45 KB of WOFF2                                |
+| Third-party requests | 2 render-blocking Google Fonts imports | **0**                                         |
+| Repo assets          | 6.9 MB                                 | ~1 MB                                         |
+| `dist`               | —                                      | 0.49 MB                                       |
 
 **The performance problem was never JavaScript.** It was 5.7 MB of unoptimised camera JPEGs on the
 homepage and a font stack that silently fell back to a CDN. The homepage now has no hero image at

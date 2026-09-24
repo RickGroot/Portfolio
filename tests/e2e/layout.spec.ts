@@ -14,7 +14,9 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 	const left = async (selector: string): Promise<number> =>
 		(await page.locator(selector).first().boundingBox())?.x ?? -1;
 
-	const main = await left('main#main');
+	// The column itself. <main> is full width on a page of bands, so the
+	// footer's .wrap is the one element that is nothing but the column.
+	const main = await left('footer .wrap');
 	const h1 = await left('.hero__copy h1');
 	const lede = await left('.hero .lede');
 	// The guide's content column.
@@ -34,16 +36,6 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 			`${name} is ${Math.round(x - main)}px off the page column`,
 		).toBeLessThan(2);
 	}
-});
-
-test('the full-bleed hero causes no horizontal overflow', async ({ page }) => {
-	await page.goto('/');
-	const overflow = await page.evaluate(() => ({
-		scrollWidth: document.documentElement.scrollWidth,
-		inner: window.innerWidth,
-	}));
-	// margin-inline: calc(50% - 50vw) is easy to get wrong by a scrollbar width.
-	expect(overflow.scrollWidth, 'the page scrolls sideways').toBeLessThanOrEqual(overflow.inner);
 });
 
 /**

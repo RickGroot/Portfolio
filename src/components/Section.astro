@@ -25,6 +25,7 @@ const { id, label, labelHidden = false, index, channel, class: cls = '' } = Astr
 	aria-labelledby={`${id}-heading`}
 	data-section
 	data-channel={channel}
+	data-osd={label}
 	style={channelStyle(channel)}
 >
 	<div class="section__inner wrap">
@@ -34,7 +35,11 @@ const { id, label, labelHidden = false, index, channel, class: cls = '' } = Astr
 					{index}
 				</span>
 			)}
-			<h2 id={`${id}-heading`} class:list={{ 'visually-hidden': labelHidden }}>
+			<h2
+				id={`${id}-heading`}
+				class:list={{ 'visually-hidden': labelHidden }}
+				data-decode={labelHidden ? undefined : ''}
+			>
 				{label}
 			</h2>
 		</header>

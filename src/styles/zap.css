@@ -1,0 +1,77 @@
+/*
+ * Zapping: the static and the channel readout src/scripts/zap.ts shows when
+ * the one-pager changes channel. Both are created by the script, so without
+ * JavaScript neither exists; both are decoration, aria-hidden and never in
+ * the way of a click.
+ */
+
+.zap {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-zap);
+	overflow: clip;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Grey specks at two strengths, so the static reads on the deep channels and
+   on paper alike. Oversized, because the script jumps it between offsets. */
+.zap__noise {
+	position: absolute;
+	inset: -96px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.62 0 0 0 0 0.62 0 0 0 2.6 -1.1'/%3E%3C/filter%3E%3Crect width='192' height='192' filter='url(%23n)'/%3E%3C/svg%3E");
+	background-size: 192px;
+}
+
+/* The roll bar: a band of brighter signal travelling through the static. */
+.zap__bar {
+	position: absolute;
+	inset-inline: 0;
+	inset-block-start: 0;
+	block-size: 22vh;
+	background: linear-gradient(
+		to bottom,
+		transparent,
+		color-mix(in oklab, var(--mark) 26%, transparent) 42%,
+		color-mix(in oklab, var(--mark) 38%, transparent) 55%,
+		transparent
+	);
+}
+
+/* The channel readout. Top right, on a plate of the channel so it stays
+   legible over any picture, and gone again a couple of seconds after a
+   change -- the way a television shows it. */
+.osd {
+	position: fixed;
+	z-index: var(--z-osd);
+	inset-block-start: var(--s-4);
+	inset-inline-end: var(--s-4);
+	display: flex;
+	align-items: baseline;
+	gap: 0.6em;
+	padding: var(--s-2) var(--s-4);
+	background: var(--field);
+	border: 2px solid var(--mark);
+	color: var(--mark);
+	font-family: var(--font-display);
+	font-size: var(--t-lg);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	line-height: 1;
+	text-transform: uppercase;
+	white-space: nowrap;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.osd__num {
+	color: var(--accent);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (forced-colors: active) {
+	.zap,
+	.osd {
+		display: none;
+	}
+}

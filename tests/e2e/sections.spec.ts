@@ -156,6 +156,55 @@ test.describe('one-page sections', () => {
 			expect(visited, 'one press did not advance exactly one step').toEqual(expected);
 		});
 
+		test('the footer is still reachable with the wheel, and back up again', async ({ page }) => {
+			await page.goto('/#contact');
+			await page.mouse.move(640, 400);
+			// Past the last section the wheel is an ordinary scroll.
+			for (let i = 0; i < 4; i++) {
+				await page.mouse.wheel(0, 120);
+				await page.waitForTimeout(120);
+			}
+			await expect
+				.poll(
+					() =>
+						page.evaluate(
+							() =>
+								window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4,
+						),
+					{ message: 'the wheel could not reach the footer', timeout: 6000 },
+				)
+				.toBe(true);
+
+			// And up from the footer lands on the last section, whole -- not the one
+			// before it.
+			await page.waitForTimeout(400);
+			await page.mouse.wheel(0, -120);
+			await expect
+				.poll(
+					() =>
+						page.evaluate(() =>
+							Math.round(document.getElementById('contact')?.getBoundingClientRect().top ?? 9999),
+						),
+					{ message: 'up from the footer did not come back to the contact section', timeout: 6000 },
+				)
+				.toBe(0);
+		});
+
+		test('Ctrl + wheel is left to the browser, to zoom', async ({ page }) => {
+			await page.goto('/');
+			const prevented = await page.evaluate(() => {
+				const ev = new WheelEvent('wheel', {
+					deltaY: 120,
+					ctrlKey: true,
+					bubbles: true,
+					cancelable: true,
+				});
+				document.body.dispatchEvent(ev);
+				return ev.defaultPrevented;
+			});
+			expect(prevented, 'Ctrl + wheel was taken as a channel change').toBe(false);
+		});
+
 		test('typing in a field is never hijacked', async ({ page }) => {
 			await page.goto('/');
 			// There is no form on the page yet, so synthesise one: the guard must
@@ -206,6 +255,55 @@ test.describe('one-page sections', () => {
 				Math.abs(after - before),
 				'an arrow key inside an input advanced a section',
 			).toBeLessThan(200);
+		});
+	});
+
+	/**
+	 * Every scroll over a channel changes channel or does nothing -- it never
+	 * moves the page a little. A slow trackpad scroll is a stream of tiny
+	 * deltas; each was let through as drift, and the page crept past the edge.
+	 */
+	test.describe('the advance takes every scroll', () => {
+		/** How far the nearest section's top is from the top of the screen. */
+		const offBy = (page: import('@playwright/test').Page): Promise<number> =>
+			page.evaluate(() =>
+				Math.min(
+					...[...document.querySelectorAll('[data-section]')].map((s) =>
+						Math.abs(Math.round(s.getBoundingClientRect().top)),
+					),
+				),
+			);
+
+		test('a slow scroll changes channel rather than creeping', async ({ page }) => {
+			await page.goto('/');
+			await page.mouse.move(640, 400);
+			for (let i = 0; i < 40; i++) {
+				await page.mouse.wheel(0, 2);
+				await page.waitForTimeout(16);
+			}
+			await page.waitForTimeout(900);
+			expect(await offBy(page), 'the page stopped between two channels').toBeLessThan(2);
+			expect(
+				await page.evaluate(() =>
+					Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 9999),
+				),
+				'a slow scroll did not change channel',
+			).toBe(0);
+		});
+
+		test('Space pages from channel to channel, and Shift+Space back', async ({ page }) => {
+			await page.goto('/');
+			await page.keyboard.press('Space');
+			await expect
+				.poll(() =>
+					page.evaluate(() =>
+						Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 9999),
+					),
+				)
+				.toBe(0);
+			await page.waitForTimeout(700);
+			await page.keyboard.press('Shift+Space');
+			await expect.poll(() => page.evaluate(() => Math.round(window.scrollY))).toBe(0);
 		});
 	});
 

@@ -14,10 +14,17 @@
  *   - NOW is moved to today, and a clock shows the visitor's own time -- real
  *     state, the one piece of chrome a TV guide always has.
  *
- * No animation loop: the tuning burst is a short Web Animation, and the clock
- * is a timeout that fires once a minute. The one loop on this site belongs to
- * the character field.
+ * Changing programme is changing channel, and looks like it: the old
+ * listing slides away and the new one rolls in from the direction you are
+ * going, the picture jumps like a set losing vertical hold under a burst of
+ * static, the new channel's colour wipes down the screen in scanline steps,
+ * and the title decodes out of noise.
+ *
+ * No animation loop of its own: every one of those is a short Web Animation,
+ * the title decode borrows the site's one loop for half a second, and the clock
+ * is a timeout that fires once a minute.
  */
+import { decode } from '../lib/decode';
 
 /** Everything a channel sets. Must match channelStyle() in src/lib/channels.ts. */
 const CHANNEL_VARS = [
@@ -77,6 +84,49 @@ function mount(guide: HTMLElement): void {
 	/* ---- focus follows the pointer and the keyboard ------------------------ */
 
 	let active = blocks.find((b) => 'focus' in b.dataset)?.dataset.block;
+	const order = blocks.map((b) => b.dataset.block);
+
+	/* ---- the colour wipe ---------------------------------------------------- */
+
+	// The new channel's ground comes in as a wipe over the old one, so the
+	// section's own background changes only once the wipe has covered it. A
+	// change arriving mid-wipe finishes the last one first.
+	const wipe = guide.querySelector<HTMLElement>('[data-guide-wipe]');
+	let wiping: { animation: Animation; field: string } | null = null;
+
+	function commitField(field: string): void {
+		guide.style.setProperty('--field', field);
+		guide.dispatchEvent(new CustomEvent('channel:update', { bubbles: true }));
+	}
+
+	function retuneGround(field: string, dir: number): void {
+		if (wiping) {
+			wiping.animation.cancel();
+			commitField(wiping.field);
+			wiping = null;
+		}
+		if (!wipe || reduced.matches) {
+			commitField(field);
+			return;
+		}
+		wipe.style.background = field;
+		const animation = wipe.animate(
+			[
+				{ clipPath: dir > 0 ? 'inset(0 0 100% 0)' : 'inset(100% 0 0 0)', opacity: 1 },
+				{ clipPath: 'inset(0 0 0 0)', opacity: 1 },
+			],
+			{ duration: 380, easing: 'steps(8, end)', fill: 'forwards' },
+		);
+		wiping = { animation, field };
+		animation.onfinish = () => {
+			if (wiping?.animation !== animation) return;
+			commitField(field);
+			animation.cancel();
+			wiping = null;
+		};
+	}
+
+	/* ---- changing programme ------------------------------------------------- */
 
 	function activate(id: string | undefined): void {
 		if (!id || id === active) return;
@@ -85,36 +135,88 @@ function mount(guide: HTMLElement): void {
 		// lit, and hover is plain CSS.
 		if (!preview) return;
 
-		previews.get(active)?.removeAttribute('data-active');
+		const previous = previews.get(active);
+		const dir = Math.sign(order.indexOf(id) - order.indexOf(active)) || 1;
+		previous?.removeAttribute('data-active');
 		preview.setAttribute('data-active', '');
 		for (const b of blocks) b.toggleAttribute('data-focus', b.dataset.block === id);
 		active = id;
 
 		// Retune the whole screen to the programme's channel. The preview
 		// carries that channel's colours inline, so they are copied rather than
-		// recomputed, and channel.ts is told so the page chrome follows.
+		// recomputed; the ground itself arrives with the wipe, and channel.ts is
+		// told when it lands so the page chrome follows.
 		for (const name of CHANNEL_VARS) {
+			if (name === '--field') continue;
 			const value = preview.style.getPropertyValue(name);
 			if (value) guide.style.setProperty(name, value);
 		}
 		if (preview.dataset.tone) guide.dataset.channel = preview.dataset.tone;
-		guide.dispatchEvent(new CustomEvent('channel:update', { bubbles: true }));
+		retuneGround(preview.style.getPropertyValue('--field'), dir);
 
-		// A burst of static as the screen changes channel. Opacity only.
-		const staticLayer = preview.querySelector<HTMLElement>('[data-guide-static]');
-		if (staticLayer && !reduced.matches) {
-			staticLayer.animate(
-				[{ opacity: 0.95 }, { opacity: 0.55 }, { opacity: 0.8 }, { opacity: 0 }],
-				{
-					duration: 260,
-					easing: 'steps(4, end)',
-				},
+		if (reduced.matches) return;
+
+		// The listing: out the way you are going, in from where you are going.
+		// Added onto the depth layer's own transform rather than replacing it.
+		previous
+			?.querySelector('.guide__info')
+			?.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-dir * 18}px)` }], {
+				duration: 200,
+				easing: 'ease-in',
+				composite: 'add',
+			});
+		preview
+			.querySelector('.guide__info')
+			?.animate([{ transform: `translateY(${dir * 28}px)` }, { transform: 'translateY(0)' }], {
+				duration: 380,
+				easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+				composite: 'add',
+			});
+
+		// The picture: a burst of static, and a roll like a set losing
+		// vertical hold before it locks.
+		preview
+			.querySelector('[data-guide-static]')
+			?.animate([{ opacity: 0.95 }, { opacity: 0.55 }, { opacity: 0.8 }, { opacity: 0 }], {
+				duration: 260,
+				easing: 'steps(4, end)',
+			});
+		preview
+			.querySelector('.guide__screen img')
+			?.animate(
+				[
+					{ transform: `translateY(${dir * 10}%)` },
+					{ transform: `translateY(${-dir * 3}%)`, offset: 0.55 },
+					{ transform: 'translateY(0)' },
+				],
+				{ duration: 300, easing: 'steps(5, end)', composite: 'add' },
 			);
-		}
+
+		decode(preview.querySelector<HTMLElement>('[data-decode]'));
 	}
 
+	// Only a pointer that actually moved picks a programme. With pointerenter,
+	// a block that scrolled under a pointer standing still changed the
+	// programme: every section advance past the guide swept its rows under the
+	// cursor and retuned the screen on the way through. The position is
+	// compared rather than movementX/Y, which some synthetic input leaves at 0.
+	let lastX = Number.NaN;
+	let lastY = Number.NaN;
+	let moved = false;
+	window.addEventListener(
+		'pointermove',
+		(ev) => {
+			moved = ev.clientX !== lastX || ev.clientY !== lastY;
+			lastX = ev.clientX;
+			lastY = ev.clientY;
+		},
+		{ capture: true, passive: true },
+	);
+
 	for (const block of blocks) {
-		block.addEventListener('pointerenter', () => activate(block.dataset.block));
+		block.addEventListener('pointermove', () => {
+			if (moved) activate(block.dataset.block);
+		});
 		block.addEventListener('focus', () => activate(block.dataset.block));
 	}
 
@@ -132,8 +234,6 @@ function mount(guide: HTMLElement): void {
 	}
 
 	/* ---- scrolling steps through the programmes --------------------------- */
-
-	const order = blocks.map((b) => b.dataset.block);
 
 	/** Move to a programme -- focus too, if the keyboard is already in the guide. */
 	function stepTo(id: string | undefined): void {

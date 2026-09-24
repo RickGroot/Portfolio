@@ -80,6 +80,9 @@
 
 	--z-nav: 40;
 	--z-progress: 45;
+	/* Channel changes: the static and the readout, over everything but the cursor. */
+	--z-zap: 60;
+	--z-osd: 61;
 	--z-cursor: 90;
 	/* the skip link sits at 100, above everything */
 

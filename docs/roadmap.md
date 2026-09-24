@@ -20,7 +20,7 @@ their turn arrives — not guessed at today.
 > treatment renders as text in two `<pre>` elements, so `ogl`, `motion`, the shared GL context, the
 > quality governor, the `potato`/`thin`/`steady`/`full` tiers, context-loss handling and build-time
 > poster generation were all cut. They existed to serve an effect a string assignment produces. The
-> whole art system measures **2.6 KB gzip** against the 25 KB that renderer would have taken on its
+> whole art system measures **2.9 KB gzip** against the 25 KB that renderer would have taken on its
 > own. Later phases are renumbered accordingly.
 
 ---
@@ -40,15 +40,63 @@ Rick: _"the app feels too static and too dark."_ The visual layer is being repla
 the one-pager is a television, and each full-screen section is a **channel** — its own flat colour
 field, its own number. Delivered in stages, each ending with Rick's review.
 
-| Stage                                                                    | State                      |
-| ------------------------------------------------------------------------ | -------------------------- |
-| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done**                   |
-| 1b. The programme guide — work, case studies, no header, deep grounds    | **Done — awaiting review** |
-| 2. Channels on the DOM — channel readout, tuning wipe, number keys       | Next                       |
-| 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | —                          |
-| 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                          |
-| 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                          |
-| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | —                          |
+| Stage                                                                    | State                     |
+| ------------------------------------------------------------------------ | ------------------------- |
+| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done**                  |
+| 1b. The programme guide — work, case studies, no header, deep grounds    | **Done**                  |
+| 2. Channels on the DOM — readout, static, decode, depth; number keys     | **Part done — in review** |
+| 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | —                         |
+| 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                         |
+| 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                         |
+| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | —                         |
+
+**Stage 2, part one: motion (2026-09-24).** Rick: _"Can you add more parallax scrolling effects and
+animations when switching channels?"_
+
+- **Depth** (`src/styles/depth.css`): every section's layers ride a scroll-driven view timeline at
+  their own depth — the name in two planes, the picture behind, the copy in front. Every depth is
+  0 at rest, so a settled channel is exactly its layout. Phones move the pictures only; reduced
+  motion moves nothing. A case study sinks away in layers as it scrolls.
+- **Changing channel** (`src/scripts/zap.ts`): a burst of static with a roll bar, the on-screen
+  readout (`02 GUIDE`), and the headline decoding in (`src/lib/decode.ts`, on the one loop). A step
+  through the guide wipes the next channel's ground in, rolls the picture and decodes the title;
+  a page transition zaps.
+- Still to do in this stage: number keys, and the planned instant cut behind a full-cover wipe.
+- Found on the way: **Lightning CSS folded `animation-timeline` into the `animation` shorthand**,
+  which is invalid, so every scroll-driven animation in the production build — the reveals, the
+  arrivals, the progress bar — was silently dead. CSS is now minified by esbuild. And `measure()`
+  read `scrollHeight`, which counts transformed overflow, so with the parallax every section
+  measured as overflowing and PageDown skipped one.
+
+**Rick's review of it:** _"There is a slight margin left and right, and the scrolling in the
+channels doesn't fully take over, on desktop I can still slowly scroll past."_
+
+- **The margin was a scrollbar.** Full-bleed bands escaped a column-wide `<main>` with
+  `calc(50% - 50vw)`, and vw counts a classic scrollbar: in Chrome on Windows every band was 15px
+  wider than the page, and the page scrolled sideways. Every test passed, because Playwright hides
+  scrollbars. A page of bands now has a full-width `<main>` (`BaseLayout`'s `bleed`), and
+  `tests/e2e/scrollbars.spec.ts` runs with real ones.
+- **Slow scrolling crept.** Wheel deltas under 12px were let through as trackpad drift, and a slow
+  scroll is nothing but those. They now add up to a channel change; no wheel event over a channel
+  moves the page. That leak had also been the only way to reach the footer with a wheel, so past
+  the last section the wheel now scrolls normally on purpose. Ctrl + wheel zooms again (it was
+  being taken as a channel change), and Space pages like Page Down.
+- **Short laptop screens scrolled instead of changing channel.** 1366×768 and 1280×720 leave 657
+  and 630px under the browser's chrome, and the hero, guide, practice and contact were 20–140px
+  taller: they scrolled natively, and a native Page Down overshot into the next channel, which then
+  took over misaligned. Every section now fits from 630px tall, and a section that still overflows
+  pages by at most what is left of it.
+- Found on the way: the interludes' statements crossed their photographs bare, over the
+  lighthouse's tower. They sit on plates of the field now, line by line.
+- Homepage LCP at 4× throttle measured 1968 ms in `pnpm test:vitals`, over the 1800 ms trip-wire,
+  with the machine at 50% load from other work. Built against HEAD and served from one server,
+  interleaved: **960 ms** against **976 ms** (medians of 8). No regression; the trip-wire stays.
+- **The vitals test had been measuring its own scroll.** It read LCP after walking the page, and
+  a programmatic scroll does not end LCP the way a visitor's does, so the homepage's "LCP element"
+  was often an interlude photograph halfway down — `img` on a route whose first screen has no
+  image. LCP is now read before the walk, once the first screen stops producing candidates; CLS
+  still walks everything. Corrected: `/` **1484 ms** (the live field layer, the slow mode of the
+  race in open item 11), `/work/chromecast` **444 ms**, CLS 0.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there

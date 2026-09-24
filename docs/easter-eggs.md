@@ -26,7 +26,7 @@ on the same machine rather than in absolute terms.
 
 There used to be a device tier called `potato`, meaning "poster only, never load the renderer".
 It is gone, along with the tier system and the WebGL renderer it belonged to: the art is text now,
-the whole system costs 2.6 KB gzip, and there is no quality left to degrade.
+the whole system costs 2.9 KB gzip, and there is no quality left to degrade.
 
 Recorded rather than silently deleted, because the joke did real work — the name taught the
 behaviour to whoever read the tier list six months later. If tiers ever come back, bring the name.

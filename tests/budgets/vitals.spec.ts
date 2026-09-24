@@ -83,17 +83,37 @@ async function measure(page: Page, path: string, cpuThrottle: number): Promise<V
 	if (cpuThrottle > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpuThrottle });
 
 	await page.goto(path, { waitUntil: 'load' });
-	await page.waitForTimeout(600);
+
+	// LCP is read BEFORE the walk. A visitor's first scroll ends LCP; a
+	// programmatic one does not, so after the walk the homepage's LCP was often
+	// an interlude photograph painted halfway down the page -- `img` on a route
+	// whose first screen has no image -- and the number measured the walk.
+	// Read once the first screen has stopped producing candidates, not after a
+	// fixed wait: the live field's first paint came as late as 1680ms.
+	const lcp = await page.evaluate(async () => {
+		const w = window as unknown as { __lcp: number; __lcpEl: string };
+		const start = performance.now();
+		let seen = w.__lcp;
+		let quietSince = start;
+		while (performance.now() - start < 6000) {
+			await new Promise((r) => setTimeout(r, 100));
+			if (w.__lcp !== seen) {
+				seen = w.__lcp;
+				quietSince = performance.now();
+			} else if (seen > 0 && performance.now() - quietSince >= 800) break;
+		}
+		return { lcp: Math.round(w.__lcp), lcpElement: w.__lcpEl };
+	});
 	await walk(page);
 
 	const v = await page.evaluate(() => {
-		const w = window as unknown as { __lcp: number; __cls: number; __lcpEl: string };
-		return { lcp: Math.round(w.__lcp), cls: Number(w.__cls.toFixed(4)), lcpElement: w.__lcpEl };
+		const w = window as unknown as { __cls: number };
+		return { cls: Number(w.__cls.toFixed(4)) };
 	});
 
 	await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
 	await cdp.detach();
-	return v;
+	return { ...lcp, ...v };
 }
 
 /**
@@ -159,6 +179,12 @@ const LCP_TRIPWIRE = 1800;
  * with `pnpm test:vitals`, which forces a single worker.
  */
 test.describe('core web vitals on built output @vitals', () => {
+	// Three fresh throttled loads, each walking the whole page, is a slow test
+	// by design: at 4x CPU it came to about 30s on a machine that was busy with
+	// other work, and the default timeout failed a measurement that was fine.
+	// The budgets below are the gate; the timeout is not.
+	test.setTimeout(120_000);
+
 	for (const path of ROUTES) {
 		test(`${path} — 4x CPU throttle, median of 3`, async ({ browser }) => {
 			const v = await median(browser, path);

@@ -35,7 +35,7 @@ const rail = [
 ];
 ---
 
-<BaseLayout title={site.name} description={site.description}>
+<BaseLayout title={site.name} description={site.description} bleed>
 	<nav class="rail" data-rail aria-label="Sections">
 		{rail.map((s) => (
 			<a href={`#${s.id}`}>
@@ -51,6 +51,7 @@ const rail = [
 		aria-labelledby="top-heading"
 		data-section
 		data-channel="ink"
+		data-osd="Rick Groot"
 		style={channelStyle('ink')}
 	>
 		<CharacterField />
@@ -58,7 +59,7 @@ const rail = [
 			<p class="hero__eyebrow">Connected TV developer</p>
 			{/* One word per line. The space between the spans is what keeps the */}
 			{/* accessible name "Rick Groot" rather than "RickGroot". */}
-			<h1 id="top-heading">
+			<h1 id="top-heading" data-decode>
 				<span>Rick</span> <span>Groot</span>
 			</h1>
 			<p class="lede">
@@ -158,7 +159,16 @@ const rail = [
 
 	<script>
 		import { boot } from '../scripts/sections';
+		import { boot as bootZap } from '../scripts/zap';
+		import { decode } from '../lib/decode';
 		boot();
+		bootZap();
+		// The name tunes in with the portrait on first sight -- once the display
+		// face is in, so the noise glyphs are the same width as the letters.
+		// Not on a deep link that lands further down the page.
+		void document.fonts.ready.then(() => {
+			if (window.scrollY < window.innerHeight / 2) decode(document.getElementById('top-heading'));
+		});
 	</script>
 </BaseLayout>
 
@@ -170,8 +180,6 @@ const rail = [
 		display: grid;
 		align-content: center;
 		min-block-size: 100svh;
-		/* Full bleed, so the field can fill the whole screen. */
-		margin-inline: calc(50% - 50vw);
 		overflow: clip;
 	}
 
@@ -226,8 +234,14 @@ const rail = [
 	/* The name is the loudest thing on the site: two planes, one word each. */
 	/* GROOT is five Martian Mono glyphs, 3.4em at -0.02em tracking, so the */
 	/* 12vw slope keeps it inside a 390px phone's column with room to spare. */
+	/* The svh term sizes it by height too. Two lines are 1.76em, and the rest */
+	/* of the column is about 411px on a short screen, so the name fits below */
+	/* (100svh - 411px) / 1.76; 56svh - 15rem stays under that with 20px to */
+	/* spare from 630px to 800px tall. It only bites below 757px: a 1280x720 */
+	/* or 1366x657 laptop was 62-143px too tall, and paged natively instead of */
+	/* changing channel. */
 	.hero__copy h1 {
-		font-size: clamp(3.5rem, 1rem + 12vw, 11.5rem);
+		font-size: clamp(3.5rem, min(1rem + 12vw, 56svh - 15rem), 11.5rem);
 		line-height: 0.88;
 		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
@@ -277,6 +291,22 @@ const rail = [
 		}
 	}
 
+	/* A short screen gives the column the room the name's svh term counts on: */
+	/* less padding and tighter gaps. The bottom padding still clears the cue. */
+	@media (max-height: 820px) {
+		.hero {
+			padding-block: var(--s-8) var(--s-12);
+		}
+
+		.hero__copy {
+			gap: var(--s-4);
+		}
+
+		.hero__cue {
+			inset-block-end: var(--s-4);
+		}
+	}
+
 	.lede {
 		font-size: var(--t-lg);
 		color: var(--mark-dim);
@@ -295,11 +325,14 @@ const rail = [
 		overflow: clip;
 	}
 
+	/* Oversized top and bottom: it sits back in the depth map (depth.css), and */
+	/* the travel must never show an edge. */
 	.practice__backdrop :global(img) {
 		position: absolute;
-		inset: 0;
+		inset-inline: 0;
+		inset-block-start: -9%;
 		inline-size: 100%;
-		block-size: 100%;
+		block-size: 118%;
 		object-fit: cover;
 		/* Rick sits at ~18% across; on a phone this keeps him in the narrow */
 		/* centre band a cover crop leaves. */
@@ -480,10 +513,14 @@ const rail = [
 		inline-size: min(16rem, 100%);
 	}
 
+	/* Oversized, because it holds back inside its frame as the frame comes */
+	/* forward (depth.css): a window rather than a card. */
 	.contact__photo :global(img) {
-		display: block;
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: -8%;
 		inline-size: 100%;
-		block-size: 100%;
+		block-size: 116%;
 		object-fit: cover;
 		transition: filter var(--speed-slow) var(--ease-out);
 	}
@@ -507,9 +544,11 @@ const rail = [
 			grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
 		}
 
+		/* The svh term keeps the portrait-shaped photo inside a short laptop */
+		/* screen: at 26rem wide it is 520px tall, and 657px tall is common. */
 		.contact__photo {
 			justify-self: end;
-			inline-size: min(26rem, 100%);
+			inline-size: min(26rem, 100%, (100svh - 13rem) * 0.8);
 		}
 	}
 

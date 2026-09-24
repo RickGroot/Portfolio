@@ -80,6 +80,13 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 - **After a content schema change, delete `node_modules/.astro/data-store.json`** and restart the dev
   server. `astro check` writes that cache, and the dev server keeps serving the old shape from it —
   a new field reads as `undefined` with no error.
+- **Full-bleed bands go on a `bleed` page** (`BaseLayout`'s prop: `<main>` goes full width, and each
+  band draws its own column). Never `calc(50% - 50vw)`: vw counts a classic scrollbar, so on Windows
+  the band is 15px wider than the page and the page scrolls sideways. Playwright hides scrollbars;
+  only `tests/e2e/scrollbars.spec.ts` can see this.
+- **CSS is minified by esbuild, not Lightning CSS** (`astro.config.mjs`). Lightning folds
+  `animation-timeline` into the `animation` shorthand, which is invalid, and the browser drops it:
+  every scroll-driven animation was dead in the production build, and nothing failed.
 
 ## Budgets
 
@@ -110,7 +117,7 @@ got _stronger_ — a canvas appearing now means someone reintroduced a WebGL pat
 
 ## The art system
 
-The hero renders as text in two `<pre>` elements. No canvas, no WebGL, 2.6 KB gzip.
+The hero renders as text in two `<pre>` elements. No canvas, no WebGL, 2.9 KB gzip.
 See `docs/art-system.md` before touching `src/lib/field/`.
 
 ## Content rule
