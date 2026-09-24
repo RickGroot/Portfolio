@@ -23,11 +23,19 @@ export default defineConfig({
 	// `preview` only -- the old config ran `build && preview` inside the test
 	// run, rebuilding what CI had just built. `url` (not `port`) makes
 	// Playwright wait for a real 200 rather than just an open socket.
+	//
+	// `--ignore-lock` keeps the server in the foreground, where Playwright can
+	// own it. Astro 7.3 backgrounds `astro preview` when it detects that an AI
+	// agent is running it, and the command then returns at once -- which
+	// Playwright reports as "Process from config.webServer exited early", with
+	// an orphaned server left holding the port. Harmless everywhere else: it
+	// only skips the lock file, and a test run's server has no use for one.
 	...(PREVIEW_URL
 		? {}
 		: {
 				webServer: {
-					command: 'node node_modules/astro/bin/astro.mjs preview --port 4173 --host 127.0.0.1',
+					command:
+						'node node_modules/astro/bin/astro.mjs preview --port 4173 --host 127.0.0.1 --ignore-lock',
 					url: BASE,
 					reuseExistingServer: !process.env.CI,
 					timeout: 60_000,

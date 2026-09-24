@@ -22,21 +22,21 @@ happens because a boolean got flipped.
 
 ## Fields
 
-| Field      | Rule                            | Why the rule exists                                                           |
-| ---------- | ------------------------------- | ----------------------------------------------------------------------------- |
-| `title`    | ≤ 60 chars                      | Past 60 the card wraps and the search-result title truncates.                 |
-| `role`     | ≤ 60 chars                      | Rendered in the meta line, so the prose does not have to repeat it.           |
-| `company`  | `Triple` or `Independent`       | An enum costs nothing and prevents `triple` / `Triple ` drift.                |
-| `period`   | `2023` or `2022–2025` (en dash) | First-to-last year of involvement. **See the note below.**                    |
-| `status`   | `ongoing` or `completed`        | `ongoing` renders as "Ongoing since 2022". See below.                         |
-| `summary`  | 50–180 chars                    | This becomes the `<meta name="description">`. Write it for a search result.   |
-| `tags`     | 1–4 items                       | The card layout breaks past four.                                             |
-| `accent`   | 6-digit hex                     | Becomes a CSS custom property, so it must be a real colour.                   |
-| `cover`    | ≥ 1600 px wide ideally          | Goes through `astro:assets`, which stamps intrinsic dimensions → CLS control. |
-| `coverAlt` | Required, non-empty             | **Describe what is actually in the image.** See below.                        |
-| `links`    | ≤ 3                             | More than three and nobody clicks any of them.                                |
-| `order`    | integer                         | Deterministic hand ordering.                                                  |
-| `draft`    | boolean                         | Use this to unpublish. **Never delete, never comment out.**                   |
+| Field      | Rule                            | Why the rule exists                                                            |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------ |
+| `title`    | ≤ 60 chars                      | Past 60 the card wraps and the search-result title truncates.                  |
+| `role`     | ≤ 60 chars                      | Rendered in the meta line, so the prose does not have to repeat it.            |
+| `company`  | `Triple` or `Independent`       | An enum costs nothing and prevents `triple` / `Triple ` drift.                 |
+| `period`   | `2023` or `2022–2025` (en dash) | First-to-last year of involvement. **See the note below.**                     |
+| `status`   | `ongoing` or `completed`        | `ongoing` renders as "Ongoing since 2022". See below.                          |
+| `summary`  | 50–180 chars                    | This becomes the `<meta name="description">`. Write it for a search result.    |
+| `tags`     | 1–4 items                       | The card layout breaks past four.                                              |
+| `channel`  | a palette name                  | The entry's colour field. A name, not a hex: every channel is contrast-solved. |
+| `cover`    | ≥ 1600 px wide ideally          | Goes through `astro:assets`, which stamps intrinsic dimensions → CLS control.  |
+| `coverAlt` | Required, non-empty             | **Describe what is actually in the image.** See below.                         |
+| `links`    | ≤ 3                             | More than three and nobody clicks any of them.                                 |
+| `order`    | integer                         | Deterministic hand ordering.                                                   |
+| `draft`    | boolean                         | Use this to unpublish. **Never delete, never comment out.**                    |
 
 ### Dates: `period` + `status`, not a range
 

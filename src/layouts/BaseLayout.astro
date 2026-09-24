@@ -4,6 +4,7 @@ import Nav from '@components/Nav.astro';
 import Footer from '@components/Footer.astro';
 import ScrollProgress from '@components/ScrollProgress.astro';
 import { site } from '@lib/site';
+import { channel as channelColours, channelStyle, paletteStyle, type Channel } from '@lib/channels';
 
 // The ONE place global.css is imported. See CLAUDE.md.
 import '@styles/global.css';
@@ -14,23 +15,30 @@ interface Props {
 	ogImage?: string | undefined;
 	noindex?: boolean | undefined;
 	/**
-	 * The accent the page chrome answers to. The one-pager's advance script
-	 * publishes this per section as you scroll; a page that is about exactly one
-	 * thing sets it once here instead. The nav, the rail and the cursor all read
-	 * `--c-section-ink`, and they live in <body>, so this is where it belongs.
+	 * The page's own channel. Everything outside a section -- the nav, the
+	 * rail, the cursor, the progress bar -- is drawn in it, and it is what the
+	 * browser's own chrome shows. The one-pager's sections each carry their own
+	 * channel, and src/scripts/channel.ts re-points <html> at whichever is in
+	 * view; a page that is about one thing sets it once, here.
 	 */
-	sectionInk?: string | undefined;
+	channel?: Channel | undefined;
 }
 
-const { title, description = site.description, ogImage, noindex, sectionInk } = Astro.props;
+const { title, description = site.description, ogImage, noindex, channel = 'ink' } = Astro.props;
 ---
 
 <!doctype html>
-<html lang={site.locale}>
+<html lang={site.locale} style={`${paletteStyle()};${channelStyle(channel)}`}>
 	<head>
-		<BaseHead title={title} description={description} ogImage={ogImage} noindex={noindex} />
+		<BaseHead
+			title={title}
+			description={description}
+			ogImage={ogImage}
+			noindex={noindex}
+			themeColor={channelColours(channel).field}
+		/>
 	</head>
-	<body {...(sectionInk ? { style: `--c-section-ink:${sectionInk}` } : {})}>
+	<body>
 		<a class="skip-link" href="#main">
 			Skip to content
 		</a>
@@ -44,8 +52,10 @@ const { title, description = site.description, ogImage, noindex, sectionInk } = 
 		<Footer />
 
 		<script>
-			import { boot } from '../scripts/cursor';
-			boot();
+			import { boot as bootCursor } from '../scripts/cursor';
+			import { boot as bootChannel } from '../scripts/channel';
+			bootChannel();
+			bootCursor();
 		</script>
 	</body>
 </html>

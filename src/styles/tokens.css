@@ -1,71 +1,35 @@
 /*
  * Design tokens.
  *
- * The repo previously had ZERO CSS custom properties and an empty colors.scss --
- * every colour was hardcoded inline. Everything visual should resolve to
- * something declared here.
+ * COLOUR IS NOT DECLARED HERE. Every colour on the site comes from
+ * src/lib/channels.ts, which solves each channel's mark against its field at
+ * build time and fails the build below WCAG AA. It emits them as inline custom
+ * properties: the palette and the page's default channel on <html> (see
+ * BaseLayout), and each section's own channel on that section.
+ * src/scripts/sections.ts then publishes the channel in view onto :root, so the
+ * fixed chrome -- rail, cursor, progress bar -- takes the colours of the
+ * channel you are on.
+ *
+ * The variables every stylesheet reads:
+ *   --field      the channel's flat colour field
+ *   --mark       everything drawn on it: text, rules, marks
+ *   --mark-dim   secondary text; the solver keeps it at AA or better
+ *   --accent     small details and links; equal to --mark on saturated fields
+ *   --line       decorative hairlines only
+ *   --line-loud  a hairline that has to survive a photograph behind it
+ *   --duo-blend  multiply or screen: how a photograph takes the two colours
+ *
+ * The previous dark-mode set (--c-bg, --c-text, the mint and amber accents) is
+ * gone rather than aliased. A custom property that references another is
+ * resolved where it is declared, so an alias on :root would have frozen every
+ * section to the root's colours.
  */
 :root {
-	/* ---- Ground ---------------------------------------------------------
-	 * Lifted, not flat black. At #101214 (4% lightness) every surface step
-	 * above the ground has to be tiny or it reads as a different site; #15181c
-	 * buys four distinguishable steps and still keeps body text at 15:1.
-	 */
-	--c-void: #0b0d10; /* behind the hero art; text colour ON an accent   */
-	--c-bg: #15181c; /* the page                                         */
-	--c-surface: #1d2126; /* cards, the nav's opaque fallback                 */
-	--c-raise: #262b31; /* hover / active surface                           */
-	--c-line: #333a42; /* hairlines                                        */
-	--c-line-loud: #4a535e; /* a hairline that must survive a photo behind it   */
-
-	--c-text: #eeece8; /* 15.1:1 on --c-bg */
-	--c-text-dim: #a2abb5; /*  7.7:1 on --c-bg */
-	/* 4.6:1 on --c-bg but only 4.2:1 on --c-surface, so it FAILS AA there.
-	   Decorative use only -- chapter indices, which are aria-hidden.
-	   Do not use it for a caption. */
-	--c-text-mute: #79828d;
-
-	/* ---- Accents, a pair ------------------------------------------------
-	 * Cool = idle, structure, "you are here".
-	 * Hot  = active, energy, "you are doing something".
-	 *
-	 * Amber rather than a second red/pink for three reasons: the seven work
-	 * accents are reds, violets, a blue and a grey, so there is no warm amber
-	 * in the set and a 40-degree hue can never be mistaken for a project's
-	 * brand colour; it is the Teenage Engineering move (neutral + one warm
-	 * signal); and both clear AA as text AND inverted as a background, so
-	 * either can be flipped anywhere without a second thought.
-	 *
-	 * They are a PAIR, NOT A GRADIENT -- interpolated they pass through a
-	 * muddy khaki. The one exception is the 2px scroll bar, where the
-	 * midpoint is too small to see.
-	 */
-	--c-cool: #01efac; /* 11.4:1 on --c-bg */
-	--c-hot: #ff9f1c; /*  8.4:1 on --c-bg */
-
-	/* Phase 1 wrote against these names; keep them working. */
-	--c-accent: var(--c-cool);
-	/* Deliberately NOT rebound per entry: the focus ring stays one colour
-	   site-wide so it is always recognisable as a focus ring. */
-	--c-focus: var(--c-cool);
-
-	/* Per-entry brand colour, set inline from frontmatter.
-	   --c-entry-accent is the RAW value: safe for 3px+ areas only.
-	   --c-entry-ink is lightness-floored for text. See src/lib/accent.ts. */
-	--c-entry-accent: var(--c-cool);
-	--c-entry-ink: var(--c-cool);
-
-	/* ---- Art ------------------------------------------------------------
-	 * Five discrete steps, not a gradient. Character fields are discrete by
-	 * construction, and quantising is what keeps the two accents from
-	 * blending into khaki.
-	 */
-	--art-0: #1b2026;
-	--art-1: #2c3942;
-	--art-2: color-mix(in oklab, var(--c-cool) 30%, var(--c-bg));
-	--art-3: color-mix(in oklab, var(--c-cool) 62%, var(--c-bg));
-	--art-4: var(--c-cool);
-	--art-hot: var(--c-hot);
+	/* ---- Art --------------------------------------------------------------
+	 * The hero field's two layers. Blue is the signal still in noise, yellow
+	 * the portrait resolving out of it -- both straight from the palette. */
+	--art-noise: var(--signal-blue);
+	--art-signal: var(--signal-yellow);
 
 	--art-cell: clamp(10px, 1.25vw, 17px);
 
@@ -73,7 +37,7 @@
 	--font-sans:
 		'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
 		sans-serif;
-	--font-display: 'Space Grotesk', 'Display Fallback', var(--font-sans);
+	--font-display: 'Martian Mono', 'Display Fallback', var(--font-mono);
 	/* The character field REQUIRES a uniform advance width. A stack is a risk
 	   here: `ui-monospace` resolved to a proportional face in testing, which
 	   shears the grid. tests/e2e/field.spec.ts asserts uniformity. */
@@ -90,7 +54,9 @@
 	--lh-tight: 1.15;
 	--lh-body: 1.6;
 	--measure: 68ch;
-	--tracking-display: -0.035em;
+	/* A monospace display face: its letters already sit on a fixed grid, so
+	   tracking only tightens a little before glyphs start to touch. */
+	--tracking-display: -0.02em;
 	--tracking-meta: 0.08em;
 
 	/* ---- Space ---------------------------------------------------------- */
@@ -104,8 +70,9 @@
 	--s-16: 4rem;
 	--s-24: 6rem;
 
-	--radius: 4px;
-	--radius-lg: 10px;
+	/* Hard edges, per the brief: flat layers, no rounded cards, no pills. */
+	--radius: 0;
+	--radius-lg: 0;
 	--gutter: clamp(1rem, 5vw, 3rem);
 	--wrap: 72rem;
 	--hero-min: min(86svh, 780px);
@@ -131,12 +98,6 @@
 	/* Pointer speed, 0..1. Written by cursor.ts, read by the art and the
 	   cursor ring. Registered in cursor.css so it can be interpolated. */
 	--pointer-v: 0;
-}
-
-/* Inside an entry's subtree, anything written against --c-accent localises to
-   that entry automatically. --c-focus is intentionally not included. */
-[data-accent] {
-	--c-accent: var(--c-entry-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {

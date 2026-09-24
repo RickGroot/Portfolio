@@ -308,7 +308,13 @@ export function mountField(host: HTMLElement): FieldHandle {
 	const steps = Array.from({ length: 21 }, (_, n) => n / 20);
 	const io = new IntersectionObserver(
 		(entries) => {
-			const e = entries[0];
+			// The LAST entry is the current state, not the first. Entries queue
+			// up between callbacks while the main thread is busy, and a fast
+			// scroll crosses many thresholds in a few frames: reading entries[0]
+			// acted on where the hero WAS. Scrolled straight past under load, the
+			// field saw "still on screen", kept its subscription, and the loop
+			// ran at full rate, offscreen, for good.
+			const e = entries[entries.length - 1];
 			if (!e) return;
 			visible = e.intersectionRatio;
 

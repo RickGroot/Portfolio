@@ -52,23 +52,11 @@ export function boot(): void {
 		}
 	}
 
-	/**
-	 * Publish the current section's accent so chrome can follow it.
-	 *
-	 * Read from the panel rather than the section, because the panel carries
-	 * the AA-floored `--c-entry-ink` -- the raw brand colour is safe for large
-	 * low-opacity fills but not for nav text.
-	 */
-	function publishAccent(section: HTMLElement | undefined): void {
-		const source = section?.querySelector<HTMLElement>('[style*="--c-entry-ink"]') ?? section;
-		const ink = source ? getComputedStyle(source).getPropertyValue('--c-entry-ink').trim() : '';
-		if (ink) root.style.setProperty('--c-section-ink', ink);
-		else root.style.removeProperty('--c-section-ink');
-	}
-
+	// Channel colours are published by src/scripts/channel.ts, which runs even
+	// when this advance is switched off for reduced motion. This only tracks
+	// position.
 	function setCurrent(next: number): void {
 		index = Math.max(0, Math.min(sections.length - 1, next));
-		publishAccent(sections[index]);
 		dots.forEach((dot, i) => {
 			if (i === index) dot.setAttribute('aria-current', 'true');
 			else dot.removeAttribute('aria-current');
@@ -169,7 +157,6 @@ export function boot(): void {
 	for (const section of sections) observer.observe(section);
 
 	measure();
-	publishAccent(sections[0]);
 	const resize = new ResizeObserver(measure);
 	resize.observe(document.body);
 

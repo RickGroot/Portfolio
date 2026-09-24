@@ -6,7 +6,7 @@ period: '2021'
 status: completed
 summary: Front-end development for the NH Nieuws and AT5 regional news platforms, built in React and TypeScript for a Dutch regional news provider.
 tags: ['React', 'TypeScript', 'News provider']
-accent: '#1a5ccc'
+channel: blue
 # cover removed: src/assets/work/nhnieuws.jpg still needs a provenance check before
 #   it can ship. Restore `cover` + `coverAlt` when cleared, then drop `draft: true`.
 order: 7

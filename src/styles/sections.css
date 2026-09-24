@@ -61,17 +61,7 @@
 	font-size: var(--t-xs);
 	letter-spacing: var(--tracking-meta);
 	font-variant-numeric: tabular-nums;
-	color: var(--c-text-mute);
-}
-
-/* A hairline between sections, so the boundary reads even mid-transition. */
-.section + .section::before {
-	content: '';
-	position: absolute;
-	inset-block-start: 0;
-	inset-inline: var(--gutter);
-	block-size: 1px;
-	background: linear-gradient(90deg, var(--c-line), transparent 60%);
+	color: var(--mark-dim);
 }
 
 /* ---- Section progress rail ---------------------------------------------- */
@@ -80,6 +70,12 @@
  * Where you are in the narrative. It is a nav, not decoration: every dot is a
  * real link to a real id, so it works with the script disabled and gives a
  * keyboard user a way to jump.
+ *
+ * On its own plate, in the page's channel. src/scripts/channel.ts re-points
+ * the page channel at the section in view, but without JavaScript nothing
+ * does, and the dots would stay paper over every section -- about 1.2:1 over
+ * the yellow channel. On a plate they are always the mark on their own field,
+ * whatever is behind them.
  */
 .rail {
 	position: fixed;
@@ -88,31 +84,35 @@
 	translate: 0 -50%;
 	z-index: var(--z-nav);
 	display: grid;
-	gap: var(--s-3);
+	padding: var(--s-1);
+	background: var(--field);
 }
 
+/* A 20px target around an 8px mark: small to look at, not small to hit. */
 .rail a {
-	display: block;
-	inline-size: 10px;
-	block-size: 10px;
-	border-radius: 50%;
-	border: 1px solid var(--c-line-loud);
+	display: grid;
+	place-items: center;
+	inline-size: 20px;
+	block-size: 20px;
+}
+
+.rail a::before {
+	content: '';
+	inline-size: 8px;
+	block-size: 8px;
+	border: 1px solid var(--mark);
 	transition:
 		background-color var(--speed) var(--ease),
-		border-color var(--speed) var(--ease),
 		scale var(--speed) var(--ease);
 }
 
-.rail a:hover,
-.rail a:focus-visible {
-	border-color: var(--c-section-ink, var(--c-cool));
-	scale: 1.3;
+.rail a:hover::before,
+.rail a:focus-visible::before {
+	scale: 1.4;
 }
 
-.rail a[aria-current='true'] {
-	background: var(--c-section-ink, var(--c-cool));
-	border-color: var(--c-section-ink, var(--c-cool));
-	scale: 1.15;
+.rail a[aria-current='true']::before {
+	background: var(--mark);
 }
 
 @media (max-width: 48rem) {
@@ -146,6 +146,18 @@
  */
 .section[data-overflows] {
 	align-content: start;
+}
+
+/*
+ * ...except a work section, which stretches instead. An overflowing section
+ * has no free space for either value to distribute, so the two only differ when
+ * the flag is stale -- set at one viewport size and not yet cleared at the next
+ * -- and for a work panel `start` is the wrong one: its image row is a 1fr
+ * track, and without the stretch it collapses to nothing. Seen at 1440x900
+ * after a resize: all three work panels with no picture in them.
+ */
+.section--work[data-overflows] {
+	align-content: stretch;
 }
 
 /*

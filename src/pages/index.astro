@@ -15,6 +15,7 @@ import SocialLinks from '@components/SocialLinks.astro';
 import { getFeaturedWork, getPublishedWork, formatPeriod } from '@lib/work';
 import { skills } from '@lib/skills';
 import { site } from '@lib/site';
+import { channelStyle } from '@lib/channels';
 
 const featured = await getFeaturedWork();
 const published = await getPublishedWork();
@@ -49,11 +50,22 @@ const rail = [
 	</nav>
 
 	{/* ---- Masthead ---- */}
-	<section id="top" class="section hero" aria-labelledby="top-heading" data-section>
+	<section
+		id="top"
+		class="section hero"
+		aria-labelledby="top-heading"
+		data-section
+		data-channel="ink"
+		style={channelStyle('ink')}
+	>
 		<CharacterField />
 		<div class="hero__copy">
 			<p class="hero__eyebrow">Connected TV developer</p>
-			<h1 id="top-heading">Rick Groot</h1>
+			{/* One word per line. The space between the spans is what keeps the */}
+			{/* accessible name "Rick Groot" rather than "RickGroot". */}
+			<h1 id="top-heading">
+				<span>Rick</span> <span>Groot</span>
+			</h1>
 			<p class="lede">
 				I build Connected TV apps at Triple — NLZIET on Smart TVs, Chromecast receivers, and the
 				video players underneath them. Most of it is performance work: the devices they run on are
@@ -72,7 +84,7 @@ const rail = [
 			id={featured[0].id}
 			label={featured[0].data.title}
 			labelHidden={true}
-			accent={featured[0].data.accent}
+			channel={featured[0].data.channel}
 			class="section--work"
 		>
 			<WorkPanel entry={featured[0]} index="01" />
@@ -84,7 +96,7 @@ const rail = [
 			id={featured[1].id}
 			label={featured[1].data.title}
 			labelHidden={true}
-			accent={featured[1].data.accent}
+			channel={featured[1].data.channel}
 			class="section--work"
 		>
 			<WorkPanel entry={featured[1]} index="02" />
@@ -96,18 +108,19 @@ const rail = [
 		image={artSignal}
 		alt="A lighthouse and a small group of people silhouetted against a sunset over a bay."
 		focus="40% 50%"
-		brightness={0.68}
+		lift={1.45}
+		contrast={1.35}
 		statement="A TV app has to feel fast on hardware that shipped years before the app did."
 		caption="Interlude / Signal"
-		tone="cool"
+		channel="yellow"
 	/>
 
 	{/* ---- How I work ---- */}
-	<Section id="practice" label="How I work" index="03" class="section--backdrop">
+	<Section id="practice" label="How I work" index="03" class="section--backdrop" channel="paper">
 		{/* Rick presenting, standing at the left; his three points sit to his */}
 		{/* right on wide screens, so the cards never cover his face. The slide */}
 		{/* and both audience members are blurred in the source file itself. */}
-		<div class="practice__backdrop">
+		<div class="practice__backdrop duo" style="--duo-lift:1.2;--duo-contrast:1.15">
 			<Image
 				src={talkPhoto}
 				alt="Rick giving a talk about AI-assisted development."
@@ -116,15 +129,14 @@ const rail = [
 				loading="lazy"
 				decoding="async"
 			/>
-			<span class="practice__dither" aria-hidden="true"></span>
-			<span class="practice__scrim" aria-hidden="true"></span>
+			<span class="practice__fade" aria-hidden="true"></span>
 		</div>
 		<p class="practice__lede">
 			Three things that happened while building this site, with the numbers.
 		</p>
 		<ol class="practice">
 			{practice.map((item) => (
-				<li class="practice__item" data-proximity>
+				<li class="practice__item">
 					<p class="practice__index" aria-hidden="true">
 						{item.index}
 					</p>
@@ -141,25 +153,27 @@ const rail = [
 			id={featured[2].id}
 			label={featured[2].data.title}
 			labelHidden={true}
-			accent={featured[2].data.accent}
+			channel={featured[2].data.channel}
 			class="section--work"
 		>
 			<WorkPanel entry={featured[2]} index="04" />
 		</Section>
 	)}
 
+	{/* U+2060 WORD JOINER holds "re-run" together at a line end. The non-breaking */}
+	{/* hyphen this used before, U+2011, is not in the Martian Mono subset. */}
 	<ArtSection
 		id="interlude-field"
 		image={artField}
 		alt="A stone clock tower against a bright, empty sky."
 		focus="36% 45%"
-		statement="Every measurement quoted on this site can be re‑run from the repository."
+		statement={'Every measurement quoted on this site can be re-\u2060run from the repository.'}
 		caption="Interlude / Field"
-		tone="hot"
+		channel="blue"
 	/>
 
 	{/* ---- Contact ---- */}
-	<Section id="contact" label="Contact" index="05">
+	<Section id="contact" label="Contact" index="05" channel="paper">
 		<div class="contact">
 			<div class="contact__text">
 				<p class="lede">
@@ -184,7 +198,7 @@ const rail = [
 					</div>
 				)}
 			</div>
-			<figure class="contact__photo">
+			<figure class="contact__photo duo">
 				<Image
 					src={aboutPhoto}
 					alt="Rick Groot, smiling, on a bridge by a canal."
@@ -193,7 +207,6 @@ const rail = [
 					loading="lazy"
 					decoding="async"
 				/>
-				<span class="contact__dither" aria-hidden="true"></span>
 			</figure>
 		</div>
 	</Section>
@@ -227,11 +240,11 @@ const rail = [
 		background:
 			linear-gradient(
 				100deg,
-				var(--c-bg) 0 30%,
-				color-mix(in oklab, var(--c-bg) 45%, transparent) 55%,
+				var(--field) 0 30%,
+				color-mix(in oklab, var(--field) 45%, transparent) 55%,
 				transparent 80%
 			),
-			linear-gradient(to bottom, var(--c-bg), transparent 14%, transparent 84%, var(--c-bg));
+			linear-gradient(to bottom, var(--field), transparent 14%, transparent 84%, var(--field));
 	}
 
 	.hero__copy {
@@ -245,8 +258,16 @@ const rail = [
 		margin-inline: auto;
 	}
 
-	.hero__copy > * {
+	/* Everything but the name sits on a plate of the field, so it stays */
+	/* legible wherever the portrait's cells fall behind it -- on a phone the */
+	/* whole copy column crosses the portrait. The spread paints the plate */
+	/* past the text without moving the box, so the column still lines up. */
+	/* :global because the tag list is another component's element. */
+	.hero__copy > :global(:not(h1)) {
+		justify-self: start;
 		max-width: var(--measure);
+		background: var(--field);
+		box-shadow: 0 0 0 0.5rem var(--field);
 	}
 
 	.hero__eyebrow {
@@ -254,12 +275,35 @@ const rail = [
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-cool);
+		color: var(--accent);
 	}
 
+	/* The name is the loudest thing on the site: two planes, one word each. */
+	/* GROOT is five Martian Mono glyphs, 3.4em at -0.02em tracking, so the */
+	/* 12vw slope keeps it inside a 390px phone's column with room to spare. */
 	.hero__copy h1 {
-		font-size: var(--t-3xl);
+		font-size: clamp(3.5rem, 1rem + 12vw, 11.5rem);
+		line-height: 0.88;
 		letter-spacing: var(--tracking-display);
+		text-transform: uppercase;
+	}
+
+	.hero__copy h1 span {
+		display: block;
+	}
+
+	/* On a wide screen the portrait takes the right of the stage and the name */
+	/* the left, so the two do not fight over the same cells. Below this the */
+	/* column is too narrow to split and the field sits behind the copy, under */
+	/* the scrim. */
+	@media (min-width: 60rem) {
+		.hero :global(.field) {
+			inset-inline-start: 40%;
+		}
+
+		.hero__copy > :global(:not(h1)) {
+			max-width: min(36rem, 38vw);
+		}
 	}
 
 	.hero__cue {
@@ -272,7 +316,7 @@ const rail = [
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 		animation: cue 2.4s ease-in-out infinite;
 	}
 
@@ -290,7 +334,7 @@ const rail = [
 
 	.lede {
 		font-size: var(--t-lg);
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	/* ---- How I work: a three-up horizontal grid --------------------------- */
@@ -315,39 +359,21 @@ const rail = [
 		/* Rick sits at ~18% across; on a phone this keeps him in the narrow */
 		/* centre band a cover crop leaves. */
 		object-position: 18% 45%;
-		filter: grayscale(1) contrast(1.15) brightness(0.5);
 	}
 
-	.practice__dither {
+	/* Printed in ink on paper by .duo. The heading and lede sit on the top of */
+	/* it, so the photograph runs out into the paper there -- lighter where the */
+	/* text is, never darker. Above the overlay, or it would be printed too. */
+	.practice__fade {
 		position: absolute;
 		inset: 0;
-		background-image:
-			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
-			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
-		background-size: 3px 3px;
-		opacity: 0.7;
-	}
-
-	/* Darker where the text is, lighter where Rick is. */
-	.practice__scrim {
-		position: absolute;
-		inset: 0;
-		background:
-			linear-gradient(
-				to bottom,
-				color-mix(in oklab, var(--c-bg) 72%, transparent) 0 24%,
-				transparent 48%
-			),
-			linear-gradient(
-				to right,
-				transparent 0 22%,
-				color-mix(in oklab, var(--c-bg) 62%, transparent) 46%
-			);
+		z-index: 2;
+		background: linear-gradient(to bottom, var(--field) 0 16%, transparent 44%);
 	}
 
 	.practice__lede {
 		font-size: var(--t-lg);
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 		max-width: var(--measure);
 	}
 
@@ -360,22 +386,20 @@ const rail = [
 		counter-reset: none;
 	}
 
+	/* Solid plates, hard edges: the photograph shows around the cards, never */
+	/* through them, so the text is always ink on paper. */
 	.practice__item {
 		display: grid;
 		grid-template-rows: auto auto 1fr auto;
 		gap: var(--s-3);
 		padding: var(--s-6);
-		border: 1px solid var(--c-line);
-		border-radius: var(--radius-lg);
-		background: color-mix(in oklab, var(--c-surface) 70%, transparent);
-		transition:
-			border-color var(--speed) var(--ease),
-			translate var(--speed) var(--ease);
+		border: 1px solid var(--mark);
+		background: var(--field);
+		transition: translate var(--speed) var(--ease);
 	}
 
 	.practice__item:hover,
 	.practice__item:focus-within {
-		border-color: color-mix(in oklab, var(--c-cool) 40%, var(--c-line));
 		translate: 0 -4px;
 	}
 
@@ -383,7 +407,7 @@ const rail = [
 		font-family: var(--font-mono);
 		font-size: var(--t-lg);
 		font-weight: 700;
-		color: var(--c-cool);
+		color: var(--accent);
 		line-height: 1;
 	}
 
@@ -393,7 +417,7 @@ const rail = [
 	}
 
 	.practice__body {
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	/* The checkable detail. Set apart, because it is the thing that stops the */
@@ -401,9 +425,9 @@ const rail = [
 	.practice__proof {
 		margin-block-start: var(--s-2);
 		padding-block-start: var(--s-3);
-		border-block-start: 1px solid var(--c-line);
+		border-block-start: 1px solid var(--line);
 		font-size: var(--t-sm);
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 	}
 
 	/* Three stacked cards will always exceed a phone, and that is fine -- the */
@@ -499,12 +523,16 @@ const rail = [
 		position: relative;
 		margin: 0;
 		overflow: clip;
-		border-radius: var(--radius-lg);
-		border: 1px solid var(--c-line);
+		border: 1px solid var(--mark);
 		aspect-ratio: 4 / 5;
 		/* On a phone the photo stacks under the text; at full width it pushed the */
 		/* last section 104px past the screen. Supporting, not the headline. */
-		max-inline-size: min(16rem, 100%);
+		/* A definite width, not a maximum. With only a maximum, the box sized */
+		/* itself from the image, and a lazy image has no size until it loads: */
+		/* the figure sat at 0x0, then grew to 416x520 the moment it scrolled */
+		/* into view -- a layout shift at the bottom of the page, and one that */
+		/* scroll anchoring answered by pulling the page 119px back up. */
+		inline-size: min(16rem, 100%);
 	}
 
 	.contact__photo :global(img) {
@@ -512,18 +540,21 @@ const rail = [
 		inline-size: 100%;
 		block-size: 100%;
 		object-fit: cover;
-		filter: grayscale(1) contrast(1.1);
+		transition: filter var(--speed-slow) var(--ease-out);
 	}
 
-	.contact__dither {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		background-image:
-			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
-			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
-		background-size: 3px 3px;
-		opacity: 0.55;
+	/* Printed in ink on paper, and back in its own colours under the pointer, */
+	/* like every other photograph on the site. */
+	.contact__photo::after {
+		transition: opacity var(--speed-slow) var(--ease-out);
+	}
+
+	.contact__photo:hover::after {
+		opacity: 0;
+	}
+
+	.contact__photo:hover :global(img) {
+		filter: none;
 	}
 
 	@media (min-width: 52rem) {
@@ -533,7 +564,7 @@ const rail = [
 
 		.contact__photo {
 			justify-self: end;
-			max-inline-size: 26rem;
+			inline-size: min(26rem, 100%);
 		}
 	}
 
@@ -541,7 +572,7 @@ const rail = [
 		font-size: var(--t-sm);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 		margin-block-end: var(--s-3);
 	}
 
@@ -550,7 +581,7 @@ const rail = [
 		gap: var(--s-3);
 		list-style: none;
 		padding: 0;
-		border-block-start: 1px solid var(--c-line);
+		border-block-start: 1px solid var(--line);
 		padding-block-start: var(--s-4);
 	}
 
@@ -565,7 +596,7 @@ const rail = [
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 	}
 
 	@media (prefers-reduced-motion: reduce) {

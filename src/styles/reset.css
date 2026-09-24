@@ -66,10 +66,11 @@ ol[class] {
 }
 
 /* Visible focus everywhere, always. Never remove this without a replacement. */
+/* In the mark of whatever channel the control sits on, so it always clears the */
+/* same contrast floor as the text. Square, like every other edge on the site. */
 :focus-visible {
-	outline: 2px solid var(--c-focus);
+	outline: 2px solid var(--mark);
 	outline-offset: 3px;
-	border-radius: 2px;
 }
 
 /*

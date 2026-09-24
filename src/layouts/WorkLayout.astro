@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import TagList from '@components/TagList.astro';
 import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
-import { ink } from '@lib/accent';
+import { channelStyle, NEGATIVE_PRINT } from '@lib/channels';
 import { vt } from '@lib/vt';
 
 interface Props {
@@ -14,15 +14,18 @@ interface Props {
 }
 
 const { entry, index, prev, next } = Astro.props;
-const { title, role, company, summary, tags, accent, cover, coverAlt, links } = entry.data;
-const entryInk = ink(accent);
+const { title, role, company, summary, tags, channel, cover, coverAlt, coverInvert, links } =
+	entry.data;
 ---
 
-<BaseLayout title={title} description={summary} sectionInk={entryInk}>
-	<article class="case" style={`--c-entry-accent:${accent}; --c-entry-ink:${entryInk}`}>
-		<header class="case__hero">
+{/* Two channels: the entry's own for the page and its hero -- the same field */}
+{/* its panel carries on the one-pager, so the cover lands in the colour it */}
+{/* left -- and paper for the reading, where the long text gets 16.65:1. */}
+<BaseLayout title={title} description={summary} channel={channel}>
+	<article class="case">
+		<header class="case__hero" data-channel={channel} style={channelStyle(channel)}>
 			<div class="case__media" style={`view-transition-name:${vt('cover', entry.id)}`}>
-				<span class="case__frame">
+				<span class="case__frame duo" style={coverInvert ? NEGATIVE_PRINT : undefined}>
 					<Image
 						src={cover}
 						alt={coverAlt}
@@ -32,8 +35,6 @@ const entryInk = ink(accent);
 						fetchpriority="high"
 					/>
 				</span>
-				<span class="case__dither" aria-hidden="true"></span>
-				<span class="case__scrim" aria-hidden="true"></span>
 				<span class="case__bracket case__bracket--tl" aria-hidden="true"></span>
 				<span class="case__bracket case__bracket--tr" aria-hidden="true"></span>
 				<span class="case__bracket case__bracket--bl" aria-hidden="true"></span>
@@ -63,71 +64,76 @@ const entryInk = ink(accent);
 				</p>
 				<div class="case__titlebox">
 					<h1 class="case__title" style={`view-transition-name:${vt('title', entry.id)}`}>
-						{title}
+						<span class="case__plate">{title}</span>
 					</h1>
 				</div>
 			</div>
 		</header>
 
-		<div class="case__body">
-			<p class="case__lede" data-reveal>
-				{summary}
-			</p>
-			<div data-reveal>
-				<TagList tags={tags} />
-			</div>
-
-			<div class="prose" data-reveal>
-				<slot />
-			</div>
-
-			{links.length > 0 && (
-				<div class="case__links" data-reveal>
-					<h2 class="visually-hidden">Project links</h2>
-					<ul>
-						{links.map((l) => (
-							<li>
-								<a href={l.href} target="_blank" rel="noopener noreferrer" data-proximity>
-									{l.label}
-									<span aria-hidden="true"> ↗</span>
-									<span class="visually-hidden"> (opens in a new tab)</span>
-								</a>
-							</li>
-						))}
-					</ul>
+		<div class="case__reading" data-channel="paper" style={channelStyle('paper')}>
+			<div class="case__body wrap">
+				<p class="case__lede" data-reveal>
+					{summary}
+				</p>
+				<div data-reveal>
+					<TagList tags={tags} />
 				</div>
-			)}
-		</div>
 
-		<nav class="case__nav" aria-label="Work">
-			<a class="case__back" href={`/#${entry.id}`}>
-				<span aria-hidden="true">←</span> Back to the overview
-			</a>
-			<div class="case__sequence">
-				{prev && (
-					<a class="case__step" href={`/work/${prev.id}`} rel="prev">
-						<span class="case__steplabel">Previous</span>
-						<span class="case__steptitle">{prev.data.title}</span>
-					</a>
-				)}
-				{next && (
-					<a class="case__step case__step--next" href={`/work/${next.id}`} rel="next">
-						<span class="case__steplabel">Next</span>
-						<span class="case__steptitle">{next.data.title}</span>
-					</a>
+				<div class="prose" data-reveal>
+					<slot />
+				</div>
+
+				{links.length > 0 && (
+					<div class="case__links" data-reveal>
+						<h2 class="visually-hidden">Project links</h2>
+						<ul>
+							{links.map((l) => (
+								<li>
+									<a href={l.href} target="_blank" rel="noopener noreferrer">
+										{l.label}
+										<span aria-hidden="true"> ↗</span>
+										<span class="visually-hidden"> (opens in a new tab)</span>
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
 				)}
 			</div>
-		</nav>
+
+			<nav class="case__nav wrap" aria-label="Work">
+				<a class="case__back" href={`/#${entry.id}`}>
+					<span aria-hidden="true">←</span> Back to the overview
+				</a>
+				<div class="case__sequence">
+					{prev && (
+						<a class="case__step" href={`/work/${prev.id}`} rel="prev">
+							<span class="case__stepplate" style={channelStyle(prev.data.channel)}>
+								<span class="case__steplabel">Previous</span>
+								<span class="case__steptitle">{prev.data.title}</span>
+							</span>
+						</a>
+					)}
+					{next && (
+						<a class="case__step case__step--next" href={`/work/${next.id}`} rel="next">
+							<span class="case__stepplate" style={channelStyle(next.data.channel)}>
+								<span class="case__steplabel">Next</span>
+								<span class="case__steptitle">{next.data.title}</span>
+							</span>
+						</a>
+					)}
+				</div>
+			</nav>
+		</div>
 	</article>
 </BaseLayout>
 
 <style>
 	/* ---- the hero: the same treatment as a panel, at full width ---------- */
 
-	/* The one-pager dithers every cover to monochrome. This page used to show
-	   the raw colour photograph, so the view transition morphed a dithered
-	   thumbnail into an untreated image and the page read as a different site.
-	   Same treatment, bigger. */
+	/* The same treatment as the panel it came from, at full width: the cover */
+	/* printed in the entry's channel, so the view transition morphs a picture */
+	/* into the same picture rather than into a different treatment of it. */
 	.case__hero {
 		position: relative;
 		display: grid;
@@ -159,7 +165,6 @@ const entryInk = ink(accent);
 		inline-size: 100%;
 		block-size: 116%;
 		object-fit: cover;
-		filter: grayscale(0.9) contrast(1.15) brightness(0.5);
 	}
 
 	/* Parallax, matching the panels. Scroll-driven, transform only, zero JS. */
@@ -182,38 +187,13 @@ const entryInk = ink(accent);
 		}
 	}
 
-	.case__dither {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		background-image:
-			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
-			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
-		background-size: 3px 3px;
-		opacity: 0.82;
-	}
-
-	/* The title sits on the image, so it needs a floor to stay readable
-	   whatever the photograph happens to be doing behind it. */
-	.case__scrim {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		background: linear-gradient(
-			to bottom,
-			color-mix(in oklab, var(--c-bg) 70%, transparent) 0 12%,
-			color-mix(in oklab, var(--c-bg) 30%, transparent) 38%,
-			color-mix(in oklab, var(--c-bg) 86%, transparent) 78%,
-			var(--c-bg)
-		);
-	}
-
 	.case__bracket {
 		position: absolute;
+		z-index: 2;
 		inline-size: 26px;
 		block-size: 26px;
 		pointer-events: none;
-		border-color: var(--c-entry-ink);
+		border-color: var(--accent);
 		opacity: 0.85;
 	}
 
@@ -244,13 +224,20 @@ const entryInk = ink(accent);
 
 	/* ---- headline -------------------------------------------------------- */
 
+	/* The meta line and the title sit on the cover, each on a plate of the */
+	/* field -- a broadcast lower third. The plates replace a scrim that kept */
+	/* them legible by darkening the whole photograph. */
 	.case__headline {
 		position: relative;
 		display: grid;
-		gap: var(--s-4);
+		justify-items: start;
+		gap: var(--s-3);
 	}
 
 	.case__meta {
+		inline-size: fit-content;
+		padding: var(--s-2) var(--s-3);
+		background: var(--field);
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--s-2) var(--s-3);
@@ -259,18 +246,18 @@ const entryInk = ink(accent);
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	.case__index {
 		font-size: var(--t-lg);
 		font-weight: 700;
-		color: var(--c-entry-ink);
+		color: var(--accent);
 		line-height: 1;
 	}
 
 	.case__sep {
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 	}
 
 	/* Same container-query sizing as the panels: an element cannot be its own
@@ -280,12 +267,24 @@ const entryInk = ink(accent);
 		container-type: inline-size;
 	}
 
+	.case__titlebox {
+		inline-size: 100%;
+	}
+
+	/* 14cqi for the same reason as the panel title: CHROMECAST is 6.8em in */
+	/* Martian Mono at -0.02em tracking, plus the plate. */
 	.case__title {
-		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 15cqi);
+		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 14cqi);
 		line-height: 0.92;
-		letter-spacing: -0.04em;
+		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
-		text-shadow: 0 8px 40px rgb(0 0 0 / 0.85);
+	}
+
+	.case__plate {
+		padding-inline-end: 0.15em;
+		background: var(--field);
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
 	}
 
 	/* ---- idle signal bars, as on the panels ------------------------------ */
@@ -300,7 +299,7 @@ const entryInk = ink(accent);
 	.case__bars i {
 		inline-size: 2px;
 		block-size: 100%;
-		background: var(--c-entry-ink);
+		background: var(--accent);
 		transform-origin: 50% 100%;
 		scale: 1 0.35;
 		animation: case-bars 2.6s ease-in-out infinite;
@@ -335,6 +334,11 @@ const entryInk = ink(accent);
 
 	/* ---- body ------------------------------------------------------------ */
 
+	/* Full bleed, so the paper runs edge to edge; its children re-wrap. */
+	.case__reading {
+		margin-inline: calc(50% - 50vw);
+	}
+
 	.case__body {
 		display: grid;
 		gap: var(--s-6);
@@ -345,9 +349,8 @@ const entryInk = ink(accent);
 		max-width: var(--measure);
 		font-size: var(--t-lg);
 		line-height: 1.45;
-		color: var(--c-text);
-		/* The accent bar reads as a continuation of the panel's title rule. */
-		border-inline-start: 3px solid var(--c-entry-ink);
+		color: var(--mark);
+		border-inline-start: 3px solid var(--mark);
 		padding-inline-start: var(--s-4);
 	}
 
@@ -369,19 +372,20 @@ const entryInk = ink(accent);
 		position: relative;
 		display: inline-block;
 		padding: var(--s-3) var(--s-4);
-		border: 1px solid color-mix(in oklab, var(--c-entry-ink) 45%, var(--c-line));
-		border-radius: var(--radius);
-		color: var(--c-entry-ink);
+		border: 1px solid var(--accent);
+		color: var(--accent);
 		text-decoration: none;
 		overflow: clip;
 		transition:
-			border-color var(--speed) var(--ease),
+			background-color var(--speed) var(--ease),
+			color var(--speed) var(--ease),
 			translate var(--speed) var(--ease);
 	}
 
 	.case__links a:hover,
 	.case__links a:focus-visible {
-		border-color: var(--c-entry-ink);
+		background: var(--accent);
+		color: var(--field);
 		translate: 0 -2px;
 	}
 
@@ -391,18 +395,18 @@ const entryInk = ink(accent);
 		display: grid;
 		gap: var(--s-6);
 		padding-block: var(--s-8) var(--s-16);
-		border-block-start: 1px solid var(--c-line);
+		border-block-start: 1px solid var(--line);
 	}
 
 	.case__back {
 		font-size: var(--t-sm);
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 		text-underline-offset: 0.3em;
 	}
 
 	.case__back:hover,
 	.case__back:focus-visible {
-		color: var(--c-entry-ink);
+		color: var(--accent);
 	}
 
 	.case__sequence {
@@ -410,22 +414,26 @@ const entryInk = ink(accent);
 		gap: var(--s-4);
 	}
 
+	/* Each step is a preview of the channel it goes to: channel up, channel */
+	/* down. The colours sit on an inner plate, not on the link, so the link's */
+	/* focus ring stays in the reading channel's mark -- a ring in the */
+	/* destination's paper mark would vanish against this paper. */
 	.case__step {
 		display: grid;
-		gap: var(--s-1);
-		padding: var(--s-4) var(--s-4);
-		border: 1px solid var(--c-line);
-		border-radius: var(--radius-lg);
-		background: color-mix(in oklab, var(--c-surface) 60%, transparent);
 		text-decoration: none;
-		transition:
-			border-color var(--speed) var(--ease),
-			translate var(--speed) var(--ease);
+		transition: translate var(--speed) var(--ease);
+	}
+
+	.case__stepplate {
+		display: grid;
+		gap: var(--s-1);
+		padding: var(--s-4);
+		background: var(--field);
+		color: var(--mark);
 	}
 
 	.case__step:hover,
 	.case__step:focus-visible {
-		border-color: color-mix(in oklab, var(--c-entry-ink) 45%, var(--c-line));
 		translate: 0 -3px;
 	}
 
@@ -434,7 +442,7 @@ const entryInk = ink(accent);
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	.case__steptitle {

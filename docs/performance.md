@@ -82,6 +82,24 @@ curl -s -A "Mozilla/5.0" "https://fonts.googleapis.com/css2?family=Lato:wght@400
 # 3. Verify the magic bytes are "wOF2" before committing.
 ```
 
+### Display face: Martian Mono 700
+
+`public/fonts/martian-mono-700.woff2` — 10.6 KB, Latin subset, OFL alongside, preloaded — with a
+metric-matched fallback declared in `src/styles/typography.css`. Re-measure the fallback whenever the
+face changes. Load the face with `new FontFace()`, **await it**, then read `measureText()` on a
+canvas at 100px, for the face and for the local fallback: one glyph's `width` (both are monospaced,
+so one glyph is every glyph), `fontBoundingBoxAscent` and `fontBoundingBoxDescent`.
+
+```text
+size-adjust      = face advance / fallback advance     70 / 60.01 = 116.65%
+ascent-override  = face ascent  / size-adjust          100 / 1.1665 = 85.73%
+descent-override = face descent / size-adjust           20 / 1.1665 = 17.15%
+```
+
+Measuring before the face has loaded silently measures the fallback: four different candidates once
+all came out at an identical 6.61em. The subset has no arrows and no U+2011 non-breaking hyphen, so
+neither may appear in display text.
+
 The previous setup declared `format('ttf')` — not a valid token, it is `truetype` — so the local
 fonts never loaded and the page fell back to two render-blocking Google Fonts CDN imports,
 duplicated into all 8 component stylesheets. That was both a performance bug and a GDPR one: the
@@ -90,9 +108,13 @@ something to do by accident.
 
 ## Caching
 
-`firebase.json` sets `immutable` year-long caching for `/_astro/**` and `/fonts/**` (Astro
-content-hashes those filenames, so this is safe and without it every repeat visit re-validates your
-CSS), `must-revalidate` for HTML, and `no-store` for `/service-worker.js`.
+`firebase.json` sets `immutable` year-long caching for `/_astro/**` and `/fonts/**`, `must-revalidate` for
+HTML, and `no-store` for `/service-worker.js`. Astro content-hashes everything under `/_astro/`, so
+that is safe, and without it every repeat visit re-validates the CSS.
+
+**`/fonts/**` is NOT hashed** — those files come from `public/` and keep their names. A font
+changed in place would stay stale for a year for anyone who has visited. A changed font gets a new
+file name; never overwrite one.
 
 ## Renderer rules
 
@@ -117,7 +139,7 @@ The art renders as text. `src/lib/field/` owns it; see `docs/art-system.md`.
   release the typed arrays. A generation counter guards the dynamic `import()`, which can resolve
   after teardown if someone scrolls past fast.
 - **Two `<pre>` layers is the colour budget.** Measured 3× single-layer cost, not 2× — overlapping
-  repaint is superlinear. A third accent is not affordable on mobile.
+  repaint is superlinear. A third layer colour is not affordable on mobile.
 - **ASCII-only ramp, ligatures explicitly disabled.** A glyph missing from the user's font falls
   back per-glyph with an unconstrained advance and shears the line; `reset.css` sets
   `text-rendering: optimizeLegibility` on `body`, which _enables_ ligature processing, so the

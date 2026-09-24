@@ -70,6 +70,16 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
   files something outside your HTML references — favicons, manifest, robots.txt, the service worker,
   CSS-referenced fonts.
 - Content lives in `src/content/work/*.md`. **Zero content in `.ts` files.**
+- **Every colour comes from `src/lib/channels.ts`.** Each full-screen section is a _channel_ — one
+  flat field — and declares which one; its text colour is solved against the field at build time and
+  the build fails below 4.5:1. Stylesheets only read `--field`, `--mark`, `--mark-dim`, `--accent`.
+  No hex values in CSS, and no darkening a photograph to make text legible — photos print in their
+  channel's colours (`.duo`), and text that crosses one sits on a plate of the field.
+- **Public files are not hashed.** `/fonts/**` is cached `immutable` for a year, so a changed font
+  gets a new file name. Never overwrite one in place.
+- **After a content schema change, delete `node_modules/.astro/data-store.json`** and restart the dev
+  server. `astro check` writes that cache, and the dev server keeps serving the old shape from it —
+  a new field reads as `undefined` with no error.
 
 ## Budgets
 

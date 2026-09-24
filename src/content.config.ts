@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
 import { glob } from 'astro/loaders';
+import { CHANNELS } from './lib/channels';
 
 /**
  * Work collection.
@@ -36,8 +37,14 @@ const work = defineCollection({
 				// The card layout breaks past four.
 				tags: z.array(z.string().min(1)).min(1).max(4),
 
-				// Becomes a CSS custom property, so it must be a real 6-digit hex.
-				accent: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+				/**
+				 * Which channel the entry is broadcast on: the flat colour field of
+				 * its panel on the one-pager and of its case study's hero. A name
+				 * from the palette, never a hex value -- every channel's text colour
+				 * is solved and contrast-checked in src/lib/channels.ts, and a
+				 * free-form colour would bypass that.
+				 */
+				channel: z.enum(CHANNELS),
 
 				/**
 				 * image() emits intrinsic width/height on the <img>, which is what
@@ -57,6 +64,17 @@ const work = defineCollection({
 				// An unlabelled image is a build failure, not something the a11y
 				// test should be first to notice.
 				coverAlt: z.string().min(1).optional(),
+
+				/**
+				 * Print the cover as a negative. Covers are printed in their
+				 * channel's two colours (src/styles/surfaces.css .duo), and a cover
+				 * should come out mostly as the FIELD. A dark cover on a light
+				 * channel does not: a logo on black prints on the red channel as a
+				 * dark block with a faint logo in it, and a white app screenshot
+				 * prints on the navy channel as a white page. As negatives, both
+				 * print mostly in the channel's own colour.
+				 */
+				coverInvert: z.boolean().default(false),
 
 				links: z
 					.array(z.object({ label: z.string().min(1), href: z.url() }))

@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
+import { channelStyle, type Channel } from '@lib/channels';
 
 interface Props {
 	id: string;
@@ -8,8 +9,8 @@ interface Props {
 	alt: string;
 	statement: string;
 	caption: string;
-	/** Which accent the treatment leans on. */
-	tone?: 'cool' | 'hot' | undefined;
+	/** The channel the interlude is broadcast on. Its field and mark print the photograph. */
+	channel: Channel;
 	/**
 	 * The object-position that keeps the subject in frame. A full-bleed cover
 	 * image on a phone shows a narrow centre band of a landscape photograph, so
@@ -17,8 +18,14 @@ interface Props {
 	 * crop is told where to look.
 	 */
 	focus?: string | undefined;
-	/** How far the photograph is pushed down. Bright images take the default. */
-	brightness?: number | undefined;
+	/**
+	 * Brightness before the print (surfaces.css --duo-lift). A photograph that
+	 * is mostly mid-tones prints muddy on a multiply channel; lifting it sends
+	 * those mid-tones to the field.
+	 */
+	lift?: number | undefined;
+	/** How hard the two colours separate (surfaces.css --duo-contrast). */
+	contrast?: number | undefined;
 }
 
 const {
@@ -27,10 +34,18 @@ const {
 	alt,
 	statement,
 	caption,
-	tone = 'cool',
+	channel,
 	focus = '50% 50%',
-	brightness = 0.42,
+	lift,
+	contrast,
 } = Astro.props;
+
+const levels = [
+	lift === undefined ? '' : `--duo-lift:${lift}`,
+	contrast === undefined ? '' : `--duo-contrast:${contrast}`,
+]
+	.filter(Boolean)
+	.join(';');
 ---
 
 <section
@@ -38,13 +53,14 @@ const {
 	class="art"
 	aria-labelledby={`${id}-heading`}
 	data-section
-	style={`--art-tone: var(--c-${tone}); --art-focus: ${focus}; --art-brightness: ${brightness};`}
+	data-channel={channel}
+	style={`${channelStyle(channel)};--art-focus:${focus}`}
 >
 	<h2 id={`${id}-heading`} class="visually-hidden">
 		Interlude
 	</h2>
 
-	<div class="art__media">
+	<div class="art__media duo" style={levels || undefined}>
 		<Image
 			src={image}
 			alt={alt}
@@ -53,8 +69,7 @@ const {
 			loading="lazy"
 			decoding="async"
 		/>
-		<span class="art__dither" aria-hidden="true"></span>
-		<span class="art__scrim" aria-hidden="true"></span>
+		<span class="art__fade" aria-hidden="true"></span>
 	</div>
 
 	<div class="art__copy wrap">
@@ -87,6 +102,8 @@ const {
 		overflow: clip;
 	}
 
+	/* Printed in the channel's two colours by .duo (surfaces.css), at full */
+	/* strength: the photograph IS the section, not a texture behind it. */
 	.art__media :global(img) {
 		position: absolute;
 		inset-inline: 0;
@@ -95,9 +112,6 @@ const {
 		block-size: 124%;
 		object-fit: cover;
 		object-position: var(--art-focus);
-		/* Pushed well down and tinted, so it reads as a treated surface rather */
-		/* than a photograph someone forgot to style. */
-		filter: grayscale(1) contrast(1.25) brightness(var(--art-brightness));
 	}
 
 	/* Parallax, deeper than the project panels -- an interlude should feel like
@@ -121,29 +135,15 @@ const {
 		}
 	}
 
-	/* The signature treatment, at image scale: an ordered dot screen in the page
-	   colour laid over the art. Static -- nothing animates here. */
-	.art__dither {
+	/* The statement sits on the bottom of the photograph, so the photograph */
+	/* runs out into the field there. The field, not a darker shade: on the */
+	/* yellow channel this is yellow. Above the overlay, or it would be printed */
+	/* into the duotone with everything else. */
+	.art__fade {
 		position: absolute;
 		inset: 0;
-		background-image:
-			radial-gradient(circle at 25% 25%, var(--c-bg) 1px, transparent 1.2px),
-			radial-gradient(circle at 75% 75%, var(--c-bg) 1px, transparent 1.2px);
-		background-size: 4px 4px;
-		opacity: 0.55;
-		mix-blend-mode: multiply;
-	}
-
-	.art__scrim {
-		position: absolute;
-		inset: 0;
-		background:
-			linear-gradient(to bottom, var(--c-bg) 0 6%, transparent 34%, transparent 52%, var(--c-bg)),
-			radial-gradient(
-				90% 70% at 30% 60%,
-				color-mix(in oklab, var(--art-tone) 12%, transparent),
-				transparent 70%
-			);
+		z-index: 2;
+		background: linear-gradient(to bottom, transparent 45%, var(--field) 92%);
 	}
 
 	.art__copy {
@@ -167,6 +167,6 @@ const {
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--art-tone);
+		color: var(--accent);
 	}
 </style>

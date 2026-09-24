@@ -106,11 +106,9 @@
 	transform-origin: 0 50%;
 	pointer-events: none;
 
-	/*
-	 * The one place the two accents are allowed to blend. At 2px the muddy
-	 * oklab midpoint is too small to see; anywhere larger it reads as khaki.
-	 */
-	background: linear-gradient(90deg, var(--c-cool), var(--c-hot));
+	/* In the mark of the channel you are on: src/scripts/channel.ts re-points
+	   the page's colours as you scroll, so the bar changes channel with you. */
+	background: var(--mark);
 }
 
 @supports (animation-timeline: scroll()) {
@@ -134,20 +132,12 @@
 	}
 }
 
-@media (prefers-reduced-motion: reduce) {
-	/*
-	 * The bar STAYS. It is 1:1 with the user's own scrolling, so it is not
-	 * autonomous motion — removing it removes information.
-	 *
-	 * reset.css carries the matching `animation-duration: auto !important`
-	 * exception for [data-scroll-linked], without which the global
-	 * `0.01ms !important` would re-map this onto a sliver of the scroll range
-	 * and pin the bar at full.
-	 *
-	 * Drop the gradient though: a two-colour bar sliding is a colour change
-	 * nobody asked for.
-	 */
-	.progress {
-		background: var(--c-cool);
-	}
-}
+/*
+ * Under reduced motion the bar STAYS. It is 1:1 with the user's own scrolling,
+ * so it is not autonomous motion -- removing it removes information.
+ *
+ * reset.css carries the matching `animation-duration: auto !important`
+ * exception for [data-scroll-linked], without which the global
+ * `0.01ms !important` would re-map this onto a sliver of the scroll range and
+ * pin the bar at full.
+ */

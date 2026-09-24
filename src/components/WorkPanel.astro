@@ -2,8 +2,8 @@
 import { Image } from 'astro:assets';
 import TagList from './TagList.astro';
 import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
-import { ink } from '@lib/accent';
 import { vt } from '@lib/vt';
+import { NEGATIVE_PRINT } from '@lib/channels';
 
 interface Props {
 	entry: PublishedWorkEntry;
@@ -11,15 +11,13 @@ interface Props {
 }
 
 const { entry, index } = Astro.props;
-const { title, role, company, summary, tags, accent, cover } = entry.data;
+const { title, role, company, summary, tags, cover, coverInvert } = entry.data;
 const href = `/work/${entry.id}`;
 ---
 
-<article
-	class="panel"
-	data-proximity
-	style={`--c-entry-accent:${accent}; --c-entry-ink:${ink(accent)}`}
->
+{/* No colours of its own: the panel is drawn in the channel of the section */}
+{/* that holds it. */}
+<article class="panel">
 	<p class="panel__meta">
 		<span class="panel__index" aria-hidden="true">
 			{index}
@@ -48,7 +46,7 @@ const href = `/work/${entry.id}`;
 		aria-hidden="true"
 		style={`view-transition-name:${vt('cover', entry.id)}`}
 	>
-		<span class="panel__frame">
+		<span class="panel__frame duo" style={coverInvert ? NEGATIVE_PRINT : undefined}>
 			<Image
 				src={cover}
 				alt=""
@@ -58,8 +56,6 @@ const href = `/work/${entry.id}`;
 				decoding="async"
 			/>
 		</span>
-		<span class="panel__dither"></span>
-		<span class="panel__sheen"></span>
 		<span class="panel__bracket panel__bracket--tl"></span>
 		<span class="panel__bracket panel__bracket--tr"></span>
 		<span class="panel__bracket panel__bracket--bl"></span>
@@ -104,33 +100,34 @@ const href = `/work/${entry.id}`;
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	.panel__index {
 		font-size: var(--t-lg);
 		font-weight: 700;
-		color: var(--c-entry-ink);
+		color: var(--accent);
 		line-height: 1;
 	}
 
 	.panel__sep {
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 	}
 
 	/* ---- media: the biggest thing on the screen -------------------------- */
 
+	/* A hard frame in the mark, and nothing else: no radius, no shadow. The */
+	/* panel sits flat on its channel like a picture on a screen. The floor */
+	/* holds at every width, not just on phones: the picture's row is a 1fr */
+	/* track, and on a short screen the title and summary take their height */
+	/* first -- without a floor the picture is what gets squeezed out. */
 	.panel__media {
 		position: relative;
 		display: block;
-		min-block-size: 0;
+		min-block-size: min(34svh, 300px);
 		overflow: clip;
-		border-radius: var(--radius-lg);
-		border: 1px solid color-mix(in oklab, var(--c-entry-ink) 26%, var(--c-line));
-		background: var(--c-surface);
-		box-shadow:
-			0 1px 0 0 color-mix(in oklab, var(--c-text) 7%, transparent) inset,
-			0 40px 90px -40px rgb(0 0 0 / 0.9);
+		border: 1px solid var(--mark);
+		background: var(--field);
 		isolation: isolate;
 	}
 
@@ -150,10 +147,17 @@ const href = `/work/${entry.id}`;
 		inline-size: 100%;
 		block-size: 118%;
 		object-fit: cover;
-		filter: saturate(0.7) contrast(1.06);
 		transition:
 			scale var(--speed-slow) var(--ease-out),
 			filter var(--speed-slow) var(--ease-out);
+	}
+
+	/* The cover is printed in the channel's two colours (surfaces.css .duo) */
+	/* and comes back in its own colours under the pointer or keyboard focus. */
+	/* The shader version of this reveal replaces it once the renderer lands; */
+	/* this is what every browser without WebGL keeps. */
+	.panel__frame::after {
+		transition: opacity var(--speed-slow) var(--ease-out);
 	}
 
 	/* Parallax. Scroll-driven, zero JS, transform only. */
@@ -179,50 +183,14 @@ const href = `/work/${entry.id}`;
 		}
 	}
 
-	/* Ordered dither, dissolving on hover / focus. Only opacity animates. */
-	.panel__dither {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		background-image:
-			radial-gradient(circle at 25% 25%, var(--c-bg) 0.9px, transparent 1.1px),
-			radial-gradient(circle at 75% 75%, var(--c-bg) 0.9px, transparent 1.1px);
-		background-size: 3px 3px;
-		opacity: 0.9;
-		transition: opacity var(--speed-slow) var(--ease-out);
-	}
-
-	/* A sheen sweeping across on hover. Static gradient on a transformed */
-	/* element -- never animate background-position. */
-	.panel__sheen {
-		position: absolute;
-		inset-block: 0;
-		inset-inline-start: 0;
-		inline-size: 45%;
-		pointer-events: none;
-		background: linear-gradient(
-			100deg,
-			transparent,
-			color-mix(in oklab, var(--c-entry-ink) 16%, transparent),
-			transparent
-		);
-		translate: -160% 0;
-		rotate: 4deg;
-		transition: translate 900ms var(--ease-out);
-	}
-
-	.panel:hover .panel__sheen,
-	.panel:focus-within .panel__sheen {
-		translate: 320% 0;
-	}
-
 	/* Corner brackets: a viewport, not a card. */
 	.panel__bracket {
 		position: absolute;
 		inline-size: 22px;
 		block-size: 22px;
+		z-index: 2;
 		pointer-events: none;
-		border-color: var(--c-entry-ink);
+		border-color: var(--accent);
 		opacity: 0;
 		transition:
 			opacity var(--speed) var(--ease),
@@ -264,15 +232,15 @@ const href = `/work/${entry.id}`;
 		translate: 0 0;
 	}
 
-	.panel:hover .panel__dither,
-	.panel:focus-within .panel__dither {
+	.panel:hover .panel__frame::after,
+	.panel:focus-within .panel__frame::after {
 		opacity: 0;
 	}
 
 	.panel:hover .panel__media :global(img),
 	.panel:focus-within .panel__media :global(img) {
 		scale: 1.04;
-		filter: saturate(1) contrast(1);
+		filter: none;
 	}
 
 	/* ---- title and detail ------------------------------------------------ */
@@ -283,28 +251,37 @@ const href = `/work/${entry.id}`;
 		align-items: end;
 	}
 
-	/* Sized against its own column, not the viewport. At 1715px the viewport
-	   clamp asked for 112px in a 587px column, and "CHROMECAST" is 6.04em wide
-	   -- 677px. The reset sets overflow-wrap: break-word on headings, which is
-	   right for prose and catastrophic here: it split the word into CHROMECA /
-	   ST rather than overflowing. 15cqi keeps a ten-character word inside its
-	   column at every width, and the break-word net stays as the loud-but-safe
-	   fallback if a much longer title ever appears. A test asserts none does. */
+	/* Sized against its own column, not the viewport. The reset sets */
+	/* overflow-wrap: break-word on headings, which is right for prose and */
+	/* catastrophic here: it once split CHROMECAST into CHROMECA / ST rather */
+	/* than overflowing. Martian Mono advances exactly 0.7em per glyph, so at */
+	/* -0.02em tracking the ten letters of CHROMECAST need 6.8em, plus the */
+	/* plate's 0.15em: 6.95em x 14cqi = 97% of the column, at every width. A */
+	/* test asserts no title breaks. */
 	.panel__titlebox {
 		container-type: inline-size;
 	}
 
 	/* Big. This is the thing you should be able to read across the room. */
 	.panel__title {
-		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 15cqi);
+		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 14cqi);
 		line-height: 0.92;
-		letter-spacing: -0.04em;
+		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
 	}
 
+	/* The plate: the title sits on a block of its own field, so where it */
+	/* crosses the cover it reads as cut out of the picture, the way a */
+	/* broadcast lower third does. It replaces the text-shadow that used to */
+	/* keep the title legible by darkening whatever was behind it. Cloned per */
+	/* line, so a two-line title gets two plates that hug their words. */
 	.panel__title a {
+		padding-inline-end: 0.15em;
+		background-color: var(--field);
+		box-decoration-break: clone;
+		-webkit-box-decoration-break: clone;
 		text-decoration: none;
-		background-image: linear-gradient(var(--c-entry-ink), var(--c-entry-ink));
+		background-image: linear-gradient(var(--accent), var(--accent));
 		background-repeat: no-repeat;
 		background-position: 0 100%;
 		background-size: 0% 3px;
@@ -323,12 +300,12 @@ const href = `/work/${entry.id}`;
 	}
 
 	.panel__summary {
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 		font-size: var(--t-lg);
 	}
 
 	.panel__more a {
-		color: var(--c-entry-ink);
+		color: var(--accent);
 		font-size: var(--t-sm);
 		text-underline-offset: 0.3em;
 	}
@@ -345,7 +322,7 @@ const href = `/work/${entry.id}`;
 	.panel__bars i {
 		inline-size: 2px;
 		block-size: 100%;
-		background: var(--c-entry-ink);
+		background: var(--accent);
 		transform-origin: 50% 100%;
 		scale: 1 0.35;
 		animation: bars 2.6s ease-in-out infinite;
@@ -434,10 +411,6 @@ const href = `/work/${entry.id}`;
 			z-index: 2;
 		}
 
-		.panel__title {
-			text-shadow: 0 8px 40px rgb(0 0 0 / 0.85);
-		}
-
 		.panel__detail {
 			padding-block-start: var(--s-12);
 		}
@@ -447,10 +420,6 @@ const href = `/work/${entry.id}`;
 		.panel__bars i {
 			animation: none;
 			scale: 1 0.7;
-		}
-
-		.panel__sheen {
-			display: none;
 		}
 	}
 </style>

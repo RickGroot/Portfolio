@@ -1,7 +1,8 @@
 ---
 import { socialLinks } from '@lib/social';
+import { publicPath } from '@lib/site';
 
-const path = Astro.url.pathname;
+const path = publicPath(Astro.url.pathname);
 const onHome = path === '/';
 const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 ---
@@ -58,7 +59,7 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 
 	.mark:hover .mark__name,
 	.mark:focus-visible .mark__name {
-		color: var(--c-section-ink, var(--c-cool));
+		color: var(--accent);
 	}
 
 	.mark__role {
@@ -66,7 +67,7 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 	}
 
 	.actions {
@@ -77,13 +78,23 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 
 	.link {
 		font-size: var(--t-sm);
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	/* A phone cannot fit the name, the role, the way back and the button on */
+	/* one line: the arrow was wrapping away from its own label. The role is */
+	/* the one to drop -- every page says it again in its own content. */
+	@media (max-width: 30rem) {
+		.mark__role {
+			display: none;
+		}
 	}
 
 	.link:hover,
 	.link:focus-visible {
-		color: var(--c-text);
+		color: var(--mark);
 	}
 
 	/*
@@ -94,17 +105,15 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 	 * different, so the one action on the page is shaped like an action and the
 	 * navigation is shaped like navigation. Nothing has to be guessed.
 	 */
-	/* The action follows the section you are on. --c-section-ink is published
-	   by src/scripts/sections.ts and falls back to the cool accent, so this is
-	   correct with the script disabled. */
+	/* Drawn in the page's channel. The nav sits at the top of the page, above */
+	/* every section, so the page channel is the one it is always seen on. */
 	.cta {
-		--nav-ink: var(--c-section-ink, var(--c-cool));
+		--nav-ink: var(--mark);
 		transition-property: background-color, color, border-color;
 		font-size: var(--t-sm);
 		font-weight: 700;
 		padding: var(--s-2) var(--s-4);
 		border: 1px solid var(--nav-ink);
-		border-radius: 999px;
 		color: var(--nav-ink);
 		text-decoration: none;
 		transition:
@@ -119,6 +128,6 @@ const email = socialLinks.find((l) => l.href.startsWith('mailto:'));
 	.cta:hover,
 	.cta:focus-visible {
 		background: var(--nav-ink);
-		color: var(--c-void);
+		color: var(--field);
 	}
 </style>

@@ -35,7 +35,7 @@ export const practice: readonly Practice[] = [
 		title: 'Fixed what the tools missed',
 		body: 'Selecting text on one case study made it harder to read, not easier: the project’s own brand colour was being used raw as the selection background. Automated accessibility checks do not look at ::selection, so twenty-five green tests had nothing to say about it.',
 		proof:
-			'It measured 1.34:1 against the page. Every accent now passes through an OKLCH lightness floor at build time and the worst case is 6.62:1.',
+			'It measured 1.34:1 against the page. Every text colour on the site is now solved at build time against the field it sits on, and the build fails below 4.5:1.',
 	},
 	{
 		index: '02',

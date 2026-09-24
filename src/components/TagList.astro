@@ -13,21 +13,30 @@ const { tags, label = 'Technologies' } = Astro.props;
 </ul>
 
 <style>
+	/* A line of monospace, not a row of pills: hard edges everywhere, and a */
+	/* tag is a label, not a control, so it should not look like a button. */
 	.tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--s-2);
+		gap: var(--s-1) 0;
 		list-style: none;
 		margin: 0;
 		padding: 0;
-	}
-	li {
+		font-family: var(--font-mono);
 		font-size: var(--t-xs);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		padding: var(--s-1) var(--s-3);
-		border: 1px solid var(--c-line);
-		border-radius: 999px;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
+	}
+
+	/* The separator is decoration: the empty alternative text keeps screen */
+	/* readers from announcing "slash" between every item. Browsers without */
+	/* the alt syntax drop the second declaration and keep the first. After */
+	/* the item rather than before the next, so a wrapped line ends on a */
+	/* slash instead of starting with one. */
+	li:not(:last-child)::after {
+		content: '/';
+		content: '/' / '';
+		padding-inline: 0.75em;
 	}
 </style>

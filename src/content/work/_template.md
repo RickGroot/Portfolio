@@ -8,7 +8,7 @@ period: '2024' # or '2022–2025'. First-to-last year, NOT a claim of continuous
 status: completed # or ongoing -> renders as "Ongoing since <period>"
 summary: One sentence, 50-180 characters. This becomes the meta description, so write it for a search result.
 tags: ['Tag one', 'Tag two'] # 1-4. The card layout breaks past four.
-accent: '#000000' # 6-digit hex. Becomes a CSS custom property.
+channel: paper # ink, paper, yellow, blue, red or navy. See src/lib/channels.ts.
 cover: ../../assets/work/your-image.jpg
 coverAlt: What is actually in the image, for someone who cannot see it.
 order: 99

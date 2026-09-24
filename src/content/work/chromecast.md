@@ -6,7 +6,7 @@ period: '2023'
 status: ongoing
 summary: Custom Chromecast receivers for multiple projects, plus a TypeScript boilerplate covering media playback, error handling and Cast SDK integration.
 tags: ['JavaScript', 'Chromecast', 'Shaka player']
-accent: '#2c2c2c'
+channel: blue
 cover: ../../assets/work/chromecast.jpg
 coverAlt: A Google Chromecast dongle and its remote on a white surface.
 featured: true

@@ -34,10 +34,52 @@ CI quality gates, and the service-worker kill switch.
 
 **This phase must be shippable on its own.**
 
+### The Channels redesign (2026-09-24)
+
+Rick: _"the app feels too static and too dark."_ The visual layer is being replaced with one idea:
+the one-pager is a television, and each full-screen section is a **channel** — its own flat colour
+field, its own number. Delivered in stages, each ending with Rick's review.
+
+| Stage                                                                    | State                      |
+| ------------------------------------------------------------------------ | -------------------------- |
+| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done — awaiting review** |
+| 2. Channels on the DOM — channel readout, tuning wipe, number keys       | Next                       |
+| 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | —                          |
+| 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                          |
+| 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                          |
+| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | —                          |
+
+**Stage 1, what changed:**
+
+- **`src/lib/channels.ts` is the only source of colour.** Six channels (ink, paper, yellow, blue,
+  red, navy) on the Broadcast primaries palette. Each channel's mark — ink or paper, whichever reads —
+  its dimmed mark and its accent are solved at build time, and the build fails below 4.5:1. Mint and
+  amber are gone. `src/lib/accent.ts` is deleted.
+- **Everything that darkened the page is deleted**: the grain overlay, per-section washes and
+  vignettes, the alternating darker ground, drop shadows, text shadows, and every
+  `brightness(0.42–0.68)` on a photograph.
+- **Photos print in their channel's two colours** (`.duo`, CSS `mix-blend-mode`) and come back in
+  their own colours under the pointer. A cover can be printed as a negative (`coverInvert`) where a
+  positive print would come out as a block of the wrong colour.
+- **Text that crosses a picture sits on a plate of the field** — a broadcast lower third — instead
+  of a scrim or a shadow.
+- **Martian Mono 700** is the display face, with a measured monospace fallback. Space Grotesk is gone.
+- **Hard edges**: no radius, no pills (tags are mono text with slashes), no glows (the proximity
+  glow and the cursor's difference blend are gone).
+- The page chrome — rail, cursor, progress bar and the browser's own theme colour — follows the
+  channel in view (`src/scripts/channel.ts`), including under reduced motion.
+- Found on the way: every canonical URL ended in `.html` and the homepage nav linked to itself, both
+  build-only (`build.format: 'file'`); the contact photo shifted layout by 238px when its lazy image
+  loaded; a stale "overflowing" flag could collapse a work panel's picture to nothing; and Astro 7.3
+  backgrounds `astro preview` when an AI agent runs it, which broke the test server. All fixed, and
+  the first three are now tested.
+- Homepage LCP under 4× throttle: **552 ms** (was bimodal, 840–1470 ms). CLS 0.
+
 **Done:**
 
-- Two-accent palette on a lifted ground (`#15181c`), five-step art ramp, motion tokens.
-- `src/lib/accent.ts` — OKLCH lightness floor per work accent. Fixes a shipped bug where
+- ~~Two-accent palette on a lifted ground (`#15181c`)~~ — replaced by channels (above). Five-step art
+  ramp, motion tokens.
+- ~~`src/lib/accent.ts` — OKLCH lightness floor per work accent.~~ Replaced by `src/lib/channels.ts`. Fixes a shipped bug where
   `::selection` used the raw accent and measured **1.34:1** on `/work/chromecast`. Every entry now
   clears AA, worst case 6.62:1.
 - The character-field hero: two stacked `<pre>`, 30fps, decode-on-load, pointer-reactive. The
@@ -47,13 +89,14 @@ CI quality gates, and the service-worker kill switch.
   animations rather than speeding them up.
 - Draft entries no longer ship their cover images.
 - Hero column alignment; skip-link focus behaviour.
-- Cursor, trail and proximity — one script, no `requestAnimationFrame` of its own.
+- Cursor and trail — one script, no `requestAnimationFrame` of its own. (The proximity glow went in
+  the Channels redesign.)
 - Scroll-into-view reveals and the scroll-progress bar — both zero JS, `animation-timeline`.
 - Nav: legibility, sticky, non-colour current-page cues, Email as a button. Nav, rail and pointer
   all take their colour from the section in view.
 - Page transitions via CSS `@view-transition` (no `ClientRouter`, ever).
-- Space Grotesk 700 (OFL) with a **measured** metric-matched fallback — closes the Archive Regular
-  licence gap.
+- ~~Space Grotesk 700~~ → **Martian Mono 700** (OFL) with a **measured** metric-matched fallback —
+  closes the Archive Regular licence gap.
 - `scripts/check-assets.mjs` as a CI gate. It has already caught two real regressions.
 - **Restructured to a one-pager.** Eight full-height sections in one document, with the work detail
   routes kept: `/work/[slug]` still deep-links, shares and renders without JS. `Section.astro` is

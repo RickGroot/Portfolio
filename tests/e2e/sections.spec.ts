@@ -227,26 +227,57 @@ test.describe('one-page sections', () => {
 });
 
 test.describe('work panels', () => {
-	test('the dither clears on hover and on keyboard focus', async ({ page }) => {
+	test('the cover comes back in its own colours on hover and on keyboard focus', async ({
+		page,
+	}) => {
 		await page.goto('/#nlziet');
 		await page.waitForTimeout(600);
 
-		const dither = page.locator('#nlziet .panel__dither').first();
-		const opacity = async (): Promise<number> =>
-			Number(await dither.evaluate((el) => getComputedStyle(el).opacity));
+		// At rest the cover is printed in the channel's two colours: a grey
+		// image under a field-coloured overlay (surfaces.css .duo). Revealed,
+		// the overlay is gone and the image is back in colour.
+		const frame = page.locator('#nlziet .panel__frame').first();
+		const state = async (): Promise<{ overlay: number; filter: string }> =>
+			frame.evaluate((el) => ({
+				overlay: Number(getComputedStyle(el, '::after').opacity),
+				filter: getComputedStyle(el.querySelector('img') as Element).filter,
+			}));
 
-		expect(await opacity(), 'the dither should be visible at rest').toBeGreaterThan(0.5);
+		const rest = await state();
+		expect(rest.overlay, 'the duotone overlay should be on at rest').toBeGreaterThan(0.9);
+		expect(rest.filter, 'the cover should be grey at rest').toContain('grayscale(1)');
 
 		await page.locator('#nlziet .panel__title a').first().hover();
 		await page.waitForTimeout(700);
-		expect(await opacity(), 'the dither did not clear on hover').toBeLessThan(0.1);
+		let now = await state();
+		expect(now.overlay, 'the duotone did not clear on hover').toBeLessThan(0.1);
+		expect(now.filter, 'the cover stayed grey on hover').toBe('none');
 
 		// Keyboard parity: focusing the title must do the same thing.
 		await page.mouse.move(0, 0);
 		await page.waitForTimeout(700);
 		await page.locator('#nlziet .panel__title a').first().focus();
 		await page.waitForTimeout(700);
-		expect(await opacity(), 'the dither did not clear on focus').toBeLessThan(0.1);
+		now = await state();
+		expect(now.overlay, 'the duotone did not clear on focus').toBeLessThan(0.1);
+		expect(now.filter, 'the cover stayed grey on focus').toBe('none');
+	});
+
+	// The overflow flag is set at one viewport size and cleared at the next, so
+	// for a moment it can be stale. On a work section a stale flag once switched
+	// the grid from stretch to start, and the picture's 1fr row collapsed to
+	// nothing: three panels with no picture in them after a resize.
+	test('a work panel keeps its picture even while flagged as overflowing', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/#nlziet');
+		const height = await page.evaluate(() => {
+			const section = document.getElementById('nlziet');
+			if (!section) return 0;
+			section.dataset.overflows = '';
+			return section.querySelector('.panel__media')?.getBoundingClientRect().height ?? 0;
+		});
+		// Above the 300px floor the media always keeps: this is the stretch, not the floor.
+		expect(height, 'the panel picture collapsed under a stale overflow flag').toBeGreaterThan(400);
 	});
 
 	test('the decorative media link is hidden from assistive technology', async ({ page }) => {

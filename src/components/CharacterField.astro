@@ -46,7 +46,7 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		font-size: var(--art-cell);
 		line-height: 1.05;
 		white-space: pre;
-		color: var(--art-2);
+		color: var(--art-noise);
 
 		/* Ligatures MUST be off. */
 		/* The ramp emits '==', '--', '::', '**' constantly. If a visitor's */
@@ -107,16 +107,16 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 	/* The resolve state is the colour mask: cells still in noise are cool, */
 	/* cells that have resolved into the portrait are warm. */
 	.field__layer--a {
-		color: var(--art-2);
+		color: var(--art-noise);
 	}
 	.field__layer--b {
-		color: var(--art-hot);
+		color: var(--art-signal);
 	}
 
 	/* Before the renderer takes over, layer A holds the resolved portrait, so */
 	/* it should read as resolved rather than as field. */
 	.field[data-field-state='static'] .field__layer--a {
-		color: var(--art-hot);
+		color: var(--art-signal);
 	}
 
 	@media print {

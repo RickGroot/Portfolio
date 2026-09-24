@@ -1,5 +1,5 @@
 /*
- * Custom cursor, trail, and proximity.
+ * Custom cursor and trail.
  *
  * The trail is not a loop: the dot snaps, the ring transitions. The lag between
  * them IS the trail, and because the ring covers a longer distance in the same
@@ -10,18 +10,6 @@
 	syntax: '<number>';
 	inherits: true;
 	initial-value: 0;
-}
-
-@property --px {
-	syntax: '<length-percentage>';
-	inherits: false;
-	initial-value: 50%;
-}
-
-@property --py {
-	syntax: '<length-percentage>';
-	inherits: false;
-	initial-value: 50%;
 }
 
 /*
@@ -41,12 +29,12 @@
 	cursor: auto;
 }
 
-/* The cursor follows the section you are on. --c-section-ink is published by
-   src/scripts/sections.ts and falls back to the cool accent, so this is still
-   correct with the script disabled. */
+/* The cursor is drawn in the channel you are on: src/scripts/channel.ts
+   re-points the page's --mark at the section in view. The cursor only exists
+   when JavaScript runs, so there is no no-JS case to cover. */
 .cursor__dot,
 .cursor__ring {
-	--cursor-ink: var(--c-section-ink, var(--c-cool));
+	--cursor-ink: var(--mark);
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -78,18 +66,12 @@
 		border-color var(--speed) linear,
 		opacity var(--speed) linear;
 
-	/* Velocity shifts the ring from cool to hot and swells it slightly.
-	   A style recalc on ONE 30px element per frame -- not compositor-only,
-	   and not worth pretending otherwise. */
-	border-color: color-mix(in oklab, var(--cursor-ink), var(--c-hot) calc(var(--pointer-v) * 100%));
+	/* Velocity shifts the ring from the mark toward the channel's accent and
+	   swells it slightly. On a channel whose accent IS its mark it only swells.
+	   A style recalc on ONE 30px element per frame -- not compositor-only, and
+	   not worth pretending otherwise. */
+	border-color: color-mix(in oklab, var(--cursor-ink), var(--accent) calc(var(--pointer-v) * 100%));
 	scale: calc(1 + var(--pointer-v) * 0.55);
-}
-
-/* Keeps the ring legible over both the dark ground and a bright cover image. */
-@supports (mix-blend-mode: difference) {
-	.cursor__ring {
-		mix-blend-mode: difference;
-	}
 }
 
 /* Instant on, slow off -- the asymmetry is what makes a press feel physical. */
@@ -108,60 +90,10 @@
 @supports selector(:has(a)) {
 	:root[data-cursor='custom']:has(a:hover, button:hover) .cursor__ring {
 		scale: 1.9;
-		border-color: var(--c-hot);
+		border-color: var(--accent);
 	}
 
 	:root[data-cursor='custom']:has(a:hover, button:hover) .cursor__dot {
 		opacity: 0;
-	}
-}
-
-/* ---- Proximity ---------------------------------------------------------- */
-
-[data-proximity] {
-	position: relative;
-	isolation: isolate;
-}
-
-/*
- * The glow lives INSIDE the element it belongs to.
- *
- * It used to be inset by -30% and then clipped, which is why it looked cut off
- * at the panel edge -- and un-clipping it hung 30% of a 1152px panel off each
- * side of the page. Keeping it within bounds and softening the falloff reads as
- * light moving across a surface instead of a disc being trimmed.
- */
-[data-proximity]::before {
-	content: '';
-	position: absolute;
-	inset: 0;
-	z-index: -1;
-	pointer-events: none;
-	/* STATIC gradient, translated. Never animate background-position. */
-	/* Positioned by the pointer rather than translated, so it can never leave
-	   the box. A wide soft falloff keeps the edge invisible. */
-	background: radial-gradient(
-		38rem 38rem at var(--px) var(--py),
-		color-mix(in oklab, var(--c-entry-ink, var(--c-cool)) 17%, transparent),
-		color-mix(in oklab, var(--c-entry-ink, var(--c-cool)) 5%, transparent) 38%,
-		transparent 72%
-	);
-	opacity: 0;
-	transition: opacity var(--speed) var(--ease);
-}
-
-[data-proximity]:hover::before,
-/* Keyboard equivalent: --px/--py keep their 50% initial values, so a tabbed
-   card gets the identical glow, centred. Hover/focus parity is a rule here,
-   not an afterthought. */
-[data-proximity]:focus-within::before {
-	opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-	/* The glow is a STATE indicator, not autonomous motion, so it stays --
-	   it just arrives instantly. */
-	[data-proximity]::before {
-		transition: none;
 	}
 }

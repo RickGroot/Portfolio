@@ -1,18 +1,16 @@
 /**
- * Cursor, trail, and proximity — one script, no animation loop.
- *
- * Three effects were asked for: a custom cursor, a trail, and proximity
- * highlights. They are one system, not three, and none of them needs a frame
- * loop:
+ * Cursor and trail — one script, no animation loop.
  *
  *   - The TRAIL is the lag between two elements. The dot has
  *     `transition: none`, the ring has `transition: translate 420ms`. Because
  *     the ring interpolates a longer distance in a fixed time, it stretches
  *     further behind on fast movement automatically. No rAF, no lerp.
- *   - PROXIMITY is a static radial gradient on a pseudo-element, translated to
- *     the pointer. Never animate `background-position` — that repaints the
- *     whole element every frame.
  *   - VELOCITY is one smoothed number published as `--pointer-v`.
+ *
+ * The proximity glow that used to live here -- a soft light following the
+ * pointer across cards -- went with the rest of the glows in the Channels
+ * redesign: flat fields, no light effects. The pointer's job from here on is to
+ * reveal the photograph under it, which is the renderer's to do.
  *
  * `pointermove` is already coalesced to frame rate by the browser, so sampling
  * it directly is not wasteful.
@@ -115,49 +113,10 @@ function mountCursor(): Disposable | null {
 	};
 }
 
-/**
- * Proximity highlight.
- *
- * The listener's lifetime is the hover, so it cannot leak — the previous
- * iteration of this site attached listeners per card and never removed them.
- *
- * Keyboard equivalent: `:focus-within` shows the same glow, centred, because
- * `--px`/`--py` keep their 50% initial values when nothing writes them. That is
- * handled entirely in CSS; there is no JS path for it.
- */
-function mountProximity(): Disposable {
-	function onEnter(ev: PointerEvent): void {
-		const el = (ev.target as Element | null)?.closest<HTMLElement>('[data-proximity]');
-		if (!el) return;
-		const move = (e: PointerEvent): void => {
-			const r = el.getBoundingClientRect();
-			el.style.setProperty('--px', `${e.clientX - r.left}px`);
-			el.style.setProperty('--py', `${e.clientY - r.top}px`);
-		};
-		const leave = (): void => {
-			el.removeEventListener('pointermove', move);
-			el.removeEventListener('pointerleave', leave);
-			el.style.removeProperty('--px');
-			el.style.removeProperty('--py');
-		};
-		el.addEventListener('pointermove', move, { passive: true });
-		el.addEventListener('pointerleave', leave, { passive: true });
-	}
-
-	document.addEventListener('pointerover', onEnter as EventListener, { passive: true });
-	return {
-		destroy() {
-			document.removeEventListener('pointerover', onEnter as EventListener);
-		},
-	};
-}
-
 export function boot(): void {
 	// Coarse pointers get none of this. There is no touch equivalent of a
-	// cursor, and proximity needs a pointer position that touch does not have
-	// between taps.
+	// cursor.
 	if (!window.matchMedia(FINE_POINTER).matches) return;
 
 	mountCursor();
-	mountProximity();
 }

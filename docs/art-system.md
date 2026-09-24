@@ -27,7 +27,9 @@ Against a 16.7 ms budget, even 20,000 cells uses under a fifth of a frame.
 
 ## Two layers, because colour is the resolve state
 
-The palette uses two accents, which means per-cell colour. Measured at 120×60:
+The field uses two palette colours — signal yellow for the resolved portrait, electric blue for the
+noise it resolves out of (`--art-signal`, `--art-noise`) — which means per-cell colour. Measured at
+120×60:
 
 | Strategy                            | ms/frame  |
 | ----------------------------------- | --------- |
@@ -37,13 +39,13 @@ The palette uses two accents, which means per-cell colour. Measured at 120×60:
 
 Span-per-cell is 2.5× over a 60fps budget _on a desktop_. Settled.
 
-The split costs nothing extra because it **is** the resolve state: a resolved cell goes to the warm
-layer, a cell still in noise to the cool one, and each writes a space to the other. At rest one
+The split costs nothing extra because it **is** the resolve state: a resolved cell goes to the signal
+layer, a cell still in noise to the noise layer, and each writes a space to the other. At rest one
 layer is entirely spaces and its write is skipped — so the field spends almost all its life at
 single-layer cost and only pays the double during the ~1 s decode.
 
 Two layers measured **3×** single-layer cost, not 2× — overlapping repaint is superlinear. **Two is
-the colour budget.** A third accent is not affordable on mobile.
+the colour budget.** A third layer colour is not affordable on mobile.
 
 ## The resolve
 
@@ -157,26 +159,33 @@ written down rather than hidden by disabling the art.
 ## The art interludes
 
 Two full-bleed sections sit between the work panels. They are not the character field — they are
-photographs under a CSS treatment: greyscaled, pushed down, parallaxed, and screened with a static
-dot pattern (`.art__dither`).
+photographs printed in their channel's two colours: greyed, then the field laid over them with
+`multiply` (a dark mark: the photo prints in ink on the field) or `screen` (a light mark: it prints
+in paper). That is `.duo` in `src/styles/surfaces.css`, and every photograph on the site uses it.
+
+The previous treatment greyscaled each photograph, pushed it down to 42–68% brightness and laid a dot
+screen over it in the page colour. Every image came out as a darkened photo on a dark page, which is
+most of why the site read as dark. A duotone is made of the channel's own colours and nothing else,
+so it cannot.
 
 They are Rick's own photographs — a lighthouse at sunset for _Signal_, a clock tower for _Field_ —
 chosen by dithering all twelve candidates rather than looking at them. See `src/assets/IMAGES.md`.
 
-Two props exist because real photographs are not uniform:
+Three props exist because real photographs are not uniform:
 
-- **`brightness`** — how far the image is pushed down, default `0.42`. That default was tuned for
-  generated art that was close to white. A sunset silhouette is already dark, and at `0.42` the sky
-  went black; the lighthouse uses `0.68`.
+- **`lift`** — brightness before the print (`--duo-lift`). A photograph that is mostly mid-tones
+  prints muddy on a multiply channel; lifting it sends the mid-tones to the field. The lighthouse
+  sunset printed olive at 1 and prints yellow at `1.45`.
+- **`contrast`** — how hard the two colours separate (`--duo-contrast`, default `1.1`).
 - **`focus`** — the `object-position` of the cover crop. A phone shows a narrow centre band of a
   landscape photograph, so an off-centre subject gets cut away unless the crop is told where to
   look. The clock tower sits left of centre.
 
-**Screen at display time, not at bake time.** An earlier version quantised its source through an
-ordered Bayer dither, which looked right in isolation and was wrong twice over: the dot screen is
-already applied in CSS, so it doubled; and high-frequency noise is the worst input a lossy encoder
+**Treat at display time, not at bake time.** An earlier version quantised its source through an
+ordered Bayer dither, which looked right in isolation and was wrong twice over: the page applied
+its own screen on top, so it doubled; and high-frequency noise is the worst input a lossy encoder
 can get — `check-assets` failed the build at **507 KB** for one backdrop that was **67 KB** without
-it. Keep sources photographic and let the page apply the screen.
+it. Keep sources photographic and let the page apply the treatment.
 
 ## Changing the portrait
 

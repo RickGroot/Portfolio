@@ -11,6 +11,23 @@
 @import './motion.css';
 @import './cursor.css';
 
+/*
+ * The footer sits on the bottom of the screen even when the page is shorter
+ * than the screen. Without this the 404 ended in a paper footer halfway up,
+ * with a band of the page's own channel showing underneath it. A column, not
+ * a grid: in a column the automatic minimum size only applies vertically, so
+ * nothing wide inside <main> can push the page sideways.
+ */
+body {
+	display: flex;
+	flex-direction: column;
+	min-block-size: 100svh;
+}
+
+main {
+	flex: 1 0 auto;
+}
+
 .wrap {
 	width: min(100% - var(--gutter) * 2, var(--wrap));
 	margin-inline: auto;
@@ -31,8 +48,8 @@
 	top: var(--s-4);
 	z-index: 100;
 	padding: var(--s-2) var(--s-4);
-	background: var(--c-accent);
-	color: var(--c-bg);
+	background: var(--accent);
+	color: var(--field);
 	border-radius: var(--radius);
 	font-weight: 700;
 	transform: translateY(-200%);

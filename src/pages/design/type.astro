@@ -7,10 +7,14 @@ import BaseLayout from '@layouts/BaseLayout.astro';
  * tracked as an open item in docs/roadmap.md.
  *
  * The brief rejects defaulting to "Inter, Space Grotesk, Sora, or another
- * predictable pairing without a specific reason", and Space Grotesk 700 is
- * what currently ships. 2xA -- the closest reference of the seven -- runs
- * exactly two families: a variable monospace against plain Helvetica. So the
- * question is not "which grotesque" but "which monospace, against what".
+ * predictable pairing without a specific reason", and Space Grotesk 700 was
+ * what shipped. 2xA -- the closest reference of the seven -- runs exactly two
+ * families: a variable monospace against plain Helvetica. So the question was
+ * not "which grotesque" but "which monospace, against what".
+ *
+ * DECIDED 2026-09-24: Martian Mono. It now ships from public/fonts/ and is
+ * declared once in typography.css; Space Grotesk is gone. The remaining
+ * candidates stay for comparison until this route is deleted.
  *
  * Every candidate must be self-hostable under a licence that covers a public
  * portfolio. Redaction was the most on-concept face found (its weights ARE
@@ -33,14 +37,6 @@ interface Candidate {
 
 const candidates: Candidate[] = [
 	{
-		id: 'current',
-		name: 'Space Grotesk 700 (current)',
-		licence: 'SIL OFL — already self-hosted, subset, metric-matched',
-		stack: "'Space Grotesk', var(--font-sans)",
-		why: 'Derives from Space Mono, so it rhymes with the character field. Zero work, already measured for CLS.',
-		risk: 'Named explicitly in the brief as a predictable default to avoid.',
-	},
-	{
 		id: 'departure',
 		name: 'Departure Mono',
 		licence: 'SIL OFL — Helena Zhang, verified on departuremono.com',
@@ -51,11 +47,11 @@ const candidates: Candidate[] = [
 	},
 	{
 		id: 'martian',
-		name: 'Martian Mono',
-		licence: 'SIL OFL — Roman Shamin / Evil Martians, via Google Fonts',
+		name: 'Martian Mono (chosen)',
+		licence: 'SIL OFL — Roman Shamin / Evil Martians — ships from fonts/, metric-matched',
 		stack: "'Martian Mono', var(--font-mono)",
 		why: 'Deliberately brutal and wide, drawn for display rather than for code comfort. It has a sibling grotesque (Martian Grotesk), so display and text could come from one designed system instead of two unrelated families.',
-		risk: 'Wide advance widths mean long titles eat horizontal space fast. CHROMECAST is already the constraint at 6.04em in Space Grotesk.',
+		risk: 'Wide advance widths mean long titles eat horizontal space fast: every glyph is 0.7em, so CHROMECAST needs 6.8em at the display tracking and the titles are set to 14cqi to hold it.',
 	},
 	{
 		id: 'archivo',
@@ -104,9 +100,9 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 			<p class="proto__flag">Internal prototype — noindex, not for launch</p>
 			<h1>Type candidates</h1>
 			<p class="proto__note">
-				The question is which monospace carries the display role, and against what text face. All
-				three are self-hosted here from <code>fonts/proto/</code>, which is served only to this
-				route and must be empty before launch.
+				Martian Mono was chosen and ships site-wide. The others are self-hosted here from
+				<code>fonts/proto/</code>, which is served only to this route and must be empty before
+				launch.
 			</p>
 		</header>
 
@@ -145,7 +141,7 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 	/*
 	 * Measure, rather than eyeball. "CHROMECAST" is the longest word in the
 	 * content and the constraint on every panel title, so the useful number for
-	 * each face is how many ems it needs. Space Grotesk needs 6.04em; a face
+	 * each face is how many ems it needs. Martian Mono needs 6.8em; a face
 	 * needing materially more will break mid-word at the same size, which is
 	 * what the reset's overflow-wrap does to a display heading.
 	 *
@@ -173,15 +169,15 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		probe.remove();
 
 		// At `font-size: Ncqi` the longest word fits when em * N/100 <= 1, so the
-		// largest usable N is 100/em. The panels currently use 15cqi. A wide face
+		// largest usable N is 100/em. The panels currently use 14cqi. A wide face
 		// is not disqualified by this -- it just has to be set smaller.
 		const maxCqi = 100 / em;
-		const fits = maxCqi >= 15;
+		const fits = maxCqi >= 14;
 		const out = box.parentElement?.querySelector('[data-metric]');
 		if (out instanceof HTMLElement) {
 			out.textContent =
 				`${LONGEST} = ${em.toFixed(2)}em — fits up to ${maxCqi.toFixed(1)}cqi` +
-				(fits ? ' (panels use 15)' : ' — below the 15cqi the panels use');
+				(fits ? ' (panels use 14)' : ' — below the 14cqi the panels use');
 			out.dataset.fits = String(fits);
 		}
 	}
@@ -224,13 +220,6 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		font-weight: 900;
 		font-display: swap;
 	}
-
-	@font-face {
-		font-family: 'Martian Mono';
-		src: url('/fonts/proto/martian-mono-700.woff2') format('woff2');
-		font-weight: 700;
-		font-display: swap;
-	}
 </style>
 
 <style>
@@ -245,7 +234,7 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-hot);
+		color: var(--accent);
 	}
 
 	.proto__head {
@@ -255,14 +244,14 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 
 	.proto__note {
 		max-width: var(--measure);
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	.cand {
 		display: grid;
 		gap: var(--s-6);
 		padding-block-start: var(--s-8);
-		border-block-start: 1px solid var(--c-line);
+		border-block-start: 1px solid var(--line);
 	}
 
 	.cand__licence {
@@ -270,7 +259,7 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	/* Sized the way the panels size it, so this is a fair comparison and not a
@@ -282,9 +271,9 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 	.cand__display {
 		font-family: var(--stack);
 		font-weight: var(--stack-weight);
-		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 15cqi);
+		font-size: min(clamp(2.75rem, 1rem + 7vw, 7rem), 14cqi);
 		line-height: 0.92;
-		letter-spacing: -0.04em;
+		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
 	}
 
@@ -294,7 +283,7 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 
 	.cand__metric {
@@ -302,11 +291,7 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-cool);
-	}
-
-	.cand__metric[data-fits='false'] {
-		color: var(--c-hot);
+		color: var(--accent);
 	}
 
 	.cand__notes {
@@ -321,11 +306,11 @@ const specimens = ['NLZIET', 'CHROMECAST', 'VAMP'];
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
 		text-transform: uppercase;
-		color: var(--c-text-mute);
+		color: var(--mark-dim);
 	}
 
 	.cand__notes dd {
 		margin: 0;
-		color: var(--c-text-dim);
+		color: var(--mark-dim);
 	}
 </style>

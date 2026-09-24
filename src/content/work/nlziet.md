@@ -6,9 +6,10 @@ period: '2022'
 status: ongoing
 summary: Building the NLZIET streaming app across Smart TV platforms in Svelte and TypeScript, including chapters, search and the Bitmovin player.
 tags: ['Svelte', 'Connected TV', 'Bitmovin player']
-accent: '#ff145b'
+channel: red
 cover: ../../assets/work/nlziet.jpg
 coverAlt: The NLZIET wordmark in pink on a dark background.
+coverInvert: true # a logo on a dark background, on a light channel
 featured: true
 order: 1
 ---
