@@ -40,6 +40,25 @@ const lastYear = (e: PublishedWorkEntry): string => e.data.period.split('–').p
 
 const axis = `--now:${guide.now.toFixed(4)}`;
 const Tag = form === 'screen' ? 'section' : 'nav';
+
+/*
+ * On the one-pager the guide opens on its first three programmes, and the
+ * rest wait behind Load more (Rick, 2026-09-25): scrolling steps through three
+ * rather than all of them. A native <details>, so it opens without JavaScript
+ * and find-in-page still reaches what is inside. The strip under a case study
+ * lists everything, so the programme you are reading is always lit on it.
+ */
+const SHOWN = 3;
+const rows = guide.programmes.map((p, i) => ({ p, i }));
+const groups = (
+	form === 'screen'
+		? [
+				{ rows: rows.slice(0, SHOWN), more: false },
+				{ rows: rows.slice(SHOWN), more: true },
+			]
+		: [{ rows, more: false }]
+).filter((g) => g.rows.length > 0);
+const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 ---
 
 <Tag
@@ -161,32 +180,56 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 				</span>
 			</div>
 
-			<ol class="guide__rows">
-				{guide.programmes.map((p, i) => (
-					<li
-						class="guide__row"
-						style={`${channelStyle(p.entry.data.channel)};--from:${p.from.toFixed(4)};--to:${p.ongoing ? 'var(--now)' : p.to.toFixed(4)};--i:${i}`}
-					>
-						<span class="guide__ch" aria-hidden="true">
-							<b>{number(i)}</b> {shortName(p.entry.data.title)}
-						</span>
-						<span class="guide__lane">
-							<a
-								class:list={['guide__block', { 'guide__block--live': p.ongoing }]}
-								href={`/work/${p.entry.id}`}
-								data-block={p.entry.id}
-								data-focus={p.entry.id === focus.id ? '' : undefined}
-								aria-current={form === 'strip' && p.entry.id === focus.id ? 'page' : undefined}
-								aria-describedby={form === 'screen' ? `synopsis-${p.entry.id}` : undefined}
+			{groups.map((g) => {
+				const list = (
+					<ol class="guide__rows" start={g.more ? SHOWN + 1 : undefined}>
+						{g.rows.map(({ p, i }) => (
+							<li
+								class="guide__row"
+								style={`${channelStyle(p.entry.data.channel)};--from:${p.from.toFixed(4)};--to:${p.ongoing ? 'var(--now)' : p.to.toFixed(4)};--i:${i}`}
 							>
-								<span class="guide__blocktitle">{p.entry.data.title}</span>
-								<span class="guide__blocktime">{formatPeriod(p.entry)}</span>
-							</a>
-							{p.ongoing && <span class="guide__tail" aria-hidden="true"></span>}
-						</span>
-					</li>
-				))}
-			</ol>
+								<span class="guide__ch" aria-hidden="true">
+									<b>{number(i)}</b> {shortName(p.entry.data.title)}
+								</span>
+								<span class="guide__lane">
+									<a
+										class:list={['guide__block', { 'guide__block--live': p.ongoing }]}
+										href={`/work/${p.entry.id}`}
+										data-block={p.entry.id}
+										data-focus={p.entry.id === focus.id ? '' : undefined}
+										aria-current={form === 'strip' && p.entry.id === focus.id ? 'page' : undefined}
+										aria-describedby={form === 'screen' ? `synopsis-${p.entry.id}` : undefined}
+									>
+										<span class="guide__blocktitle">{p.entry.data.title}</span>
+										<span class="guide__blocktime">{formatPeriod(p.entry)}</span>
+									</a>
+									{p.ongoing && <span class="guide__tail" aria-hidden="true"></span>}
+								</span>
+							</li>
+						))}
+					</ol>
+				);
+				return g.more ? (
+					<details class="guide__more" data-guide-more>
+						<summary class="guide__moretoggle">
+							<span class="guide__ch" aria-hidden="true">
+								<b>+{restCount}</b> More
+							</span>
+							<span class="guide__lane">
+								<span class="guide__morebtn">
+									Load more
+									<span class="visually-hidden">
+										({restCount} more {restCount === 1 ? 'programme' : 'programmes'})
+									</span>
+								</span>
+							</span>
+						</summary>
+						{list}
+					</details>
+				) : (
+					list
+				);
+			})}
 		</div>
 	</div>
 </Tag>
@@ -620,6 +663,70 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 		z-index: 2;
 	}
 
+	/* ---- the rest of the listings ----------------------------------------- */
+
+	/* Load more is a row of the guide itself: the channel column, and a */
+	/* button in the lane. Once open it has done its job and goes -- it loads */
+	/* more, it is not a toggle -- and guide.ts moves focus to the first new */
+	/* programme so the keyboard is not left on nothing. */
+	.guide__more {
+		margin-block-start: 3px;
+	}
+
+	.guide__more[open] > .guide__moretoggle {
+		display: none;
+	}
+
+	.guide__moretoggle {
+		position: relative;
+		z-index: 3;
+		display: grid;
+		grid-template-columns: var(--label) minmax(0, 1fr);
+		block-size: var(--row);
+		list-style: none;
+		cursor: pointer;
+		color: var(--mark);
+	}
+
+	.guide__moretoggle::-webkit-details-marker {
+		display: none;
+	}
+
+	.guide__moretoggle .guide__lane {
+		display: flex;
+		align-items: center;
+		padding-inline-start: var(--s-3);
+	}
+
+	.guide__morebtn {
+		padding: 0.45em 1em;
+		border: 1px solid var(--accent);
+		background: var(--field);
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		font-weight: 700;
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		transition:
+			background-color var(--speed) var(--ease),
+			color var(--speed) var(--ease);
+	}
+
+	.guide__moretoggle:hover .guide__morebtn,
+	.guide__moretoggle:focus-visible .guide__morebtn {
+		background: var(--accent);
+		color: var(--field);
+	}
+
+	.guide__moretoggle:focus-visible {
+		outline: none;
+	}
+
+	.guide__moretoggle:focus-visible .guide__morebtn {
+		outline: 3px solid var(--mark);
+		outline-offset: 3px;
+	}
+
 	/* ---- first sight: the guide draws itself ------------------------------- */
 
 	/* Each programme runs out along its row, one row after another, the first */
@@ -735,6 +842,21 @@ const Tag = form === 'screen' ? 'section' : 'nav';
 
 		.guide__tick {
 			border-inline-start-color: transparent;
+		}
+
+		/* Just the button: on a phone the channel column is gone. */
+		.guide__moretoggle {
+			grid-template-columns: minmax(0, 1fr);
+			block-size: auto;
+			padding-block: var(--s-3);
+		}
+
+		.guide__moretoggle .guide__ch {
+			display: none;
+		}
+
+		.guide__moretoggle .guide__lane {
+			padding-inline-start: 0;
 		}
 	}
 </style>

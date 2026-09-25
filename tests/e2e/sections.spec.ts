@@ -120,14 +120,9 @@ test.describe('one-page sections', () => {
 					return `work:${on?.dataset.preview ?? '?'}`;
 				});
 
-			const expected = [
-				'top',
-				'work:nlziet',
-				'work:chromecast',
-				'work:vamp',
-				'work:kijk',
-				...SECTIONS.slice(2),
-			];
+			// The guide steps through the three programmes it shows; KIJK waits
+			// behind Load more and is not a step until it is loaded.
+			const expected = ['top', 'work:nlziet', 'work:chromecast', 'work:vamp', ...SECTIONS.slice(2)];
 
 			await settle();
 			const visited = [await where()];
@@ -156,36 +151,38 @@ test.describe('one-page sections', () => {
 			expect(visited, 'one press did not advance exactly one step').toEqual(expected);
 		});
 
-		test('the footer is still reachable with the wheel, and back up again', async ({ page }) => {
+		// There is no footer: it only repeated the contact channel's links (Rick,
+		// 2026-09-25). So the contact channel is the end of the page, and the
+		// end of the page must not be a trap either way.
+		test('the contact channel is the end of the page, and not a trap', async ({ page }) => {
 			await page.goto('/#contact');
 			await page.mouse.move(640, 400);
-			// Past the last section the wheel is an ordinary scroll.
-			for (let i = 0; i < 4; i++) {
-				await page.mouse.wheel(0, 120);
-				await page.waitForTimeout(120);
-			}
-			await expect
-				.poll(
-					() =>
-						page.evaluate(
-							() =>
-								window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4,
-						),
-					{ message: 'the wheel could not reach the footer', timeout: 6000 },
-				)
-				.toBe(true);
+			expect(
+				await page.evaluate(
+					() => window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2,
+				),
+				'something is below the last channel',
+			).toBe(true);
 
-			// And up from the footer lands on the last section, whole -- not the one
-			// before it.
-			await page.waitForTimeout(400);
+			// Down from the end is left to the browser, not taken.
+			const prevented = await page.evaluate(() => {
+				const ev = new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true });
+				document.body.dispatchEvent(ev);
+				return ev.defaultPrevented;
+			});
+			expect(prevented, 'the wheel past the last channel was taken').toBe(false);
+
+			// Up from it is the channel before.
 			await page.mouse.wheel(0, -120);
 			await expect
 				.poll(
 					() =>
 						page.evaluate(() =>
-							Math.round(document.getElementById('contact')?.getBoundingClientRect().top ?? 9999),
+							Math.round(
+								document.getElementById('interlude-field')?.getBoundingClientRect().top ?? 9999,
+							),
 						),
-					{ message: 'up from the footer did not come back to the contact section', timeout: 6000 },
+					{ message: 'up from the last channel did not reach the one before', timeout: 6000 },
 				)
 				.toBe(0);
 		});
@@ -387,8 +384,72 @@ test.describe('programme guide', () => {
 
 		// Keyboard parity: focus does exactly what hover does.
 		await page.mouse.move(0, 0);
-		await page.locator('#work [data-block="kijk"]').focus();
-		expect(await active(page)).toEqual({ preview: 'kijk', channel: 'ink', focus: 'kijk' });
+		await page.locator('#work [data-block="vamp"]').focus();
+		expect(await active(page)).toEqual({ preview: 'vamp', channel: 'navy', focus: 'vamp' });
+	});
+
+	// Rick: "load the first 3 projects by default, and add a load more button
+	// for other projects so navigation is better".
+	test.describe('load more', () => {
+		const shownBlocks = (page: import('@playwright/test').Page) =>
+			page.evaluate(() =>
+				[...document.querySelectorAll<HTMLElement>('#work [data-block]')]
+					.filter((b) => b.checkVisibility())
+					.map((b) => b.dataset.block),
+			);
+
+		test('the guide opens on three programmes, and loads the rest on request', async ({ page }) => {
+			await page.goto('/#work');
+			expect(await shownBlocks(page)).toEqual(['nlziet', 'chromecast', 'vamp']);
+
+			const load = page.locator('#work summary', { hasText: 'Load more' });
+			await expect(load).toHaveAccessibleName(/1 more programme/);
+			await load.click();
+
+			expect(await shownBlocks(page)).toEqual(['nlziet', 'chromecast', 'vamp', 'kijk']);
+			// The button has done its job and goes, and focus is not left on
+			// nothing: it is on the first new programme, which is previewed.
+			await expect(load).toBeHidden();
+			await expect
+				.poll(() => page.evaluate(() => (document.activeElement as HTMLElement)?.dataset.block))
+				.toBe('kijk');
+			expect(await active(page)).toEqual({ preview: 'kijk', channel: 'ink', focus: 'kijk' });
+		});
+
+		test('the arrow keys stop on Load more, and Enter loads', async ({ page }) => {
+			await page.goto('/#work');
+			await page.locator('#work [data-block="vamp"]').focus();
+			await page.keyboard.press('ArrowDown');
+			expect(await page.evaluate(() => document.activeElement?.tagName)).toBe('SUMMARY');
+			await page.keyboard.press('ArrowUp');
+			expect(
+				await page.evaluate(() => (document.activeElement as HTMLElement)?.dataset.block),
+			).toBe('vamp');
+
+			await page.keyboard.press('ArrowDown');
+			await page.keyboard.press('Enter');
+			await expect
+				.poll(() => page.evaluate(() => (document.activeElement as HTMLElement)?.dataset.block))
+				.toBe('kijk');
+			// And the page did not move: loading more is not leaving the guide.
+			expect(
+				await page.evaluate(() =>
+					Math.abs(Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 999)),
+				),
+			).toBeLessThan(4);
+		});
+
+		test('without JavaScript it still loads more', async ({ browser }) => {
+			const context = await browser.newContext({ javaScriptEnabled: false });
+			const page = await context.newPage();
+			await page.goto('/#work');
+			const kijk = page.locator('#work [data-block="kijk"]');
+			await expect(kijk).toBeHidden();
+			await page.locator('#work summary', { hasText: 'Load more' }).click();
+			await expect(kijk).toBeVisible();
+			await expect(kijk).toHaveAttribute('href', '/work/kijk');
+			await context.close();
+		});
 	});
 
 	test('arrow keys move between programmes like a remote', async ({ page }) => {
@@ -419,14 +480,15 @@ test.describe('programme guide', () => {
 				Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 9999),
 			);
 
-		for (const id of ['chromecast', 'vamp', 'kijk']) {
+		for (const id of ['chromecast', 'vamp']) {
 			await page.mouse.wheel(0, 120);
 			await expect.poll(async () => (await active(page)).preview).toBe(id);
 			expect(await top(), `the page moved while stepping to ${id}`).toBe(0);
 			await page.waitForTimeout(500);
 		}
 
-		// Past the last programme the page moves on to the next section.
+		// Past the last programme on screen the page moves on to the next
+		// section: KIJK, behind Load more, is not a step.
 		await page.mouse.wheel(0, 120);
 		await expect.poll(top, { timeout: 6000 }).toBeLessThan(-400);
 	});
@@ -444,11 +506,12 @@ test.describe('programme guide', () => {
 				),
 			)
 			.toBeLessThan(4);
-		expect((await active(page)).preview).toBe('kijk');
+		// The last programme on screen: KIJK waits behind Load more.
+		expect((await active(page)).preview).toBe('vamp');
 
 		await page.waitForTimeout(800);
 		await page.mouse.wheel(0, -120);
-		await expect.poll(async () => (await active(page)).preview).toBe('vamp');
+		await expect.poll(async () => (await active(page)).preview).toBe('chromecast');
 	});
 
 	test('the picture comes back in its own colours under the pointer', async ({ page }) => {

@@ -1,6 +1,5 @@
 ---
 import BaseHead from '@components/BaseHead.astro';
-import Footer from '@components/Footer.astro';
 import ScrollProgress from '@components/ScrollProgress.astro';
 import { site } from '@lib/site';
 import { channel as channelColours, channelStyle, paletteStyle, type Channel } from '@lib/channels';
@@ -57,13 +56,14 @@ const {
 			Skip to content
 		</a>
 		<ScrollProgress />
-		{/* No site header. This is meant to feel like an app, and an app has no */}
-		{/* masthead: the one-pager opens on the hero, and a case study carries */}
-		{/* its own way back to the guide. */}
+		{/* No site header and no footer. This is meant to feel like an app, and */}
+		{/* an app has neither: the one-pager opens on the hero and ends on the */}
+		{/* contact channel, a case study carries its own way back to the guide, */}
+		{/* and the 404 its own links. The footer only repeated the contact */}
+		{/* channel's links (Rick, 2026-09-25). */}
 		<main id="main" class:list={[{ wrap: !bleed }]} tabindex="-1">
 			<slot />
 		</main>
-		<Footer />
 
 		<script>
 			import { boot as bootCursor } from '../scripts/cursor';

@@ -125,8 +125,9 @@ See `docs/art-system.md` before touching `src/lib/field/`.
 > The programme guide is the complete record: every non-draft entry is a programme on it, and has
 > its own page at `/work/<slug>`.
 
-Publishing an entry also requires updating the guard in `src/pages/work/[id].astro`. That is
-deliberate friction.
+On the one-pager the guide shows the first three and holds the rest behind Load more — still on
+it, one press away, and in the HTML without JavaScript. Publishing an entry also requires updating
+the guard in `src/pages/work/[id].astro`. That is deliberate friction.
 
 ## Publishing hygiene
 

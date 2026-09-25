@@ -11,7 +11,9 @@ test('the one-pager is the complete record, including KIJK', async ({ page }) =>
 	await page.goto('/');
 	// KIJK never had a section of its own, and it is a programme on the guide with a
 	// link to its case study -- otherwise the copy is orphaned, which is
-	// exactly what happened when the /work index was removed.
+	// exactly what happened when the /work index was removed. It is the fourth
+	// programme, so it waits behind Load more: one press away, never gone.
+	await page.locator('#work summary', { hasText: 'Load more' }).click();
 	const kijk = page.getByRole('link', { name: /KIJK/ });
 	await expect(kijk).toBeVisible();
 	await expect(kijk).toHaveAttribute('href', '/work/kijk');

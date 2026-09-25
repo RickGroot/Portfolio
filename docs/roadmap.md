@@ -119,6 +119,23 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
 - LCP against HEAD, interleaved on one server: **1836 ms** against **1980 ms**, medians of 8, with the
   machine at 35–55% load from other work. The vitals run's 2308 ms was that load; the trip-wire stays.
 
+**2026-09-25:**
+
+- Rick: _"The footer at the bottom is double so not needed."_ It repeated the contact channel's links,
+  and it is gone from every page: the one-pager ends on the contact channel, a case study on its
+  guide strip, the 404 on its own links. The 404's content now declares its channel itself — the
+  footer had been its only channel region — and the body's flex column, which only kept the footer
+  at the bottom of a short page, is gone with it.
+- Rick: _"load the first 3 projects by default, and add a load more button for other projects so
+  navigation is better."_ The guide shows the first three and holds the rest behind **Load more**, a
+  native `<details>`, so it opens without JavaScript and find-in-page still reaches it. Scrolling and
+  the arrow keys step through what is on screen — three steps, not all of them — the arrow keys stop
+  on Load more, and opening it hands focus to the first new programme. The strip under a case study
+  still lists everything, so the page you are on is always lit on it.
+- Found on the way: a case study's screen, sinking as the page scrolls (the depth above), slid over
+  the facts and hid them, because a transform lifts an element above in-flow content. The reading
+  area is an opaque layer now, and the screen slides under it.
+
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
 should be no header — it should feel like an app. Of three candidates rendered at full size (a

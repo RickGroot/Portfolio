@@ -8,7 +8,7 @@
  *   - A section taller than the viewport scrolls NORMALLY until you reach its
  *     end; only then does the next gesture advance. Otherwise its bottom would
  *     be unreachable, which is the classic failure of this pattern.
- *   - Past the last section, the footer is an ordinary scroll.
+ *   - Past the last section the browser has the move: nothing is below it.
  *   - Ctrl + wheel and a trackpad pinch still zoom.
  *   - Keyboard keeps working: PageUp/PageDown, Space, Home/End and arrows all
  *     move between sections, and Tab moves focus normally without hijacking.
@@ -178,9 +178,9 @@ export function boot(): void {
 	}
 
 	/**
-	 * True when this move is past the last section, into the footer: an
-	 * ordinary scroll. With every other wheel event taken, nothing else would
-	 * reach it.
+	 * True when this move is past the last section. Nothing is below it, so
+	 * the move is left to the browser rather than taken: the end of the page
+	 * behaves like the end of a page, a trackpad's bounce and all.
 	 */
 	function pastTheEnd(dir: number): boolean {
 		return dir > 0 && index === sections.length - 1;
@@ -188,13 +188,8 @@ export function boot(): void {
 
 	/** One step of intent: a step inside the section, or the next channel. */
 	function advance(dir: number): void {
-		if (stepWithin(dir)) {
-			lock(STEP_MS);
-			return;
-		}
-		// Coming back up from the footer: the last section first, whole.
-		const top = sections[index]?.getBoundingClientRect().top ?? 0;
-		go(dir < 0 && top < -4 ? index : index + dir);
+		if (stepWithin(dir)) lock(STEP_MS);
+		else go(index + dir);
 	}
 
 	let wheelSum = 0;

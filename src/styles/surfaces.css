@@ -12,7 +12,7 @@
 
 /*
  * Every channel region paints itself: each section of the one-pager, a case
- * study's hero and reading area, the footer. Its colours are inline on the
+ * study's hero and reading area. Its colours are inline on the
  * element (src/lib/channels.ts), so these resolve to that region's field and
  * mark, not to the page's.
  */

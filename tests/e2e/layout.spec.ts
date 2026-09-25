@@ -14,9 +14,16 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 	const left = async (selector: string): Promise<number> =>
 		(await page.locator(selector).first().boundingBox())?.x ?? -1;
 
-	// The column itself. <main> is full width on a page of bands, so the
-	// footer's .wrap is the one element that is nothing but the column.
-	const main = await left('footer .wrap');
+	// The column itself. <main> is full width on a page of bands and the page
+	// has no footer, so a probe that is nothing but .wrap measures it.
+	const main = await page.evaluate(() => {
+		const probe = document.createElement('div');
+		probe.className = 'wrap';
+		document.body.append(probe);
+		const x = probe.getBoundingClientRect().left;
+		probe.remove();
+		return x;
+	});
 	const h1 = await left('.hero__copy h1');
 	const lede = await left('.hero .lede');
 	// The guide's content column.
@@ -80,7 +87,7 @@ test.describe('skip link', () => {
 		await page.goto('/');
 		// Suppressing the ring on the skip destination must not leak to anything
 		// a user can actually operate.
-		for (const selector of ['#work [data-block]', 'footer a']) {
+		for (const selector of ['#work [data-block]', '#contact a']) {
 			const style = await page
 				.locator(selector)
 				.first()

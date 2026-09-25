@@ -420,12 +420,18 @@ const numberOf = (e: PublishedWorkEntry): string =>
 
 	/* ---- main: the facts, and the story ------------------------------------ */
 
+	/* An opaque layer over the programme's screen, which sinks as the page */
+	/* scrolls (info-sink, below). A transform lifts the screen above in-flow */
+	/* content, so without this it slid down over the facts and hid them. */
 	.info__main {
+		position: relative;
+		z-index: 1;
 		display: grid;
 		gap: var(--s-8);
 		margin-block-start: var(--s-12);
 		padding-block-start: var(--s-8);
 		border-block-start: 1px solid var(--line);
+		background: var(--field);
 	}
 
 	.info__facts {

@@ -34,7 +34,11 @@ test('the names actually pair up between the one-pager and each detail page', as
 		// or the browser skips the whole transition -- and it is the one you
 		// click, because focus follows the pointer. So focus it first.
 		await page.goto('/');
-		await page.locator(`#work [data-block="${id}"]`).hover();
+		const block = page.locator(`#work [data-block="${id}"]`);
+		// Past the first three, a programme waits behind Load more.
+		if (!(await block.isVisible()))
+			await page.locator('#work summary', { hasText: 'Load more' }).click();
+		await block.hover();
 		const onHome = await names();
 		// A morph only happens if BOTH documents carry the same name. Naming one
 		// side only is the other silent failure mode.

@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
 import { getPublishedWork } from '@lib/work';
+import { channelStyle, type Channel } from '@lib/channels';
 
 // Plain but genuinely useful. The full "lost signal" treatment is a later
 // phase; what matters now is that this file EXISTS, so Firebase serves a real
@@ -9,16 +10,19 @@ import { getPublishedWork } from '@lib/work';
 // The links are built from the collection rather than typed out: a list typed
 // by hand had already drifted to a /work index that no longer exists.
 const work = await getPublishedWork();
+
+// The blue of a television with nothing on the input. The page is on it, and
+// so is its one region: with no footer, the section is what declares it.
+const CHANNEL: Channel = 'ultramarine';
 ---
 
-{/* The blue of a television with nothing on the input. */}
 <BaseLayout
 	title="Page not found"
 	description="That page does not exist."
 	noindex={true}
-	channel="ultramarine"
+	channel={CHANNEL}
 >
-	<section class="four-oh-four">
+	<section class="four-oh-four" data-channel={CHANNEL} style={channelStyle(CHANNEL)}>
 		<p class="code">404</p>
 		<h1>No signal here</h1>
 		<p class="lede">That page does not exist — but these do.</p>

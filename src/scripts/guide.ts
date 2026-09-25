@@ -11,6 +11,10 @@
  *     (`section:step`), so a scroll steps to the next programme, and only a
  *     scroll past the last one moves the page on. Arriving from below starts
  *     at the last programme, so scrolling back up walks back through them.
+ *   - Only the programmes on screen count. The first three show; the rest
+ *     wait behind Load more (a native <details>), and until it is opened
+ *     scrolling and the arrow keys pass them by. The arrow keys stop on Load
+ *     more itself, and opening it hands focus to the first new programme.
  *   - NOW is moved to today, and a clock shows the visitor's own time -- real
  *     state, the one piece of chrome a TV guide always has.
  *
@@ -85,6 +89,27 @@ function mount(guide: HTMLElement): void {
 
 	let active = blocks.find((b) => 'focus' in b.dataset)?.dataset.block;
 	const order = blocks.map((b) => b.dataset.block);
+
+	/* ---- the rest of the listings ------------------------------------------ */
+
+	const more = guide.querySelector<HTMLDetailsElement>('[data-guide-more]');
+	const moreToggle = more?.querySelector<HTMLElement>('summary') ?? null;
+
+	/** The programmes on screen: not the ones still waiting behind Load more. */
+	const shown = (): HTMLAnchorElement[] => blocks.filter((b) => !b.closest('details:not([open])'));
+
+	// Opened from the button, focus goes to the first new programme: the
+	// button itself is gone, and the keyboard must not be left on nothing.
+	// Not when find-in-page opens it, which should not move anything.
+	let openedByHand = false;
+	moreToggle?.addEventListener('click', () => {
+		openedByHand = true;
+	});
+	more?.addEventListener('toggle', () => {
+		if (!more.open || !openedByHand) return;
+		openedByHand = false;
+		more.querySelector<HTMLAnchorElement>('[data-block]')?.focus({ preventScroll: true });
+	});
 
 	/* ---- the colour wipe ---------------------------------------------------- */
 
@@ -248,8 +273,9 @@ function mount(guide: HTMLElement): void {
 
 	guide.addEventListener('section:step', (ev) => {
 		const dir = (ev as CustomEvent<{ dir: number }>).detail.dir;
-		const next = order[order.indexOf(active) + dir];
-		// Past the first or last programme: leave the step to the page.
+		const ids = shown().map((b) => b.dataset.block);
+		const next = ids[ids.indexOf(active) + dir];
+		// Past the first or last programme on screen: leave the step to the page.
 		if (!next) return;
 		ev.preventDefault();
 		stepTo(next);
@@ -257,15 +283,19 @@ function mount(guide: HTMLElement): void {
 
 	guide.addEventListener('section:enter', (ev) => {
 		const from = (ev as CustomEvent<{ from: 'above' | 'below' }>).detail.from;
-		stepTo(from === 'below' ? order[order.length - 1] : order[0]);
+		const on = shown();
+		stepTo((from === 'below' ? on[on.length - 1] : on[0])?.dataset.block);
 	});
 
 	guide.addEventListener('keydown', (ev) => {
 		if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return;
 		if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
-		const i = blocks.indexOf(document.activeElement as HTMLAnchorElement);
+		// The programmes on screen, then Load more while it is still closed.
+		const stops: HTMLElement[] = shown();
+		if (more && !more.open && moreToggle) stops.push(moreToggle);
+		const i = stops.indexOf(document.activeElement as HTMLElement);
 		if (i < 0) return;
-		const next = blocks[ev.key === 'ArrowDown' ? i + 1 : i - 1];
+		const next = stops[ev.key === 'ArrowDown' ? i + 1 : i - 1];
 		// Off the end of the guide: leave the key for the section advance.
 		if (!next) return;
 		ev.preventDefault();
