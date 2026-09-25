@@ -22,9 +22,10 @@ test('the one-pager is the complete record, including KIJK', async ({ page }) =>
 test('drafts never escape the collection', async ({ page }) => {
 	await page.goto('/');
 	const body = (await page.locator('body').innerText()).toLowerCase();
-	// NOS is held back over image rights; Ajax and NH Nieuws are unwritten.
+	// NH Nieuws is unwritten; Streamz & VTM GO waits on its cover and its case
+	// study. (NOS waits on its cover too, but three letters match too much text.)
 	expect(body).not.toContain('nh nieuws');
-	expect(body).not.toContain('ajax webshop');
+	expect(body).not.toContain('streamz');
 });
 
 test('a work page renders its case study body and links', async ({ page }) => {

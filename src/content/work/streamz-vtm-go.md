@@ -6,7 +6,7 @@ period: '2022–2024'
 status: completed
 summary: The Smart TV apps of Streamz and VTM GO, two Belgian streaming services, for DPG Media.
 tags: ['Connected TV']
-channel: crimson
+channel: ultramarine
 # No cover yet: a mockup of Rick's own screenshot is coming. Add `cover` +
 #   `coverAlt`, fill in the case study below, then drop `draft: true`, and add
 #   the slug to the guard in src/pages/work/[id].astro and to the list in
