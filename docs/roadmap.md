@@ -375,14 +375,17 @@ Nothing on this list may be installed without moving it off the list first.
 
 2. **NOS is held back on image rights.** Its cover was an ANP Kippa press photo. The entry is
    `draft: true` and carries no cover, so nothing ships. Needs an image Rick owns or is licensed to
-   use. **Ajax and NH Nieuws covers need the same provenance check.** Rick is making screenshots
+   use. **Ajax and NH Nieuws covers need the same provenance check.** On 2026-09-25 the three
+   supplied covers left the tree (they are still in the branch's pushed history, which only a
+   rewrite removes), and NOS (2023 to 2025) and Ajax get mockups of Rick's own screenshots. Rick is making screenshots
    of his own work for mockup key art (2026-09-25), which would clear NOS: the scene is generated
    with a flat green screen and the real screenshot composited in locally, so the UI stays
    pixel-exact and no client screen goes to an image model.
 3. **`nlziet.jpg` is 1200×675** — soft for a 2× hero if ever used at that size.
 4. **Confirm the LinkedIn URL.** The README used `/in/rick-groot-469777193/`, the unreleased branch
    used `/in/r-groot/`. The vanity URL is assumed current but unverified.
-5. **Ajax and NH Nieuws periods are inferred** and marked unconfirmed in their frontmatter.
+5. **The NH Nieuws period is inferred** and marked unconfirmed in its frontmatter. Ajax's is
+   confirmed: 2021, an internship project (Rick, 2026-09-25).
 6. **Stale remote branches** (`develop`, `first_site`, `sveltekit`) still to be pruned, which makes
    the old `icov` blobs and the 2021 "fix: remove public info" commit unreachable.
 7. **Firebase console follow-ups** — see `README.md` § Security.
