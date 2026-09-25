@@ -1,5 +1,6 @@
 ---
 import { socialLinks } from '@lib/social';
+import { channelStyle } from '@lib/channels';
 ---
 
 <ul class="social">
@@ -10,10 +11,16 @@ import { socialLinks } from '@lib/social';
 				rel={l.href.startsWith('mailto:') ? undefined : 'me noopener noreferrer'}
 				target={l.href.startsWith('mailto:') ? undefined : '_blank'}
 			>
-				{l.label}
-				{!l.href.startsWith('mailto:') && (
-					<span class="visually-hidden"> (opens in a new tab)</span>
-				)}
+				{/* Each link lights up in a channel of its own under the pointer */}
+				{/* (Rick, 2026-09-25). The plate carries that channel's colours, */}
+				{/* solved like every other pair; at rest it shows nothing, and the */}
+				{/* link reads in the page's own. */}
+				<span class="social__plate" style={channelStyle(l.channel)}>
+					{l.label}
+					{!l.href.startsWith('mailto:') && (
+						<span class="visually-hidden"> (opens in a new tab)</span>
+					)}
+				</span>
 			</a>
 		</li>
 	))}
@@ -33,7 +40,26 @@ import { socialLinks } from '@lib/social';
 	a {
 		color: var(--mark-dim);
 	}
-	a:hover {
+
+	/* Proud of the text by its own padding, pulled back by the margin, so */
+	/* lighting up moves nothing. */
+	.social__plate {
+		padding: 0.2em 0.45em;
+		margin: -0.2em -0.45em;
+		color: inherit;
+		transition:
+			background-color var(--speed) var(--ease),
+			color var(--speed) var(--ease);
+	}
+
+	a:hover,
+	a:focus-visible {
+		text-decoration-color: transparent;
+	}
+
+	a:hover .social__plate,
+	a:focus-visible .social__plate {
+		background: var(--field);
 		color: var(--mark);
 	}
 </style>

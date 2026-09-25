@@ -76,7 +76,9 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
   No hex values in CSS, and no darkening a photograph to make text legible — photos print in their
   channel's colours (`.duo`), and text that crosses one sits on a plate of the field. A
   programme's key art is the exception: it is shown as it is, because a logo printed in its channel's
-  colours loses its own.
+  colours loses its own. Its title stands on a gradient to the field instead of a plate, and because
+  axe cannot judge text over a photograph, `tests/a11y/stage-contrast.spec.ts` measures it against
+  the brightest pixel behind it.
 - **Public files are not hashed.** `/fonts/**` is cached `immutable` for a year, so a changed font
   gets a new file name. Never overwrite one in place.
 - **After a content schema change, delete `node_modules/.astro/data-store.json`** and restart the dev

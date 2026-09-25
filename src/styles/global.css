@@ -94,16 +94,68 @@
 }
 
 /*
+ * Opening a programme. The picture grows out of the guide's screen into the
+ * case study's stage and the title flies to its place, slower than the page
+ * around them, so they read as the thing that moved. At 320ms like everything
+ * else they were over before the eye found them: "when going to the case
+ * study there is no animation" (Rick, 2026-09-25). Back to the guide, the
+ * same move in reverse.
+ */
+::view-transition-group(*.vt-cover),
+::view-transition-group(*.vt-title) {
+	animation-duration: 720ms;
+	animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* A 16:9 screen becomes a stage the width of the page: both pictures fill */
+/* the moving box and crop, rather than stretching or spilling out of it. */
+::view-transition-group(*.vt-cover) {
+	overflow: clip;
+}
+
+/*
+ * Stacked as the page is: picture, then the case study's foot gradient, then
+ * the title and the chrome. Left alone, the layers take the OLD page's paint
+ * order, and on the guide the screen paints after the title -- so the title
+ * morphed across underneath the growing picture, out of sight.
+ */
+::view-transition-group(*.vt-cover) {
+	z-index: 1;
+}
+
+::view-transition-group(info-foot) {
+	z-index: 2;
+}
+
+::view-transition-group(*.vt-title),
+::view-transition-group(info-chrome) {
+	z-index: 3;
+}
+
+/* The old title is a snapshot of different-sized type, and cross-faded for */
+/* the whole move it doubled up behind the new one. It goes early instead. */
+::view-transition-old(*.vt-title) {
+	animation-duration: 200ms;
+}
+
+::view-transition-old(*.vt-cover),
+::view-transition-new(*.vt-cover) {
+	inline-size: 100%;
+	block-size: 100%;
+	object-fit: cover;
+}
+
+/*
  * Changing page is changing channel. The old page rolls away with a flash, the
- * new one rolls in and settles, while the picture and the title morph across
- * on their own. One flash per navigation, never a strobe.
+ * new one rolls in and settles after the picture and the title have mostly
+ * arrived. One flash per navigation, never a strobe.
  */
 ::view-transition-old(root) {
-	animation: vt-zap-out 240ms steps(4, end) both;
+	animation: vt-zap-out 280ms steps(4, end) both;
 }
 
 ::view-transition-new(root) {
-	animation: vt-zap-in 380ms var(--ease-out) both;
+	animation: vt-zap-in 520ms var(--ease-out) 160ms both;
 }
 
 @keyframes vt-zap-out {

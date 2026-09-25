@@ -150,6 +150,29 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   title's plate goes line by line, cut to Martian Mono's cap height, because a wrapped block's plate
   is as wide as its column.
 
+**Rick's desktop run (2026-09-25):**
+
+- **Case studies.** The back button sits level with the channel, on the column's edge rather than
+  the screen's corner. The title, its status and the synopsis share one left edge — title first,
+  as a programme page reads — and they stand on a gradient where the picture runs out into the
+  field, not on plates. axe cannot judge text over a photograph, so
+  `tests/a11y/stage-contrast.spec.ts` measures each block against the brightest pixel behind it;
+  the worst today is the title at 4.4:1 over Chromecast's white photograph. The channel keeps a
+  chip: a fade thin enough to keep the picture left it at 1:1 there.
+- _"When going to the case study there is no animation."_ There was one, over in 320 ms — and the
+  picture flew as a layer of its own that hid the title and the gradient until it ended. Now the
+  picture grows out of the guide's screen into the stage over 720 ms, the title flies above it,
+  and the gradient and the chrome fade in on layers of their own, stacked explicitly: left alone,
+  the layers took the old page's paint order, which put the title under the picture.
+- **The guide.** The picture takes the larger share of the preview under a higher cap, and reacts
+  to the pointer: it pushes in, scanlines come up, static crackles once, and a Case study cue rises.
+- **Contact.** Each link lights up in a channel of its own: LinkedIn ultramarine, GitHub ink, Email
+  yellow.
+- **How I work** is rewritten around Rick's three themes — AI-first, keeping responsibility,
+  expertise built into the tooling — each with a proof that can be checked in this repository.
+  Drafts, for Rick to put in his own voice.
+- The Signal and Field interludes stay; Rick will replace their pictures and their text.
+
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
 should be no header — it should feel like an app. Of three candidates rendered at full size (a

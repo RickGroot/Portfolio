@@ -54,7 +54,16 @@ const lastYear = entry.data.period.split('–').pop();
 				</p>
 			</div>
 
+			<span class="info__foot" aria-hidden="true"></span>
 			<div class="info__titles">
+				{/* Title first, then its status: a programme page's order, and */}
+				{/* the status is small text, so it wants the stronger field lower */}
+				{/* down the foot, not the thin top of it. */}
+				<div class="info__titlebox">
+					<h1 class="info__title" style={`view-transition-name:${vt('title', entry.id)}`}>
+						{title}
+					</h1>
+				</div>
 				<p class="info__status">
 					{status === 'ongoing' ? (
 						<span class="onair onair--live">On air</span>
@@ -62,11 +71,6 @@ const lastYear = entry.data.period.split('–').pop();
 						<span class="onair onair--ended">Ended {lastYear}</span>
 					)}
 				</p>
-				<div class="info__titlebox">
-					<h1 class="info__title" style={`view-transition-name:${vt('title', entry.id)}`}>
-						<span class="info__titleplate">{title}</span>
-					</h1>
-				</div>
 				<p class="info__lede">{summary}</p>
 				{links.length > 0 && (
 					<ul class="info__actions">
@@ -187,18 +191,23 @@ const lastYear = entry.data.period.split('–').pop();
 		justify-content: space-between;
 		gap: var(--s-4);
 		inline-size: min(100% - var(--gutter) * 2, var(--wrap));
-		min-block-size: 3rem;
+		min-block-size: 44px;
 		margin-inline: auto;
-		padding-block-start: var(--s-6);
+		margin-block-start: var(--s-6);
+		view-transition-name: info-chrome;
 	}
 
 	/* App chrome, not a header: pinned to the corner of the screen, on a plate */
 	/* of the channel so it stays legible over the picture as the page scrolls. */
+	/* Level with the channel on the right: the same top, the same height, and */
+	/* the column's own left edge rather than the corner of the screen. The */
+	/* formula is .wrap's; 100% of a fixed box's containing block is the */
+	/* viewport without its scrollbar, so it lands where the column does. */
 	.info__back {
 		position: fixed;
 		z-index: var(--z-nav);
-		inset-block-start: var(--s-4);
-		inset-inline-start: var(--s-4);
+		inset-block-start: var(--s-6);
+		inset-inline-start: max(var(--gutter), (100% - var(--wrap)) / 2);
 		display: inline-flex;
 		align-items: center;
 		gap: var(--s-3);
@@ -224,10 +233,18 @@ const lastYear = entry.data.period.split('–').pop();
 		color: var(--field);
 	}
 
+	/* A chip to match the back button: the same height, frame and field, so */
+	/* the two sit on one line as a pair. It stays a plate, unlike the title: */
+	/* over a white photograph a fade thin enough to keep the picture left */
+	/* the channel at 1:1. */
 	.info__osd {
+		display: flex;
+		align-items: center;
+		min-block-size: 44px;
 		margin-inline-start: auto;
+		padding-inline: var(--s-4);
 		background: var(--field);
-		box-shadow: 0 0 0 0.5rem var(--field);
+		border: 2px solid var(--mark);
 		font-family: var(--font-display);
 		font-size: var(--t-lg);
 		letter-spacing: 0.04em;
@@ -262,6 +279,34 @@ const lastYear = entry.data.period.split('–').pop();
 		inset: 0;
 		overflow: clip;
 		border-block-end: 2px solid var(--accent);
+		view-transition-class: vt-cover;
+	}
+
+	/* The picture runs out into the field at its foot, where the title stands */
+	/* -- the field, not a darker shade, as on the interludes. Rick found plates */
+	/* behind the text heavy (2026-09-25). It shares the title's grid row, the */
+	/* full width of the stage, and rises 24vh above it, so however tall the */
+	/* title is, the gradient is sized to it: solid behind the synopsis, never */
+	/* less than about two thirds field behind the title -- a white photograph */
+	/* needs half for 3:1 -- and clear above. A test measures the pixels. */
+	/* Its own layer in the view transition, like the chrome row: the picture */
+	/* flies in as a layer of its own, and anything left in the page beneath */
+	/* it was hidden until the transition ended -- the title morphed across a */
+	/* bare white photograph, then the gradient popped in under it. */
+	.info__foot {
+		grid-row: 3;
+		grid-column: 1;
+		z-index: 1;
+		margin-block-start: -24vh;
+		pointer-events: none;
+		view-transition-name: info-foot;
+		background: linear-gradient(
+			to top,
+			var(--field) 0%,
+			var(--field) 26%,
+			color-mix(in oklab, var(--field) 55%, transparent) 68%,
+			transparent 100%
+		);
 	}
 
 	/* Oversized top and bottom: it scrolls slower than the page, and the */
@@ -296,7 +341,9 @@ const lastYear = entry.data.period.split('–').pop();
 					exit 0% exit 100%;
 			}
 
-			.info__titles {
+			/* The foot lifts with the title, so the title never leaves its field. */
+			.info__titles,
+			.info__foot {
 				animation: info-lift linear both;
 				animation-timeline: --head;
 				animation-range: exit 0% exit 100%;
@@ -343,12 +390,13 @@ const lastYear = entry.data.period.split('–').pop();
 		}
 	}
 
-	/* The title stands on the picture's foot, in the page's column, and every */
-	/* line of it on a plate of the field: text never crosses a picture bare. */
+	/* The title stands on the picture's foot, in the page's column, on the */
+	/* gradient above. One left edge for all of it. */
 	.info__titles {
 		position: relative;
-		z-index: 1;
+		z-index: 2;
 		grid-row: 3;
+		grid-column: 1;
 		display: grid;
 		justify-items: start;
 		gap: var(--s-4);
@@ -358,37 +406,21 @@ const lastYear = entry.data.period.split('–').pop();
 		padding-block: var(--s-16) var(--s-8);
 	}
 
-	.info__titles > :not(.info__titlebox) {
-		background: var(--field);
-		box-shadow: 0 0 0 0.5rem var(--field);
-	}
-
 	.info__titlebox {
 		inline-size: 100%;
 		container-type: inline-size;
 	}
 
 	/* 14cqi: CHROMECAST is 6.8em in Martian Mono at the display tracking. */
+	/* The -0.05em is the capitals' own side bearing: without it the title's */
+	/* ink starts a few pixels right of the lines above and below it. */
 	.info__title {
+		view-transition-class: vt-title;
+		margin-inline-start: -0.05em;
 		font-size: min(clamp(2.75rem, 1rem + 6vw, 7rem), 14cqi);
-		line-height: 1;
+		line-height: 0.92;
 		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
-	}
-
-	/* The title's plate goes line by line: a wrapped block is as wide as its */
-	/* column, and CHROMECAST RECEIVERS on one plate ran across the picture. */
-	/* Uppercase only, so a line is Martian Mono's cap height, 0.808em; its */
-	/* line box is 1.192em, centred at the same height. Trimming 0.192em */
-	/* leaves a plate 0.096em proud of the capitals above and below, and at */
-	/* line-height 1 each one meets the next without covering it. */
-	.info__titleplate {
-		padding-inline: 0.12em;
-		margin-inline: -0.12em;
-		background: linear-gradient(var(--field), var(--field)) center / 100% calc(100% - 0.192em)
-			no-repeat;
-		-webkit-box-decoration-break: clone;
-		box-decoration-break: clone;
 	}
 
 	.info__lede {
@@ -465,6 +497,19 @@ const lastYear = entry.data.period.split('–').pop();
 		margin-block-start: var(--s-12);
 		padding-block: var(--s-8) var(--s-12);
 		border-block-start: 1px solid var(--line);
+	}
+
+	/* ---- narrow screens ----------------------------------------------------- */
+
+	/* On a phone the back button and the channel met in the middle. */
+	@media (max-width: 30rem) {
+		.info__back .keyhint {
+			display: none;
+		}
+
+		.info__osd {
+			font-size: var(--t-sm);
+		}
 	}
 
 	/* ---- wide screens ------------------------------------------------------- */
