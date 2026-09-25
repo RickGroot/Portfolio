@@ -8,7 +8,7 @@ summary: A local-first, offline PWA for sketching chord progressions and looping
 tags: ['SvelteKit', 'Tone.js', 'PWA', 'Web Audio']
 channel: navy
 cover: ../../assets/work/vamp.jpg
-coverAlt: VAMP open on a tablet on a music stand, beside a brass trumpet on a wooden stool, under a warm spotlight.
+coverAlt: VAMP open on a tablet on a music stand on a small jazz stage, with a trumpet on a stool beside it and a drum kit behind.
 order: 3
 links:
   - label: Live app

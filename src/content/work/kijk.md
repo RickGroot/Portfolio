@@ -8,7 +8,7 @@ summary: A responsive Smart TV app experience for the KIJK streaming platform ac
 tags: ['Connected TV', 'Advertisements', 'THEOplayer']
 channel: ink
 cover: ../../assets/work/kijk.jpg
-coverAlt: The KIJK app on a TV on a dark wall, a strip of yellow light along the floor below it.
+coverAlt: The KIJK app on a TV in a dark room, seen over the shoulder of someone on the sofa, with a yellow floor lamp in the corner.
 order: 4
 ---
 
