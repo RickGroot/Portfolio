@@ -375,9 +375,11 @@ Nothing on this list may be installed without moving it off the list first.
 
 ## Open items
 
-1. **The hero portrait is interim.** `portrait.jpg` is a matted face crop from a photo of Rick giving
-   a talk — real, but not taken for this. A purpose-shot portrait is pending; what it needs is in
-   `docs/art-system.md` § Changing the portrait.
+1. **TODO: replace the hero portrait with a real selfie** (Rick, 2026-09-25: "I don't want an AI
+   generated image to be the main subject"). `portrait.jpg` is Rick's portrait on black retouched
+   with an image model, and since the header shows the photograph itself under the characters, it
+   is the main subject of the home page. What the photo needs is in `docs/art-system.md` § Changing
+   the portrait: square, head and shoulders filling it, eyes visible, a dark plain background.
 
 2. **Done for NOS (2026-09-25):** its first cover was an ANP Kippa press photo, so it waited as a
    draft; it is published now, with a cover made from Rick's own screenshot. **The NH Nieuws cover

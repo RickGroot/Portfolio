@@ -1,6 +1,6 @@
 # Images: provenance
 
-No image here is stock. The photographs are Rick's own, and two of them were retouched with an
+No image here is stock. The photographs are Rick's own, and three of them were retouched with an
 image model; the programme covers are illustrations built around his real screenshots. Which is
 which, and how, is recorded below, because a portfolio should be able to say.
 
@@ -14,7 +14,7 @@ file names are not kept either: phone file names are capture timestamps.
 
 | File                      | What it is                                                    | Used in                  |
 | ------------------------- | ------------------------------------------------------------- | ------------------------ |
-| `portrait.jpg`            | A tight face crop from the talk photo, with a soft matte      | The hero character field |
+| `portrait.jpg`            | Rick on black, retouched: interim, a real selfie replaces it  | The hero, under the text |
 | `talk.jpg`                | Rick presenting, in front of a blank screen: retouched        | Backdrop of _How I work_ |
 | `about.jpg`               | Rick on a bridge by a canal: retouched                        | Contact                  |
 | `art/lighthouse.jpg`      | A lighthouse silhouetted at sunset                            | Interlude / Signal       |
@@ -26,17 +26,20 @@ file names are not kept either: phone file names are capture timestamps.
 | `work/streamz-vtm-go.jpg` | Illustration: VTM GO and Streamz on two TVs, real screenshots | Streamz & VTM GO key art |
 | `work/chromecast.jpg`     | A Chromecast and its remote on a white surface                | Chromecast key art       |
 
-## The three retouched photographs
+## The retouched photographs
 
-On 2026-09-25 Rick edited three of his own photographs with an image model, from prompts that asked
+On 2026-09-25 Rick edited four of his own photographs with an image model, from prompts that asked
 for the lighting, the background and the crop to change and for his face to stay exactly as it is:
 edits of real photos, never a generated face.
 
-Two of them are on the site, `talk.jpg` and `about.jpg`. The third, a portrait on flat black, was
-tried in the hero and not kept: lit hard from one side, half the face fell into the black at the
-field's resolution, and the old crop from the talk photo still reads better as characters. That
-crop keeps its soft elliptical matte, which crushes its lit background to black so the face comes
-out of empty field.
+Three of them are on the site. `talk.jpg` and `about.jpg` are two. The first portrait on flat black
+was tried in the hero and not kept: lit hard from one side, half the face fell into the black at
+the field's resolution. The second, lit from the front, is `portrait.jpg`, cropped square and tight
+to the head. It replaced a matted crop from the talk photo, and it shows twice: as the characters,
+and faintly under them as the photograph itself.
+
+That makes it the main subject of the home page, so it is interim. Rick is replacing it with a
+real selfie (2026-09-25: "I don't want an AI generated image to be the main subject").
 
 ## The covers are illustrations
 

@@ -6,7 +6,7 @@ interaction-triggered.
 ## What it is
 
 A grid of characters recomputed 60 times a second and written into two stacked `<pre>` elements.
-**No canvas, no WebGL, no graphics context.** The whole thing is 2.9 KB gzip.
+**No canvas, no WebGL, no graphics context.** The whole thing is 3.6 KB gzip.
 
 It idles as an abstract field, decodes into a portrait on load, and dissolves again as the hero
 leaves the viewport. Fast pointer movement disturbs it.
@@ -116,8 +116,15 @@ minimum-font-size setting inflates it further. A probe element measures the real
 mount and on resize; **if the measured font is not actually monospace the renderer bails to the
 static frame** rather than shipping a sheared grid.
 
-Grid capped at 6000 cells. The portrait occupies a centred box rather than the whole grid — a face
-emerging from a still-live field reads far better than a rectangle appearing.
+Grid capped at 6000 cells on a 1440×900 screen, and scaled with the screen's area up to 2.2× that.
+Capped, the glyphs grow to cover the screen, so without the extra cells a 2560×1440 display drew
+the face in blocks too coarse to read as a face (Rick, 2026-09-25: "it's not really clear that
+it's my face on there").
+
+The portrait occupies a centred **square** box rather than the whole grid, 82% of the field's
+height (or 90% of its width, where that is smaller), because a face emerging from a still-live
+field reads far better than a rectangle appearing. On a screen taller than it is wide the box sits
+near the top, 8% down, so the copy under it crosses the chin at most.
 
 Only the lit part of the box is portrait. **The map's darkest level belongs to the field**
 (`FIELD_LEVEL` in `field.ts`): where the photograph is black, the live field shows through. The box's
@@ -134,20 +141,50 @@ array 3.8×, because a small alphabet keeps deflate's match-finding working.
 No image decode, no canvas and no pixel reads at runtime. The emitted artifact carries no EXIF, no
 GPS and no camera metadata, because it is not an image any more.
 
+The map is sampled at the **centre** of each cell. Sampled at its corner, the face drew about half
+a cell right of and below where it belongs, which went unseen until a photograph sat under it.
+
 The script also emits a **fully resolved static frame** which is server-rendered into the `<pre>`.
+
+## The photograph under it
+
+At the field's resolution a face can read as a pattern, most of all on a large screen (Rick,
+2026-09-25: "it's not really clear that it's my face on there"). So the portrait photograph itself
+sits under the characters, faintly: an ordinary `<img>` from the same `portrait.jpg`, printed in the
+field's two colours by `.duo` (highlights in the face's tint, shadows in the field itself), laid on
+at 0.42 so the shadows vanish into the field and only the light parts glow through, and feathered
+at the edge so it never reads as a square.
+The characters stay the picture; the photograph tells you whose it is.
+
+It needs no JavaScript. Its box starts as the static frame's (64 columns of the field's monospace
+by 32 lines, centred like the frame's text), so the no-JS and reduced-motion portrait has it too.
+Live, the field lays the face out itself and publishes the box on the host: `--port-w` and
+`--port-h`, and its corner as `--port-dx` and `--port-dy`, measured from the host's centre.
+
+**The box never moves.** It stays pinned to the field's centre, and the handover changes only its
+size and its `translate`. Moved by its insets instead, it measured **0.109 CLS** at 1440×900, the
+whole page's budget and more, from one decorative element; at the vitals run's own viewport it was
+0.087, under the budget, so the budget would not have caught it. `tests/e2e/field.spec.ts` asks the
+handover for no layout shift at all.
+
+Both boxes are right by construction, which is not the same as the faces lining up: the corner
+sampling above passed every box check. `tests/e2e/field.spec.ts` compares the pictures instead,
+blurred to the scale of a cell, and fails if they correlate best at any shift but none.
+
+It is loaded eagerly at low priority and is not the LCP element: the `<pre>` is.
 
 ## Degradation
 
 | Rung                     | What the visitor gets                                | Cost     |
 | ------------------------ | ---------------------------------------------------- | -------- |
-| No JS                    | The resolved portrait, as text                       | 0 JS     |
+| No JS                    | The resolved portrait, as text, over the photograph  | 0 JS     |
 | `prefers-reduced-motion` | The same static resolved portrait, zero frames       | 0 JS     |
 | Data saver               | Same                                                 | 0 JS     |
 | Import fails             | Same — the static frame stands                       | —        |
 | Non-monospace font       | Same — the renderer refuses to mount                 | —        |
 | Print / forced-colors    | `display: none`. It is decoration.                   | CSS only |
 | Offscreen / tab hidden   | Loop unsubscribes, RAF cancelled — it does not idle  | —        |
-| Full                     | Decode on load, pointer-reactive, dissolve on scroll | 2.9 KB   |
+| Full                     | Decode on load, pointer-reactive, dissolve on scroll | 3.6 KB   |
 
 The gates run **before** the dynamic import, so a visitor who will never see the animation never
 downloads it. JS only ever takes over an element that is already correct — the inverse of the usual
@@ -242,9 +279,11 @@ word together, are left alone. Under reduced motion nothing scrambles.
 
 ## Changing the portrait
 
-1. Replace `src/assets/portrait.jpg`.
+1. Replace `src/assets/portrait.jpg`. Square, head and shoulders filling it: the characters and
+   the photograph under them both stretch it to the portrait box.
 2. `node scripts/build-portrait-map.mjs`
 3. Commit the regenerated `src/generated/portrait-map.ts`.
+4. Run `tests/e2e/field.spec.ts`: it holds the photograph and the characters to the same face.
 
 The source needs: head-and-shoulders, **eyes visible** (the single feature that makes a
 low-resolution face legible), strong directional light, and **a dark or plain background**. That
@@ -256,7 +295,9 @@ lower third, on a ground the field runs out into. So the face belongs in the upp
 centred. After a new portrait, run `tests/a11y/hero-contrast.spec.ts`: a brighter face can put
 the copy under its floor.
 
-**Current state: interim.** `portrait.jpg` is a face crop from the talk photo with a soft
-elliptical matte, because its background is lit. The photo worth taking: facing a window after
+**Current state: interim.** `portrait.jpg` is Rick's portrait on black, retouched with an image
+model and cropped tight to the head. Now that the photograph shows under the characters it is the
+main subject of the page, and Rick is replacing it with a real selfie (2026-09-25: "I don't want
+an AI generated image to be the main subject"). The photo worth taking: facing a window after
 dark or on an overcast day, a plain dark wall behind, no cap, one side of the face lit and the other
 in shadow. Two minutes with a phone.

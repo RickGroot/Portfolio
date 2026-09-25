@@ -122,7 +122,8 @@ got _stronger_ — a canvas appearing now means someone reintroduced a WebGL pat
 
 ## The art system
 
-The hero renders as text in two `<pre>` elements. No canvas, no WebGL, 2.9 KB gzip.
+The hero renders as text in two `<pre>` elements, over the portrait photograph printed faintly in
+the field's own blue. No canvas, no WebGL, 3.6 KB gzip.
 See `docs/art-system.md` before touching `src/lib/field/`.
 
 ## Content rule

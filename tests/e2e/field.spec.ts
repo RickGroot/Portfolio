@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import sharp from 'sharp';
 
 /** Instrument requestAnimationFrame before any page script runs. */
 async function instrument(page: Page): Promise<void> {
@@ -367,6 +368,221 @@ test.describe('character field', () => {
 			await expect
 				.poll(short, { message: `${size.width}x${size.height}: the field stops short of an edge` })
 				.toEqual([]);
+		}
+	});
+
+	// The photograph glows through the characters (Rick, 2026-09-25: "it's not
+	// really clear that it's my face on there"), so the two have to be the same
+	// face, in the same place. Both boxes came out right while the face was
+	// drawn half a cell right of and below the photo: the map was sampled at
+	// each cell's corner, not its centre. So this compares the pictures, not the
+	// boxes. Each is shot on its own, blurred to the scale of a cell, and the
+	// shift at which they correlate best has to be none.
+	for (const mode of [
+		{ width: 2560, height: 1440, motion: 'no-preference' },
+		{ width: 1440, height: 900, motion: 'no-preference' },
+		{ width: 390, height: 844, motion: 'no-preference' },
+		{ width: 1440, height: 900, motion: 'reduce' },
+	] as const) {
+		const state = mode.motion === 'reduce' ? 'static' : 'live';
+		test(`${mode.width}x${mode.height}, ${state}: the photograph sits on the characters' face`, async ({
+			browser,
+		}) => {
+			test.slow();
+			const context = await browser.newContext({
+				viewport: { width: mode.width, height: mode.height },
+				reducedMotion: mode.motion,
+			});
+			const page = await context.newPage();
+			await recordResolve(page);
+			await page.goto('/', { waitUntil: 'networkidle' });
+			await page.mouse.move(mode.width - 2, 2);
+			await expect(page.locator('[data-character-field]')).toHaveAttribute(
+				'data-field-state',
+				state,
+			);
+			if (state === 'live') {
+				// Scattered, then resolved: the field opens on the static frame.
+				const trail = (): Promise<number[]> =>
+					page.evaluate(() => (window as unknown as { __resolve: number[] }).__resolve);
+				await expect
+					.poll(async () => Math.min(...(await trail()), Infinity), { timeout: 12000 })
+					.toBeLessThan(0.35);
+				await expect
+					.poll(async () => (await trail()).at(-1) ?? -1, { timeout: 12000 })
+					.toBeGreaterThan(0.95);
+			}
+			await expect(page.locator('.field__photo img')).toHaveJSProperty('complete', true);
+
+			const r = await page.locator('.field__photo').evaluate((el) => {
+				const b = el.getBoundingClientRect();
+				return { x: b.left, y: b.top, w: b.width, h: b.height };
+			});
+			const x = Math.max(0, Math.ceil(r.x));
+			const y = Math.max(0, Math.ceil(r.y));
+			const clip = {
+				x,
+				y,
+				width: Math.min(mode.width, Math.floor(r.x + r.w)) - x,
+				height: Math.min(mode.height, Math.floor(r.y + r.h)) - y,
+			};
+			expect(clip.width * clip.height, 'the photograph has no box on screen').toBeGreaterThan(1e4);
+
+			const hideCopy =
+				'.hero__copy, .cursor__dot, .cursor__ring { visibility: hidden !important; } ';
+			const shoot = async (css: string): Promise<Buffer> => {
+				const tag = await page.addStyleTag({ content: hideCopy + css });
+				await page.waitForTimeout(200);
+				const png = await page.screenshot({ clip });
+				await tag.evaluate((n) => {
+					n.parentNode?.removeChild(n);
+				});
+				return png;
+			};
+			const photo = await shoot(
+				'.field__layer { visibility: hidden !important; } ' +
+					'.field__photo { opacity: 1 !important; mix-blend-mode: normal !important; mask-image: none !important; }',
+			);
+			// Live, layer A is the field everywhere and the face is layer B;
+			// static, layer A is the face.
+			const chars = await shoot(
+				'.field__photo { visibility: hidden !important; }' +
+					(state === 'live' ? ' .field__layer--a { visibility: hidden !important; }' : ''),
+			);
+
+			// A quarter of the size, blurred past the glyphs' shapes: what is left
+			// is the brightness of each patch of the face, in both.
+			const SCALE = 0.25;
+			const w = Math.round(clip.width * SCALE);
+			const h = Math.round(clip.height * SCALE);
+			const grey = (png: Buffer): Promise<Buffer> =>
+				sharp(png).greyscale().resize(w, h, { fit: 'fill' }).blur(2.5).raw().toBuffer();
+			const [pa, pb] = await Promise.all([grey(photo), grey(chars)]);
+
+			const R = 8; // 32px each way
+			let best = { r: -2, dx: 0, dy: 0 };
+			for (let dy = -R; dy <= R; dy++) {
+				for (let dx = -R; dx <= R; dx++) {
+					let sa = 0;
+					let sb = 0;
+					let saa = 0;
+					let sbb = 0;
+					let sab = 0;
+					let n = 0;
+					for (let yy = R; yy < h - R; yy++) {
+						for (let xx = R; xx < w - R; xx++) {
+							const va = pa[yy * w + xx]!;
+							const vb = pb[(yy + dy) * w + (xx + dx)]!;
+							sa += va;
+							sb += vb;
+							saa += va * va;
+							sbb += vb * vb;
+							sab += va * vb;
+							n += 1;
+						}
+					}
+					const corr =
+						(sab - (sa * sb) / n) / Math.sqrt((saa - (sa * sa) / n) * (sbb - (sb * sb) / n));
+					if (corr > best.r) best = { r: corr, dx, dy };
+				}
+			}
+			expect(best.r, 'the photograph and the characters are not the same picture').toBeGreaterThan(
+				0.8,
+			);
+			expect(
+				[best.dx / SCALE, best.dy / SCALE],
+				`the face is drawn ${best.dx / SCALE}px across and ${best.dy / SCALE}px down from the photograph`,
+			).toEqual([0, 0]);
+			await context.close();
+		});
+	}
+
+	// The handover from the server's static frame to the live field must move
+	// nothing: the layers are pinned to the field for this (see the comment on
+	// .field__layer), and the photograph is moved by its translate alone. Moved
+	// by its insets it measured 0.109 CLS at 1440x900 -- and 0.087 at the
+	// vitals run's own viewport, under the page's 0.1 budget, so the budget
+	// alone would have let it through. So this asks for none at all.
+	//
+	// None from the field, that is. The name, on one line, can move a hair on
+	// its own under a loaded run: when its font arrives after the first paint,
+	// "Groot" starts where the fallback's "Rick " ended, a few pixels off
+	// (measured 0.0008). That is the font's, and the vitals run holds it.
+	//
+	// A move before the first paint is not a shift: nothing was on screen to
+	// move. Unthrottled, the field often goes live before it, and this passed
+	// with the insets put back. So the CPU is throttled as the vitals run's is,
+	// and the test fails if the handover still came first.
+	test('the handover to the live field shifts nothing', async ({ browser }) => {
+		test.slow();
+		for (const size of [
+			{ width: 1440, height: 900 },
+			{ width: 390, height: 844 },
+		]) {
+			const context = await browser.newContext({ viewport: size });
+			const page = await context.newPage();
+			const cdp = await context.newCDPSession(page);
+			await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+			await page.addInitScript(() => {
+				const w = window as unknown as { __shifts: string[]; __live: number };
+				w.__shifts = [];
+				w.__live = 0;
+				// A poll, as in recordResolve: there is no document to observe yet.
+				const poll = setInterval(() => {
+					const f = document.querySelector<HTMLElement>('[data-character-field]');
+					if (f?.dataset.fieldState === 'live') {
+						w.__live = performance.now();
+						clearInterval(poll);
+					}
+				}, 5);
+				new PerformanceObserver((list) => {
+					const field = document.querySelector('[data-character-field]');
+					for (const e of list.getEntries()) {
+						const s = e as PerformanceEntry & {
+							value: number;
+							sources?: { node?: Node | null }[];
+						};
+						// Left out only when every source is provably elsewhere: an
+						// element on the page that the field does not hold. A pseudo-
+						// element, or a node since removed, counts as the field's.
+						const elsewhere =
+							!!field &&
+							(s.sources ?? []).length > 0 &&
+							(s.sources ?? []).every((x) => {
+								const n = x.node;
+								const el = n instanceof Element ? n : n?.parentElement;
+								return (
+									!!el && el.isConnected && !el.tagName.startsWith('::') && !field.contains(el)
+								);
+							});
+						if (elsewhere) continue;
+						const nodes = (s.sources ?? []).map((x) => {
+							const n = x.node;
+							const el = n instanceof Element ? n : n?.parentElement;
+							return el ? `${el.tagName.toLowerCase()}.${el.className}` : '?';
+						});
+						w.__shifts.push(`${s.value.toFixed(4)} ${nodes.join(', ')}`);
+					}
+				}).observe({ type: 'layout-shift', buffered: true });
+			});
+			await page.goto('/');
+			await expect(page.locator('[data-character-field]')).toHaveAttribute(
+				'data-field-state',
+				'live',
+			);
+			await page.waitForTimeout(1000);
+			const seen = await page.evaluate(() => {
+				const w = window as unknown as { __shifts: string[]; __live: number };
+				const fcp = performance.getEntriesByName('first-contentful-paint')[0]?.startTime ?? 0;
+				return { shifts: w.__shifts, live: w.__live, fcp };
+			});
+			expect(
+				seen.live,
+				`${size.width}x${size.height}: the field went live at ${Math.round(seen.live)}ms, before the first paint at ${Math.round(seen.fcp)}ms, so there was nothing to shift`,
+			).toBeGreaterThan(seen.fcp);
+			expect(seen.shifts, `${size.width}x${size.height}: the handover shifted layout`).toEqual([]);
+			await cdp.detach();
+			await context.close();
 		}
 	});
 

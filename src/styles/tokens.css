@@ -31,8 +31,10 @@
 	 * palette's signal blue, and the lit portrait in a tint of it halfway to
 	 * paper, so the face reads as the field brightening (Rick, 2026-09-24:
 	 * "let the blue background seep into the art of my picture"). */
-	--art-noise: var(--signal-blue);
-	--art-signal: color-mix(in oklab, var(--signal-blue) 50%, var(--paper));
+	/* The face a step lighter and the field a step darker than the signal blue,
+	   so the face is the brightest thing on it (2026-09-25). */
+	--art-noise: color-mix(in oklab, var(--signal-blue) 58%, var(--ink));
+	--art-signal: color-mix(in oklab, var(--signal-blue) 22%, var(--paper));
 
 	--art-cell: clamp(10px, 1.25vw, 17px);
 

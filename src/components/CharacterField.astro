@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import portrait from '@assets/portrait.jpg';
 import { STATIC_FRAME } from '../generated/portrait-map';
 
 /**
@@ -8,10 +10,28 @@ import { STATIC_FRAME } from '../generated/portrait-map';
  * That is what no-JS, reduced-motion, data-saver and import-failure visitors
  * see -- the real thing, not a spinner. The renderer only ever takes over an
  * element that already looks right.
+ *
+ * Under both, the portrait the characters are drawn from, faint and in the
+ * field's own blue (Rick, 2026-09-25: "it's not really clear that it's my face
+ * on there"). At character resolution a face is a shape; with the photograph
+ * glowing through, it is someone. It sits exactly where the characters draw
+ * the face: over the static frame's box, and once the field is live, where
+ * the field says it put the face (--port-*).
  */
 ---
 
 <div class="field" data-character-field data-field-state="static" aria-hidden="true">
+	<span class="field__photo duo">
+		<Image
+			src={portrait}
+			alt=""
+			widths={[480, 800, 1200]}
+			sizes="(orientation: portrait) 90vw, 82vh"
+			loading="eager"
+			fetchpriority="low"
+			decoding="async"
+		/>
+	</span>
 	<pre class="field__layer field__layer--a" data-layer="a">{STATIC_FRAME}</pre>
 	<pre class="field__layer field__layer--b" data-layer="b"></pre>
 </div>
@@ -103,6 +123,45 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		margin: 0;
 		font: inherit;
 		white-space: inherit;
+	}
+
+	/* The photograph, printed in the field's two colours by .duo (surfaces.css): */
+	/* its shadows in the field itself, so at this opacity they vanish into it, */
+	/* and only its light parts glow through. The characters stay the picture. */
+	/* No blend mode: the field's mask makes it an isolated group, so there is */
+	/* nothing behind the photograph to blend with, and `screen` measured a */
+	/* difference of 1/255. Its box starts as the static frame's: 64 columns of */
+	/* this monospace font by 32 lines, centred like the frame's text. The */
+	/* feathered edge keeps it from reading as a square. */
+	.field__photo {
+		--duo-hi: var(--art-signal);
+		--duo-lo: var(--field);
+		position: absolute;
+		inset-inline-start: 50%;
+		inset-block-start: 50%;
+		inline-size: 64ch;
+		block-size: calc(32 * 1.05em);
+		translate: -50% -50%;
+		overflow: clip;
+		opacity: 0.42;
+		mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+	}
+
+	.field__photo :global(img) {
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: fill;
+	}
+
+	/* Live, the field lays the face out itself and says where. The box stays */
+	/* pinned to the centre, and only its size and its translate change: moved */
+	/* by its insets, the photograph's handover measured 0.109 CLS at 1440x900, */
+	/* over the whole page's budget. A transform is not a layout shift, and a */
+	/* size change that keeps the box's corner where it was is not either. */
+	.field[data-field-state='live'] .field__photo {
+		inline-size: var(--port-w);
+		block-size: var(--port-h);
+		translate: var(--port-dx) var(--port-dy);
 	}
 
 	/* The resolve state is the colour mask: the field is the signal blue, the */

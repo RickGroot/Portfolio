@@ -55,8 +55,9 @@ const rail = [
 		<CharacterField />
 		<div class="hero__copy">
 			<p class="hero__eyebrow">Connected TV developer</p>
-			{/* One word per line. The space between the spans is what keeps the */}
-			{/* accessible name "Rick Groot" rather than "RickGroot". */}
+			{/* One line (Rick, 2026-09-25), still two planes: each word moves at its */}
+			{/* own depth. The space between the spans is what keeps the accessible */}
+			{/* name "Rick Groot" rather than "RickGroot". */}
 			<h1 id="top-heading" data-decode>
 				<span>Rick</span> <span>Groot</span>
 			</h1>
@@ -226,9 +227,9 @@ const rail = [
 		color: var(--accent);
 	}
 
-	/* Still two planes, one word each, but a title now, not the whole screen: */
-	/* the art is the loudest thing on it. The svh term keeps a short laptop */
-	/* screen from pushing the name into the face. */
+	/* Two planes on one line, a title rather than the whole screen: the art is */
+	/* the loudest thing on it. The svh term keeps a short laptop screen from */
+	/* pushing the name into the face. */
 	.hero__copy h1 {
 		font-size: clamp(3rem, min(1rem + 6.5vw, 14svh), 8rem);
 		line-height: 0.88;
@@ -236,8 +237,9 @@ const rail = [
 		text-transform: uppercase;
 	}
 
+	/* Inline blocks, so each word can still take its own transform. */
 	.hero__copy h1 span {
-		display: block;
+		display: inline-block;
 	}
 
 	.hero .lede {

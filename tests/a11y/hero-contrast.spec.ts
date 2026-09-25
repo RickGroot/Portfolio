@@ -15,7 +15,8 @@ import sharp from 'sharp';
  *
  * The sizes are the ones that failed while the ground was tuned: a short
  * laptop, where the copy climbs into the chin, and a small phone, where it
- * crosses the whole face.
+ * crosses the whole face. And a large screen, where the photograph under the
+ * characters is at its biggest and brightest.
  */
 
 const luminance = (r: number, g: number, b: number): number => {
@@ -41,6 +42,7 @@ const PAST_ENTRY_MS = 3600;
 type Rect = { x: number; y: number; w: number; h: number };
 
 for (const size of [
+	{ width: 2560, height: 1440 },
 	{ width: 1440, height: 900 },
 	{ width: 1280, height: 720 },
 	{ width: 390, height: 844 },

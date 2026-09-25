@@ -142,9 +142,13 @@ export function mountField(host: HTMLElement): FieldHandle {
 		let r = Math.floor(rect.height / m.rowH);
 		if (c < MIN_COLS || r < 4) return false;
 
-		// Keep the cell count bounded regardless of viewport.
-		if (c * r > MAX_CELLS) {
-			const k = Math.sqrt(MAX_CELLS / (c * r));
+		// Keep the cell count bounded, but let it grow with the screen: at one
+		// cap for every size, a 2560x1440 face got the cells a laptop's does,
+		// only bigger, and read as a blob. A large screen is a desktop's, with
+		// the frame time to spare; the cap stops at 2.2 times a 1440x900 one.
+		const cap = MAX_CELLS * clamp((rect.width * rect.height) / (1440 * 900), 1, 2.2);
+		if (c * r > cap) {
+			const k = Math.sqrt(cap / (c * r));
 			c = Math.max(MIN_COLS, Math.floor(c * k));
 			r = Math.max(4, Math.floor(r * k));
 		}
@@ -175,10 +179,27 @@ export function mountField(host: HTMLElement): FieldHandle {
 		// The portrait occupies a box, not the whole grid: a face emerging from
 		// a still-live field reads far better than a rectangle appearing. And
 		// only the lit part of the box is portrait: see FIELD_LEVEL.
-		const portRows = Math.round(rows * 0.82);
-		const portCols = Math.min(Math.round(portRows / cellAspect), Math.round(cols * 0.9), 110);
+		//
+		// The box is a square in pixels, as big as fits: 82% of the height on a
+		// wide screen, 90% of the width on a tall one. Sized in cells to 82% of
+		// the rows, a phone's face -- where the width ran out first -- was
+		// stretched to twice its height, which the photograph under it (see
+		// CharacterField.astro) would have shown at once. On a tall screen the
+		// copy takes the lower part, so the face sits in the part above it.
+		const side = Math.min(rows * rowH * 0.82, cols * cellW * 0.9);
+		const portRows = Math.max(4, Math.round(side / rowH));
+		const portCols = Math.max(4, Math.round(side / cellW));
 		const ox = Math.floor((cols - portCols) / 2);
-		const oy = Math.floor((rows - portRows) / 2);
+		const oy =
+			rect.height > rect.width ? Math.round(rows * 0.08) : Math.floor((rows - portRows) / 2);
+
+		// Where the face is, for the photograph laid under it: its size, and
+		// its corner measured from the host's centre, where the photograph's own
+		// box stays pinned (see CharacterField.astro).
+		host.style.setProperty('--port-dx', `${gridX + ox * cellW - rect.width / 2}px`);
+		host.style.setProperty('--port-dy', `${gridY + oy * rowH - rect.height / 2}px`);
+		host.style.setProperty('--port-w', `${portCols * cellW}px`);
+		host.style.setProperty('--port-h', `${portRows * rowH}px`);
 
 		thresh = new Float32Array(cols * rows);
 		portrait = new Int16Array(cols * rows).fill(-1);
@@ -193,13 +214,16 @@ export function mountField(host: HTMLElement): FieldHandle {
 			for (let x = 0; x < cols; x++) {
 				const i = y * cols + x;
 
-				// Bilinear-ish resample of the square map into the portrait box.
+				// Nearest-neighbour resample of the square map into the portrait
+				// box, taken at the CENTRE of each cell. Taken at its corner, the
+				// face drew about half a cell right of and below the photograph
+				// under it (tests/e2e/field.spec.ts measures the two together).
 				let lum = 0;
 				const bx = x - ox;
 				const by = y - oy;
 				if (bx >= 0 && bx < portCols && by >= 0 && by < portRows) {
-					const sx = Math.min(MAP_SIZE - 1, Math.floor((bx / portCols) * MAP_SIZE));
-					const sy = Math.min(MAP_SIZE - 1, Math.floor((by / portRows) * MAP_SIZE));
+					const sx = Math.min(MAP_SIZE - 1, Math.floor(((bx + 0.5) / portCols) * MAP_SIZE));
+					const sy = Math.min(MAP_SIZE - 1, Math.floor(((by + 0.5) / portRows) * MAP_SIZE));
 					const level = ALPHABET.indexOf(MAP[sy * MAP_SIZE + sx] as string);
 					if (level > FIELD_LEVEL) {
 						portrait[i] = level;
@@ -397,8 +421,11 @@ export function mountField(host: HTMLElement): FieldHandle {
 		ro.disconnect();
 		host.removeEventListener('pointermove', onPointer);
 		host.dataset.fieldState = 'off';
-		// The static frame is laid out at the stylesheet's size.
+		// The static frame is laid out at the stylesheet's size, and the photo
+		// goes back to sitting under it.
 		for (const pre of [preA, preB]) pre.style.fontSize = '';
+		for (const v of ['--port-dx', '--port-dy', '--port-w', '--port-h'])
+			host.style.removeProperty(v);
 		thresh = new Float32Array(0);
 		portrait = new Int16Array(0);
 	}

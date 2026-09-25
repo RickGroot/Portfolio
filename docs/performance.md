@@ -5,15 +5,15 @@
 | Budget                | Limit               | How it is measured                                             |
 | --------------------- | ------------------- | -------------------------------------------------------------- |
 | Initial JS, homepage  | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`                                |
-| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 2.9 KB (2026-09-24)                        |
-| Total JS, homepage    | ≤ 45 KB gzip        | measured 10.7 KB, 0.9 KB of it inline (2026-09-24)             |
+| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 3.6 KB (2026-09-25)                        |
+| Total JS, homepage    | ≤ 45 KB gzip        | measured 12.1 KB, 1.0 KB of it inline (2026-09-25)             |
 | LCP                   | < 2.5 s             | `tests/budgets/vitals.spec.ts`, 4× CPU, read before any scroll |
 | CLS                   | < 0.1               | `tests/budgets/vitals.spec.ts`, 4× CPU, the whole page walked  |
 | INP                   | < 200 ms            | **Field only** — see below                                     |
 | Canvas elements       | **0**               | `tests/budgets/payload.spec.ts`                                |
 | WebGL contexts        | **0**               | `tests/budgets/payload.spec.ts`                                |
 | Animation loops       | 1, paused when idle | `tests/budgets/payload.spec.ts`                                |
-| Character grid        | ≤ 6000 cells        | `tests/e2e/field.spec.ts`                                      |
+| Character grid        | ≤ 6000 cells        | at 1440×900; scaled with screen area, 2.2× at most             |
 
 ### Two honesty notes
 
@@ -32,7 +32,7 @@ they arrive. So the plan replaced it with three bounded numbers.
 
 Then the exemption stopped mattering. The signature treatment renders as **text in two `<pre>`
 elements** — no canvas, no WebGL, no shader compile, no texture upload. The whole art system
-measures **2.9 KB gzip**, against the 25 KB a GPU renderer would have taken on its own.
+measures **3.6 KB gzip**, against the 25 KB a GPU renderer would have taken on its own.
 
 For calibration on what was avoided: the realistic tree-shaken OGL subset for a fullscreen textured
 quad measures 25.5 KB gzip unminified, roughly 12–16 KB minified — plus a quality governor,
@@ -156,7 +156,8 @@ The art renders as text. `src/lib/field/` owns it; see `docs/art-system.md`.
 - **Never read layout inside the tick.** `textContent = s` alone is ~0.0 ms; adding a forced read
   like `offsetHeight` makes it 0.3–0.9 ms. Resolve progress comes from `IntersectionObserver`
   thresholds, never `getBoundingClientRect`.
-- **Grid capped at 6000 cells**, sized from the _measured_ advance width — never an assumed one.
+- **Grid capped at 6000 cells** at 1440×900, scaled with the screen's area up to 2.2× (13,200)
+  on a larger one, sized from the _measured_ advance width, never an assumed one.
   Cell aspect varies by font (0.55 Consolas, 0.60 Courier New) and a user's minimum-font-size
   setting can inflate it further. If the measured font is not actually monospace, the renderer
   bails to the static frame rather than shipping a sheared grid.

@@ -46,6 +46,34 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 });
 
 /**
+ * The name is one line (Rick, 2026-09-25: "Please make my name over 1 line").
+ * Each word is its own inline block, so it can move at its own depth, and an
+ * inline block wraps as a whole: nothing but this notices when a size change
+ * sends "Groot" down under "Rick". Below 360 wide it may wrap, rather than run
+ * off the screen.
+ */
+test('the name sits on one line, from a small phone to a large screen', async ({ page }) => {
+	for (const size of [
+		{ width: 360, height: 640 },
+		{ width: 390, height: 844 },
+		{ width: 1280, height: 720 },
+		{ width: 1440, height: 900 },
+		{ width: 2560, height: 1440 },
+	]) {
+		await page.setViewportSize(size);
+		await page.goto('/');
+		await page.evaluate(() => document.fonts.ready);
+		const tops = await page.evaluate(() =>
+			[...document.querySelectorAll('.hero__copy h1 > span')].map((s) =>
+				Math.round(s.getBoundingClientRect().top),
+			),
+		);
+		expect(tops, `${size.width}x${size.height}: the name has ${tops.length} words`).toHaveLength(2);
+		expect(tops[1], `${size.width}x${size.height}: "Groot" wrapped under "Rick"`).toBe(tops[0]);
+	}
+});
+
+/**
  * <main> takes focus from the skip link. Ringing it drew a 2px box around the
  * whole page. The ring is suppressed for that one element only -- focus must
  * still move, and real controls must still be ringed.
