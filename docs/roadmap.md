@@ -48,7 +48,7 @@ field, its own number. Delivered in stages, each ending with Rick's review.
 | 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | —                         |
 | 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                         |
 | 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                         |
-| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | —                         |
+| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | **Prototype deleted**     |
 
 **Stage 2, part one: motion (2026-09-24).** Rick: _"Can you add more parallax scrolling effects and
 animations when switching channels?"_
@@ -198,6 +198,12 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   the headline decode relied on it not being: it now holds every letter's measured width while it
   scrambles, and a motion test watches every frame of one for a word moving. The font budget counts
   what a visitor downloads, 76 KB of WOFF2 against 80, and no longer the licence texts beside it.
+- _"I can see a dash in the tab title - can that be replaced with |?"_ Titles read
+  "Chromecast receivers | Rick Groot", and so does the install name. _"Same for all other dashes,
+  not to be replaced but remove those as they are AI ish."_ Every sentence a visitor reads that
+  leaned on one was rewritten without it: the hero, contact, the 404, VAMP and the meta
+  description. Year ranges and the ii–V–I in the VAMP picture's description keep theirs: those
+  are ranges and notation, not punctuation.
 - _"The paralax effect on detail pages is broken on the gradient."_ The gradient lifts with the
   title while the stage moves with the page, so a strip of bare picture opened under its solid
   base: 57px of white photograph by 300px of scroll. A band of the field now waits below the
@@ -383,9 +389,9 @@ Nothing on this list may be installed without moving it off the list first.
 8. **A trumpet photo is pending** for the music beat the brief asks for. None of the supplied
    photographs has one. Rick's own instrument on a dark surface under one lamp; a generated one is
    the fallback, not the plan.
-9. **`/design/*` are internal prototypes and must not launch.** They are noindex, disallowed in
-   `robots.txt` and excluded from the sitemap, but they are still built. Delete the directory once a
-   direction is chosen.
+9. **Done (2026-09-25).** `/design/type` and its candidate fonts in `public/fonts/proto/` are gone,
+   now that the type is chosen. `robots.txt` and the sitemap filter still keep `/design/` out, for
+   the next prototype.
 10. **`src/lib/practice.ts` is placeholder copy.** The three `How I work` cards are written in a
     plausible voice, not Rick's, and the claims are about this repo. They need his own words before
     launch — the file says so at the top.

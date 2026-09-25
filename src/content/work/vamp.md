@@ -18,8 +18,8 @@ links:
 ---
 
 VAMP is the tool I wanted as a trumpet player and could not find: somewhere to sketch a chord
-progression, loop it, and play over it — without an account, a subscription, or a network
-connection. Enter chords into bars, set tempo and time signature, pick a sampled instrument, and
+progression, loop it, and play over it. No account, no subscription, no network connection.
+Enter chords into bars, set tempo and time signature, pick a sampled instrument, and
 jam. Everything stays on the device.
 
 It is built with SvelteKit and TypeScript, with Tone.js driving the audio clock and smplr providing
