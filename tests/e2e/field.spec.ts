@@ -332,6 +332,44 @@ test.describe('character field', () => {
 		expect(b - a, 'the loop kept running behind the guide').toBeLessThan(5);
 	});
 
+	// The cell cap bounds how many characters the field draws, not how much of
+	// the screen it covers: capped, the glyphs grow. At the stylesheet's size a
+	// 2560x1440 screen got the cap's grid across 52% of the hero, in its middle
+	// (Rick: "the header isn't full-screen on large device").
+	test('it covers the hero edge to edge, on a large screen too', async ({ page }) => {
+		for (const size of [
+			{ width: 2560, height: 1440 },
+			{ width: 1440, height: 900 },
+			{ width: 390, height: 844 },
+		]) {
+			await page.setViewportSize(size);
+			await page.goto('/');
+			await expect(page.locator('[data-character-field]')).toHaveAttribute(
+				'data-field-state',
+				'live',
+			);
+			// The edges the grid falls short of, within a pixel: it may overhang,
+			// and the hero clips it. Polled, because "live" is set when the grid is
+			// laid out, a frame before the first live render fills it.
+			const short = (): Promise<string[]> =>
+				page.evaluate(() => {
+					const hero = (document.querySelector('.hero') as HTMLElement).getBoundingClientRect();
+					const range = document.createRange();
+					range.selectNodeContents(document.querySelector('.field__layer--b') as HTMLElement);
+					const grid = range.getBoundingClientRect();
+					const out: string[] = [];
+					if (grid.left > hero.left + 1) out.push('left');
+					if (grid.top > hero.top + 1) out.push('top');
+					if (grid.right < hero.right - 1) out.push('right');
+					if (grid.bottom < hero.bottom - 1) out.push('bottom');
+					return out;
+				});
+			await expect
+				.poll(short, { message: `${size.width}x${size.height}: the field stops short of an edge` })
+				.toEqual([]);
+		}
+	});
+
 	test('reduced motion shows the resolved portrait and never animates', async ({ browser }) => {
 		const context = await browser.newContext({ reducedMotion: 'reduce' });
 		const page = await context.newPage();

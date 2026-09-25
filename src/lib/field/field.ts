@@ -107,6 +107,11 @@ export function mountField(host: HTMLElement): FieldHandle {
 
 	let cols = 0;
 	let rows = 0;
+	/** The drawn cell, after the glyphs are scaled to cover the host, and where the grid starts in it. */
+	let cellW = 0;
+	let rowH = 0;
+	let gridX = 0;
+	let gridY = 0;
 	let thresh = new Float32Array(0);
 	let portrait = new Int16Array(0);
 	let rowsA: string[] = [];
@@ -148,6 +153,22 @@ export function mountField(host: HTMLElement): FieldHandle {
 		rows = r;
 		px = cols / 2;
 		py = rows / 2;
+
+		// Capped, the grid is fewer cells than the host holds, so the glyphs
+		// grow instead and the grid still covers the host edge to edge. At the
+		// stylesheet's size a large screen got the cap's grid in its middle:
+		// 52% of a 2560x1440 hero, and short of the edges even at 1440x900
+		// (Rick, 2026-09-25: "the header isn't full-screen on large device").
+		// Cover, not fit: the grid overhangs by a fraction of a cell, and the
+		// host clips it. The host keeps the stylesheet's size, so measuring
+		// again on a resize starts from the same base.
+		const fit = Math.max(rect.width / (c * m.cellW), rect.height / (r * m.rowH));
+		const base = parseFloat(getComputedStyle(host).fontSize);
+		for (const pre of [preA, preB]) pre.style.fontSize = `${base * fit}px`;
+		cellW = m.cellW * fit;
+		rowH = m.rowH * fit;
+		gridX = (rect.width - c * cellW) / 2;
+		gridY = (rect.height - r * rowH) / 2;
 
 		const cellAspect = m.cellW / m.rowH;
 
@@ -312,10 +333,8 @@ export function mountField(host: HTMLElement): FieldHandle {
 
 	function onPointer(ev: PointerEvent): void {
 		const rect = host.getBoundingClientRect();
-		const cellW = rect.width / cols;
-		const rowH = rect.height / rows;
-		px = (ev.clientX - rect.left) / cellW;
-		py = (ev.clientY - rect.top) / rowH;
+		px = (ev.clientX - rect.left - gridX) / cellW;
+		py = (ev.clientY - rect.top - gridY) / rowH;
 
 		const dt = Math.max(1, ev.timeStamp - lastT);
 		const speed = Math.hypot(ev.clientX - lastX, ev.clientY - lastY) / dt;
@@ -378,6 +397,8 @@ export function mountField(host: HTMLElement): FieldHandle {
 		ro.disconnect();
 		host.removeEventListener('pointermove', onPointer);
 		host.dataset.fieldState = 'off';
+		// The static frame is laid out at the stylesheet's size.
+		for (const pre of [preA, preB]) pre.style.fontSize = '';
 		thresh = new Float32Array(0);
 		portrait = new Int16Array(0);
 	}
