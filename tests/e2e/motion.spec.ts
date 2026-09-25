@@ -62,14 +62,51 @@ test.describe('parallax', () => {
 		expect(field, 'the portrait should sit back').toBeGreaterThan(4);
 	});
 
-	test('a case study leaves in layers: the picture sinks, the title lifts', async ({ page }) => {
+	// The key art is the stage the case study stands on (Rick: "the image can
+	// be full size with more parallax effect"). The stage scrolls with the
+	// page; the picture on it falls behind to half speed, and the title lifts.
+	test('a case study leaves in layers: the picture falls behind, the title lifts', async ({
+		page,
+	}) => {
 		await page.goto('/work/vamp');
-		expect(Math.abs(await offsetOf(page, '.info__screen'))).toBeLessThan(1.5);
+		const picture = '.info__screen img';
+		expect(Math.abs(await offsetOf(page, picture)), 'the picture is off rest').toBeLessThan(1.5);
 		expect(Math.abs(await offsetOf(page, '.info__titles'))).toBeLessThan(1.5);
 
-		await jumpTo(page, 400);
-		expect(await offsetOf(page, '.info__screen'), 'the picture should sink').toBeGreaterThan(4);
-		expect(await offsetOf(page, '.info__titles'), 'the title should lift').toBeLessThan(-2);
+		await jumpTo(page, 300);
+		const moved = await offsetOf(page, picture);
+		// Half speed: over 300px of page, the picture moves down about 150px
+		// against the stage. Loose bounds -- the point is "a lot", not "exactly".
+		expect(moved, 'the picture should fall well behind the page').toBeGreaterThan(90);
+		expect(moved, 'the picture should still move with the page').toBeLessThan(260);
+		expect(await offsetOf(page, '.info__titles'), 'the title should lift').toBeLessThan(-10);
+	});
+
+	test('a case study stage fills the width, and its picture never shows an edge', async ({
+		page,
+	}) => {
+		await page.goto('/work/nlziet');
+		for (const y of [0, 200, 400, 600]) {
+			await jumpTo(page, y);
+			const m = await page.evaluate(() => {
+				const stage = document.querySelector('.info__screen')?.getBoundingClientRect();
+				const img = document.querySelector('.info__screen img')?.getBoundingClientRect();
+				if (!stage || !img) return null;
+				// Only the part of the stage that is on screen has to be covered.
+				return {
+					stageW: stage.width,
+					pageW: document.documentElement.clientWidth,
+					gapTop: img.top - Math.max(stage.top, 0),
+					gapBottom: Math.min(stage.bottom, window.innerHeight) - img.bottom,
+				};
+			});
+			expect(m, 'no stage').not.toBeNull();
+			expect(Math.abs(m!.stageW - m!.pageW), 'the stage is not the width of the page').toBeLessThan(
+				1,
+			);
+			expect(m!.gapTop, `at ${y}px the picture's top edge shows`).toBeLessThanOrEqual(0.5);
+			expect(m!.gapBottom, `at ${y}px the picture's bottom edge shows`).toBeLessThanOrEqual(0.5);
+		}
 	});
 
 	test('reduced motion: nothing moves', async ({ browser }) => {

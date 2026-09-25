@@ -142,6 +142,13 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   negative, are gone with the print.
 - Rick: _"Don't think we need the previous/next buttons on the detail pages when we have the EPG
   underneath."_ Gone; the guide strip is the way to every other programme.
+- Rick: _"the image can be full size with more paralax effect."_ Of three candidates (a backdrop,
+  the full column, a pinned stage) he chose the **backdrop**: a case study opens on its key art
+  edge to edge across 84% of the first screen, the way a streaming app opens a programme, with the
+  way back, the channel and the title standing on it on plates of the field. As the head leaves,
+  the picture falls behind the page to half its speed and zooms in, and the title lifts away. The
+  title's plate goes line by line, cut to Martian Mono's cap height, because a wrapped block's plate
+  is as wide as its column.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there

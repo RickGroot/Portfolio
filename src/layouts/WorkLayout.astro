@@ -28,29 +28,30 @@ const lastYear = entry.data.period.split('–').pop();
 
 <BaseLayout title={title} description={summary} channel={channel} bleed>
 	<article class="info" data-channel={channel} style={channelStyle(channel)}>
-		<div class="info__chrome wrap">
-			<a class="info__back" href="/#work" data-back>
-				<span aria-hidden="true">←</span> Guide
-				<span class="keyhint" aria-hidden="true">
-					Esc
-				</span>
-			</a>
-			<p class="info__osd" aria-hidden="true">
-				CH {index} <b>{title.split(' ')[0]}</b>
-			</p>
-		</div>
-
-		<header class="info__head wrap">
-			{/* The key art as it is, like the guide's screen it came from. */}
+		<header class="info__head">
+			{/* The key art as it is, like the guide's screen it came from, and */}
+			{/* the stage everything above the story stands on. */}
 			<div class="info__screen" style={`view-transition-name:${vt('cover', entry.id)}`}>
 				<Image
 					src={cover}
 					alt={coverAlt}
 					widths={[800, 1280, 1920]}
-					sizes="(min-width: 64rem) 56vw, 100vw"
+					sizes="100vw"
 					loading="eager"
 					fetchpriority="high"
 				/>
+			</div>
+
+			<div class="info__chrome">
+				<a class="info__back" href="/#work" data-back>
+					<span aria-hidden="true">←</span> Guide
+					<span class="keyhint" aria-hidden="true">
+						Esc
+					</span>
+				</a>
+				<p class="info__osd" aria-hidden="true">
+					CH {index} <b>{title.split(' ')[0]}</b>
+				</p>
 			</div>
 
 			<div class="info__titles">
@@ -63,7 +64,7 @@ const lastYear = entry.data.period.split('–').pop();
 				</p>
 				<div class="info__titlebox">
 					<h1 class="info__title" style={`view-transition-name:${vt('title', entry.id)}`}>
-						{title}
+						<span class="info__titleplate">{title}</span>
 					</h1>
 				</div>
 				<p class="info__lede">{summary}</p>
@@ -172,17 +173,23 @@ const lastYear = entry.data.period.split('–').pop();
 
 	/* Full bleed, so the channel's ground runs edge to edge; children re-wrap. */
 	.info {
-		padding-block: var(--s-6) 0;
+		padding-block: 0;
 	}
 
 	/* ---- chrome: the way back, and where you are --------------------------- */
 
+	/* On the stage, in the page's column, above the picture. */
 	.info__chrome {
+		position: relative;
+		z-index: 1;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: var(--s-4);
+		inline-size: min(100% - var(--gutter) * 2, var(--wrap));
 		min-block-size: 3rem;
+		margin-inline: auto;
+		padding-block-start: var(--s-6);
 	}
 
 	/* App chrome, not a header: pinned to the corner of the screen, on a plate */
@@ -219,6 +226,8 @@ const lastYear = entry.data.period.split('–').pop();
 
 	.info__osd {
 		margin-inline-start: auto;
+		background: var(--field);
+		box-shadow: 0 0 0 0.5rem var(--field);
 		font-family: var(--font-display);
 		font-size: var(--t-lg);
 		letter-spacing: 0.04em;
@@ -233,26 +242,36 @@ const lastYear = entry.data.period.split('–').pop();
 
 	/* ---- head: the picture, and what it is --------------------------------- */
 
+	/* A stage, not a screen beside the title: the key art edge to edge across */
+	/* most of the first screen, the way a streaming app opens a programme, */
+	/* with the way back, the channel and the title standing on it (Rick, */
+	/* 2026-09-25: "the image can be full size with more parallax effect"). */
+	/* Its own view timeline, --head, drives the parallax below. */
 	.info__head {
-		display: grid;
-		gap: var(--s-6);
-		margin-block-start: var(--s-6);
-	}
-
-	.info__screen {
 		position: relative;
-		aspect-ratio: 16 / 9;
-		overflow: clip;
-		border: 2px solid var(--accent);
+		display: grid;
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		min-block-size: 84svh;
+		view-timeline: --head block;
 	}
 
-	/* Oversized top and bottom, so it can drift inside its frame. */
+	/* The frame is a line of the channel's accent along the foot: the screen's */
+	/* edge, now that the screen is the width of the page. */
+	.info__screen {
+		position: absolute;
+		inset: 0;
+		overflow: clip;
+		border-block-end: 2px solid var(--accent);
+	}
+
+	/* Oversized top and bottom: it scrolls slower than the page, and the */
+	/* travel must never show an edge. */
 	.info__screen :global(img) {
 		position: absolute;
 		inset-inline: 0;
-		inset-block-start: -6%;
+		inset-block-start: -15%;
 		inline-size: 100%;
-		block-size: 112%;
+		block-size: 130%;
 		object-fit: cover;
 	}
 
@@ -261,31 +280,25 @@ const lastYear = entry.data.period.split('–').pop();
 			animation: info-push 24s ease-in-out infinite alternate;
 		}
 
-		/* Parallax, on the page's own scroll: the head leaves in layers -- the */
-		/* picture sinks, the title lifts -- the picture drifts inside its frame */
-		/* the whole time it is on screen, and the guide rises into place as it */
-		/* arrives. Every range starts at rest, so the page loads exactly as laid */
-		/* out. Transform only; no script. */
+		/* Parallax, on the page's own scroll. As the head leaves, the picture */
+		/* falls behind the page to half its speed and zooms in, the title lifts */
+		/* away faster than the page, and the guide rises into place as it */
+		/* arrives. The head starts at the top of the page, so every range starts */
+		/* at rest and the page loads exactly as laid out. Transform only. */
 		@supports (animation-timeline: view()) {
 			.info__screen :global(img) {
 				animation:
 					info-push 24s ease-in-out infinite alternate,
-					info-drift linear both;
-				animation-timeline: auto, view();
+					info-backdrop linear both;
+				animation-timeline: auto, --head;
 				animation-range:
 					normal,
-					cover 0% cover 100%;
-			}
-
-			.info__screen {
-				animation: info-sink linear both;
-				animation-timeline: view();
-				animation-range: exit 0% exit 100%;
+					exit 0% exit 100%;
 			}
 
 			.info__titles {
 				animation: info-lift linear both;
-				animation-timeline: view();
+				animation-timeline: --head;
 				animation-range: exit 0% exit 100%;
 			}
 
@@ -297,24 +310,18 @@ const lastYear = entry.data.period.split('–').pop();
 		}
 	}
 
-	@keyframes info-drift {
-		from {
-			transform: translateY(-4%);
-		}
+	/* 38% of a picture 130% the head's height is 49% of the head: over the */
+	/* head's exit the picture moves down half as far as the page moves up. */
+	/* Its top starts 15% above the head and never comes into view. */
+	@keyframes info-backdrop {
 		to {
-			transform: translateY(4%);
-		}
-	}
-
-	@keyframes info-sink {
-		to {
-			transform: translateY(16vh);
+			transform: translateY(38%) scale(1.12);
 		}
 	}
 
 	@keyframes info-lift {
 		to {
-			transform: translateY(-9vh);
+			transform: translateY(-16vh);
 		}
 	}
 
@@ -336,12 +343,24 @@ const lastYear = entry.data.period.split('–').pop();
 		}
 	}
 
+	/* The title stands on the picture's foot, in the page's column, and every */
+	/* line of it on a plate of the field: text never crosses a picture bare. */
 	.info__titles {
+		position: relative;
+		z-index: 1;
+		grid-row: 3;
 		display: grid;
-		align-content: end;
 		justify-items: start;
 		gap: var(--s-4);
+		inline-size: min(100% - var(--gutter) * 2, var(--wrap));
 		min-inline-size: 0;
+		margin-inline: auto;
+		padding-block: var(--s-16) var(--s-8);
+	}
+
+	.info__titles > :not(.info__titlebox) {
+		background: var(--field);
+		box-shadow: 0 0 0 0.5rem var(--field);
 	}
 
 	.info__titlebox {
@@ -352,9 +371,24 @@ const lastYear = entry.data.period.split('–').pop();
 	/* 14cqi: CHROMECAST is 6.8em in Martian Mono at the display tracking. */
 	.info__title {
 		font-size: min(clamp(2.75rem, 1rem + 6vw, 7rem), 14cqi);
-		line-height: 0.88;
+		line-height: 1;
 		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
+	}
+
+	/* The title's plate goes line by line: a wrapped block is as wide as its */
+	/* column, and CHROMECAST RECEIVERS on one plate ran across the picture. */
+	/* Uppercase only, so a line is Martian Mono's cap height, 0.808em; its */
+	/* line box is 1.192em, centred at the same height. Trimming 0.192em */
+	/* leaves a plate 0.096em proud of the capitals above and below, and at */
+	/* line-height 1 each one meets the next without covering it. */
+	.info__titleplate {
+		padding-inline: 0.12em;
+		margin-inline: -0.12em;
+		background: linear-gradient(var(--field), var(--field)) center / 100% calc(100% - 0.192em)
+			no-repeat;
+		-webkit-box-decoration-break: clone;
+		box-decoration-break: clone;
 	}
 
 	.info__lede {
@@ -375,18 +409,10 @@ const lastYear = entry.data.period.split('–').pop();
 
 	/* ---- main: the facts, and the story ------------------------------------ */
 
-	/* An opaque layer over the programme's screen, which sinks as the page */
-	/* scrolls (info-sink, below). A transform lifts the screen above in-flow */
-	/* content, so without this it slid down over the facts and hid them. */
 	.info__main {
-		position: relative;
-		z-index: 1;
 		display: grid;
 		gap: var(--s-8);
 		margin-block-start: var(--s-12);
-		padding-block-start: var(--s-8);
-		border-block-start: 1px solid var(--line);
-		background: var(--field);
 	}
 
 	.info__facts {
@@ -444,12 +470,6 @@ const lastYear = entry.data.period.split('–').pop();
 	/* ---- wide screens ------------------------------------------------------- */
 
 	@media (min-width: 64rem) {
-		.info__head {
-			grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-			gap: var(--s-12);
-			align-items: end;
-		}
-
 		.info__main {
 			grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
 			gap: var(--s-16);
