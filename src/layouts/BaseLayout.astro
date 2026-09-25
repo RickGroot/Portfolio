@@ -64,6 +64,9 @@ const {
 		<main id="main" class:list={[{ wrap: !bleed }]} tabindex="-1">
 			<slot />
 		</main>
+		{/* The static of a page change: empty, and shown only while a view */}
+		{/* transition runs. See the end of src/styles/zap.css. */}
+		<div class="vt-static" aria-hidden="true"></div>
 
 		<script>
 			import { boot as bootCursor } from '../scripts/cursor';

@@ -171,6 +171,46 @@ test.describe('changing channel', () => {
 		expect(label, 'the decode left its aria-label behind').toBeNull();
 	});
 
+	test('in the guide, a change of programme brings static, never more than one burst at a time', async ({
+		page,
+	}) => {
+		await page.goto('/#work');
+		// Let the arrival's own burst run out first.
+		await page.waitForTimeout(800);
+		// Every burst starts with one opacity animation on the static layer, and
+		// every change of programme asks for one with channel:zap.
+		type Log = { asked: number; starts: number[] };
+		await page.evaluate(() => {
+			const log: Log = { asked: 0, starts: [] };
+			(window as unknown as { __zap: Log }).__zap = log;
+			document.addEventListener('channel:zap', () => log.asked++);
+			const zap = document.querySelector('.zap') as HTMLElement;
+			const animate = zap.animate.bind(zap);
+			zap.animate = (keyframes, options) => {
+				log.starts.push(performance.now());
+				return animate(keyframes, options);
+			};
+		});
+
+		// A sweep through the guide, as fast as a pointer goes.
+		for (const id of ['chromecast', 'vamp', 'chromecast', 'nlziet', 'vamp', 'nlziet']) {
+			await page.locator(`#work [data-block="${id}"]`).hover();
+		}
+		await page.waitForTimeout(700);
+
+		const { asked, starts } = await page.evaluate(
+			() => (window as unknown as { __zap: Log }).__zap,
+		);
+		expect(starts.length, 'a change of programme brought no static').toBeGreaterThan(0);
+		// Otherwise the sweep was too slow to test the rationing at all.
+		expect(asked, 'the sweep never asked faster than the static can play').toBeGreaterThan(
+			starts.length,
+		);
+		for (let i = 1; i < starts.length; i++) {
+			expect(starts[i]! - starts[i - 1]!, 'the static strobed').toBeGreaterThanOrEqual(500);
+		}
+	});
+
 	test('in the guide, the new ground wipes in and the chrome follows it', async ({ page }) => {
 		await page.goto('/#work');
 		await page.locator('#work [data-block="chromecast"]').hover();

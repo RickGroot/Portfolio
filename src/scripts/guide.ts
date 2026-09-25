@@ -181,6 +181,10 @@ function mount(guide: HTMLElement): void {
 
 		if (reduced.matches) return;
 
+		// The whole screen gets a lighter burst of the section advance's static.
+		// zap.ts rations it, so a pointer sweeping the guide cannot strobe.
+		guide.dispatchEvent(new CustomEvent('channel:zap', { bubbles: true, detail: { dir } }));
+
 		// The listing: out the way you are going, in from where you are going.
 		// Added onto the depth layer's own transform rather than replacing it.
 		previous

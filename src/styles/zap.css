@@ -2,8 +2,15 @@
  * Zapping: the static and the channel readout src/scripts/zap.ts shows when
  * the one-pager changes channel. Both are created by the script, so without
  * JavaScript neither exists; both are decoration, aria-hidden and never in
- * the way of a click.
+ * the way of a click. Changing page gets the same static from CSS alone, at
+ * the end of this file.
  */
+
+/* Grey specks at two strengths, so the static reads on the deep channels and
+   on paper alike. */
+:root {
+	--static-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.62 0 0 0 0 0.62 0 0 0 2.6 -1.1'/%3E%3C/filter%3E%3Crect width='192' height='192' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
 .zap {
 	position: fixed;
@@ -14,12 +21,11 @@
 	pointer-events: none;
 }
 
-/* Grey specks at two strengths, so the static reads on the deep channels and
-   on paper alike. Oversized, because the script jumps it between offsets. */
+/* Oversized, because the script jumps it between offsets. */
 .zap__noise {
 	position: absolute;
 	inset: -96px;
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.25' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.62 0 0 0 0 0.62 0 0 0 0 0.62 0 0 0 2.6 -1.1'/%3E%3C/filter%3E%3Crect width='192' height='192' filter='url(%23n)'/%3E%3C/svg%3E");
+	background-image: var(--static-noise);
 	background-size: 192px;
 }
 
@@ -69,9 +75,115 @@
 	font-variant-numeric: tabular-nums;
 }
 
+/*
+ * Changing page is changing channel as well: a case study opening out of the
+ * guide, and the way back. A page that is leaving cannot run a script over the
+ * one arriving, so this static belongs to the view transition itself.
+ *
+ * .vt-static (BaseLayout) is an empty layer that exists only while a
+ * transition runs, and is named then, so it gets a group of its own at the top
+ * of the transition's layer tree -- above the picture, the title and the
+ * chrome. The element paints nothing; the static is its group's background.
+ * So outside a transition there is nothing, and a page that loads without one
+ * never shows it.
+ *
+ * The noise jumps sideways between offsets and the roll bar comes down in
+ * steps. Each is a longhand of its own, so each keeps its own timing.
+ */
+.vt-static {
+	display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html:active-view-transition .vt-static {
+		display: block;
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		view-transition-name: vt-static;
+	}
+}
+
+::view-transition-group(vt-static) {
+	z-index: 4;
+	background-image:
+		var(--static-noise),
+		linear-gradient(
+			to bottom,
+			transparent,
+			color-mix(in oklab, var(--mark) 26%, transparent) 42%,
+			color-mix(in oklab, var(--mark) 38%, transparent) 55%,
+			transparent
+		);
+	background-size:
+		192px,
+		100% 22vh;
+	background-repeat: repeat, no-repeat;
+	animation:
+		vt-static-fade 560ms linear both,
+		vt-static-jump 560ms step-end both,
+		vt-static-roll 560ms steps(10, end) both;
+}
+
+::view-transition-old(vt-static),
+::view-transition-new(vt-static) {
+	animation: none;
+}
+
+@keyframes vt-static-fade {
+	0% {
+		opacity: 0;
+	}
+	12% {
+		opacity: 0.45;
+	}
+	60% {
+		opacity: 0.3;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+@keyframes vt-static-jump {
+	0% {
+		background-position-x: 0, 0;
+	}
+	20% {
+		background-position-x: -37px, 0;
+	}
+	40% {
+		background-position-x: 23px, 0;
+	}
+	60% {
+		background-position-x: -12px, 0;
+	}
+	80% {
+		background-position-x: 48px, 0;
+	}
+	100% {
+		background-position-x: -51px, 0;
+	}
+}
+
+@keyframes vt-static-roll {
+	from {
+		background-position-y:
+			0,
+			-22vh;
+	}
+	to {
+		background-position-y: 0, 122vh;
+	}
+}
+
 @media (forced-colors: active) {
 	.zap,
 	.osd {
+		display: none;
+	}
+
+	html:active-view-transition .vt-static {
 		display: none;
 	}
 }

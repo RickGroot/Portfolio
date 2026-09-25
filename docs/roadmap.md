@@ -181,6 +181,13 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   expertise built into the tooling — each with a proof that can be checked in this repository.
   Drafts, for Rick to put in his own voice.
 - The Signal and Field interludes stay; Rick will replace their pictures and their text.
+- **The static, on every change of channel.** _"Really like the first one, can that be applied
+  more?"_: the white noise of a section change. A section change bursts a little stronger and
+  longer (0.4 at peak, 520 ms). A change of programme in the guide gets a light burst, rationed to
+  one at a time, so a pointer sweeping the guide cannot strobe it: a sweep that asks 17 times in a
+  second and a half plays 5. Changing page, a case study opening and the way back, carries the
+  same static on a layer of its own at the top of the view transition, from CSS alone:
+  `.vt-static` exists only while a transition runs.
 - **Streamz & VTM GO** (DPG Media, 2022–2024) is in as a draft with the facts Rick gave. It waits
   on a cover and on the case study itself.
 
@@ -373,3 +380,9 @@ Nothing on this list may be installed without moving it off the list first.
 13. **Streamz & VTM GO is a draft** (`src/content/work/streamz-vtm-go.md`). It needs a cover, the
     TV platforms, the stack and what Rick built. Its screenshots should come from 2022–2024, the
     years he worked on it.
+14. **The way back can morph into the wrong programme.** When the one-pager is not restored from
+    the back-forward cache (the dev server, whose HMR socket rules the cache out, or a case study
+    opened directly and left by its back link), the guide starts on its first programme, so the
+    picture you came from has nothing to pair with. Production HTML is cacheable
+    (`max-age=0, must-revalidate`, no unload handlers), so a visitor who came from the guide gets
+    the right morph. The fix is to carry the programme in the back link.

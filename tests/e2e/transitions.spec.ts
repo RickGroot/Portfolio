@@ -98,3 +98,46 @@ test('transitions are opted out under reduced motion', async ({ browser }) => {
 	expect(optedIn, 'cross-document transitions are active under reduced motion').toBe(false);
 	await context.close();
 });
+
+/**
+ * Changing page is changing channel: the section advance's static comes with
+ * it, on a layer of its own at the top of the transition (src/styles/zap.css).
+ * It exists only while the transition runs, so it can never be left on the
+ * page afterwards.
+ */
+test('changing page brings the static, above everything, and leaves nothing behind', async ({
+	page,
+}) => {
+	type Seen = { layers: number; z: string; image: string };
+	await page.addInitScript(() => {
+		window.addEventListener('pagereveal', (e) => {
+			const vt = (e as Event & { viewTransition?: ViewTransition | null }).viewTransition;
+			if (!vt) return;
+			void vt.ready.then(() => {
+				const group = '::view-transition-group(vt-static)';
+				const style = getComputedStyle(document.documentElement, group);
+				(window as unknown as { __static: Seen }).__static = {
+					layers: document
+						.getAnimations()
+						.filter((a) => (a.effect as KeyframeEffect | null)?.pseudoElement === group).length,
+					z: style.zIndex,
+					image: style.backgroundImage,
+				};
+			});
+		});
+	});
+
+	await page.goto('/#work');
+	await page.locator('#work [data-block="chromecast"]').hover();
+	await page.locator('#work [data-preview][data-active] .guide__screen').click();
+	await page.waitForURL(/\/work\/chromecast/);
+	const seen = (await (
+		await page.waitForFunction(() => (window as unknown as { __static?: Seen }).__static)
+	).jsonValue()) as Seen;
+
+	expect(seen.layers, 'the static never ran').toBeGreaterThan(0);
+	// Above the picture (1), the gradient (2), and the title and chrome (3).
+	expect(Number(seen.z), 'the static ran under the page').toBeGreaterThan(3);
+	expect(seen.image, 'the static layer carried no noise').toContain('data:image/svg+xml');
+	await expect(page.locator('.vt-static'), 'the static outlived the transition').toBeHidden();
+});
