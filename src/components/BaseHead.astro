@@ -14,7 +14,8 @@ interface Props {
 const { title, description, ogImage, noindex = false, themeColor } = Astro.props;
 
 const canonical = new URL(publicPath(Astro.url.pathname), Astro.site ?? site.url).href;
-const fullTitle = title === site.name ? site.name : `${title} — ${site.name}`;
+// "Page | Rick Groot" -- a bar, not a dash (Rick, 2026-09-25).
+const fullTitle = title === site.name ? site.name : `${title} | ${site.name}`;
 const image = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : undefined;
 ---
 

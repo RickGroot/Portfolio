@@ -128,7 +128,8 @@
 }
 
 ::view-transition-group(*.vt-title),
-::view-transition-group(info-chrome) {
+::view-transition-group(info-chrome),
+::view-transition-group(info-back) {
 	z-index: 3;
 }
 

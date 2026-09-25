@@ -42,13 +42,19 @@ const lastYear = entry.data.period.split('–').pop();
 				/>
 			</div>
 
+			{/* The way back is pinned to the screen, and stays out of the chrome row */}
+			{/* below: that row is a stacking context (its z-index, and its view */}
+			{/* transition name), and a fixed element inside one is stacked at the */}
+			{/* row's level. The gradient and the titles scrolled over it, and took */}
+			{/* its clicks (Rick, 2026-09-25: "works weirdly with z-index"). */}
+			<a class="info__back" href="/#work" data-back>
+				<span aria-hidden="true">←</span> Guide
+				<span class="keyhint" aria-hidden="true">
+					Esc
+				</span>
+			</a>
+
 			<div class="info__chrome">
-				<a class="info__back" href="/#work" data-back>
-					<span aria-hidden="true">←</span> Guide
-					<span class="keyhint" aria-hidden="true">
-						Esc
-					</span>
-				</a>
 				<p class="info__osd" aria-hidden="true">
 					CH {index} <b>{title.split(' ')[0]}</b>
 				</p>
@@ -206,6 +212,9 @@ const lastYear = entry.data.period.split('–').pop();
 	.info__back {
 		position: fixed;
 		z-index: var(--z-nav);
+		/* A layer of its own in the page transition, as it had inside the */
+		/* chrome row: in the page's own layer it sat under the flying picture. */
+		view-transition-name: info-back;
 		inset-block-start: var(--s-6);
 		inset-inline-start: max(var(--gutter), (100% - var(--wrap)) / 2);
 		display: inline-flex;

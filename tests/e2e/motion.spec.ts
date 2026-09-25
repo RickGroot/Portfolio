@@ -121,9 +121,17 @@ test.describe('parallax', () => {
 			{ width: 1280, height: 800 },
 			{ width: 390, height: 844 },
 		]) {
+			// From a blank document each time: the case study navigating to itself
+			// runs the page transition, and a screenshot taken during one reads
+			// its layers, not the page.
+			await page.goto('about:blank');
 			await page.setViewportSize(size);
 			await page.goto('/work/chromecast');
-			await page.mouse.move(size.width - 2, size.height - 2);
+			// The cursor's ring glides after the pointer, and crossed this strip
+			// on its way: the pixels read the cursor, not the stage.
+			await page.addStyleTag({
+				content: '.cursor__dot, .cursor__ring { display: none !important; }',
+			});
 			for (const y of [120, 260, 400, 540]) {
 				await jumpTo(page, y);
 				const box = await page.evaluate(() => {
@@ -155,6 +163,43 @@ test.describe('parallax', () => {
 					worst,
 					`${size.width}px, ${y}px down: picture shows under the gradient`,
 				).toBeLessThan(8);
+			}
+		}
+	});
+
+	// The way back is pinned to the screen and must stay on top of the stage as
+	// it scrolls away. Inside the chrome row -- a stacking context -- it was
+	// stacked at the row's level: from 300px down, the lifting title and
+	// gradient passed over it and took its clicks (Rick: "works weirdly with
+	// z-index").
+	test('the way back stays on top, and takes its own clicks, all the way down', async ({
+		page,
+	}) => {
+		for (const size of [
+			{ width: 1280, height: 800 },
+			{ width: 390, height: 844 },
+		]) {
+			// From a blank document each time: the case study navigating to itself
+			// runs the page transition, and a screenshot taken during one reads
+			// its layers, not the page.
+			await page.goto('about:blank');
+			await page.setViewportSize(size);
+			await page.goto('/work/chromecast');
+			for (const y of [0, 150, 300, 450, 600, 900]) {
+				await jumpTo(page, y);
+				const hits = await page.evaluate(() => {
+					const b = document.querySelector('.info__back')?.getBoundingClientRect();
+					if (!b) return [];
+					return [b.left + 8, b.left + b.width / 2, b.right - 8].map(
+						(x) =>
+							document.elementFromPoint(x, b.top + b.height / 2)?.closest('.info__back') != null,
+					);
+				});
+				expect(hits, `${size.width}px, ${y}px down: something covers the way back`).toEqual([
+					true,
+					true,
+					true,
+				]);
 			}
 		}
 	});
@@ -260,12 +305,31 @@ test.describe('changing channel', () => {
 					// What follows the heading, measured from it: moves only if it does.
 					gap: (h.nextElementSibling?.getBoundingClientRect().top ?? r.bottom) - r.bottom,
 				});
-				if (frames.length < 90) requestAnimationFrame(tick);
+				if (!(window as unknown as { __stop?: boolean }).__stop) requestAnimationFrame(tick);
 			};
 			requestAnimationFrame(tick);
 		});
 		await page.keyboard.press('PageDown');
-		await page.waitForTimeout(1600);
+		// Until the decode has come and gone, however long a loaded machine
+		// takes: a fixed wait once read the frames with it still running, and
+		// the heading reads "How I work" before it starts as well as after.
+		await expect
+			.poll(
+				() =>
+					page.evaluate(() => {
+						const frames = (window as unknown as { __frames: Frame[] }).__frames;
+						const last = frames[frames.length - 1]?.text.trim();
+						return frames.some((f) => f.text.trim() !== 'How I work') && last === 'How I work';
+					}),
+				{ timeout: 10_000 },
+			)
+			.toBe(true);
+		await page.evaluate(
+			() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+		);
+		await page.evaluate(() => {
+			(window as unknown as { __stop: boolean }).__stop = true;
+		});
 
 		const frames = await page.evaluate(() => (window as unknown as { __frames: Frame[] }).__frames);
 		const end = frames[frames.length - 1]!;
