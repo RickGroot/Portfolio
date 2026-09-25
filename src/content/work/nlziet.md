@@ -9,7 +9,6 @@ tags: ['Svelte', 'Connected TV', 'Bitmovin player']
 channel: crimson
 cover: ../../assets/work/nlziet.jpg
 coverAlt: The NLZIET wordmark in pink on a dark background.
-coverTone: dark # a logo on a dark background
 order: 1
 ---
 

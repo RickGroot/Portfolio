@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import Guide from '@components/Guide.astro';
 import { formatPeriod, getPublishedWork, type PublishedWorkEntry } from '@lib/work';
-import { channelStyle, coverPrint } from '@lib/channels';
+import { channelStyle } from '@lib/channels';
 import { vt } from '@lib/vt';
 
 /**
@@ -18,17 +18,12 @@ import { vt } from '@lib/vt';
 interface Props {
 	entry: PublishedWorkEntry;
 	index: string;
-	prev?: PublishedWorkEntry | undefined;
-	next?: PublishedWorkEntry | undefined;
 }
 
-const { entry, index, prev, next } = Astro.props;
-const { title, role, company, summary, tags, channel, cover, coverAlt, coverTone, links, status } =
-	entry.data;
+const { entry, index } = Astro.props;
+const { title, role, company, summary, tags, channel, cover, coverAlt, links, status } = entry.data;
 const all = await getPublishedWork();
 const lastYear = entry.data.period.split('–').pop();
-const numberOf = (e: PublishedWorkEntry): string =>
-	String(all.findIndex((w) => w.id === e.id) + 1).padStart(2, '0');
 ---
 
 <BaseLayout title={title} description={summary} channel={channel} bleed>
@@ -46,10 +41,8 @@ const numberOf = (e: PublishedWorkEntry): string =>
 		</div>
 
 		<header class="info__head wrap">
-			<div
-				class="info__screen duo"
-				style={`view-transition-name:${vt('cover', entry.id)};${coverPrint(channel, coverTone) ?? ''}`}
-			>
+			{/* The key art as it is, like the guide's screen it came from. */}
+			<div class="info__screen" style={`view-transition-name:${vt('cover', entry.id)}`}>
 				<Image
 					src={cover}
 					alt={coverAlt}
@@ -125,31 +118,9 @@ const numberOf = (e: PublishedWorkEntry): string =>
 			</div>
 		</div>
 
-		{(prev || next) && (
-			<nav class="info__zap wrap" aria-label="Other programmes">
-				{prev && (
-					<a class="info__step" href={`/work/${prev.id}`} rel="prev">
-						<span class="info__plate" style={channelStyle(prev.data.channel)}>
-							<span class="info__steplabel">
-								<span aria-hidden="true">◂</span> CH {numberOf(prev)}
-							</span>
-							<span class="info__steptitle">{prev.data.title}</span>
-						</span>
-					</a>
-				)}
-				{next && (
-					<a class="info__step info__step--next" href={`/work/${next.id}`} rel="next">
-						<span class="info__plate" style={channelStyle(next.data.channel)}>
-							<span class="info__steplabel">
-								CH {numberOf(next)} <span aria-hidden="true">▸</span>
-							</span>
-							<span class="info__steptitle">{next.data.title}</span>
-						</span>
-					</a>
-				)}
-			</nav>
-		)}
-
+		{/* No channel up/down: the guide underneath is the way to every other */}
+		{/* programme, and it had been saying the same as the buttons above it */}
+		{/* (Rick, 2026-09-25). */}
 		<div class="info__guide">
 			<Guide entries={all} form="strip" current={entry.id} />
 		</div>
@@ -283,7 +254,6 @@ const numberOf = (e: PublishedWorkEntry): string =>
 		inline-size: 100%;
 		block-size: 112%;
 		object-fit: cover;
-		transition: filter var(--speed-slow) var(--ease-out);
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -319,7 +289,6 @@ const numberOf = (e: PublishedWorkEntry): string =>
 				animation-range: exit 0% exit 100%;
 			}
 
-			.info__zap,
 			.info__guide {
 				animation: info-arrive linear both;
 				animation-timeline: view();
@@ -365,20 +334,6 @@ const numberOf = (e: PublishedWorkEntry): string =>
 			scale: 1.1;
 			translate: -1.5% -1%;
 		}
-	}
-
-	.info__screen::before,
-	.info__screen::after {
-		transition: opacity var(--speed-slow) var(--ease-out);
-	}
-
-	.info__screen:hover::before,
-	.info__screen:hover::after {
-		opacity: 0;
-	}
-
-	.info__screen:hover :global(img) {
-		filter: none;
 	}
 
 	.info__titles {
@@ -478,62 +433,6 @@ const numberOf = (e: PublishedWorkEntry): string =>
 		color: var(--accent);
 	}
 
-	/* ---- zap: channel down, channel up ------------------------------------- */
-
-	.info__zap {
-		display: grid;
-		gap: var(--s-4);
-		margin-block-start: var(--s-16);
-	}
-
-	/* The colours sit on an inner plate, not on the link, so the link's focus */
-	/* ring stays in this page's mark -- a ring in the destination's colours */
-	/* could vanish against this ground. */
-	.info__step {
-		display: grid;
-		text-decoration: none;
-		transition: scale var(--speed) var(--ease);
-	}
-
-	.info__step:hover,
-	.info__step:focus-visible {
-		scale: 1.02;
-	}
-
-	.info__plate {
-		display: grid;
-		gap: var(--s-2);
-		padding: var(--s-4) var(--s-6);
-		background: var(--field);
-		color: var(--mark);
-		border: 2px solid var(--accent);
-	}
-
-	.info__steplabel {
-		font-family: var(--font-mono);
-		font-size: var(--t-xs);
-		font-weight: 700;
-		letter-spacing: var(--tracking-meta);
-		color: var(--accent);
-	}
-
-	.info__steptitle {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--t-xl);
-		line-height: 1;
-		letter-spacing: var(--tracking-display);
-		text-transform: uppercase;
-	}
-
-	.info__step--next {
-		text-align: end;
-	}
-
-	.info__step--next .info__plate {
-		justify-items: end;
-	}
-
 	/* ---- the guide, along the bottom --------------------------------------- */
 
 	.info__guide {
@@ -543,17 +442,6 @@ const numberOf = (e: PublishedWorkEntry): string =>
 	}
 
 	/* ---- wide screens ------------------------------------------------------- */
-
-	@media (min-width: 48rem) {
-		.info__zap {
-			grid-template-columns: 1fr 1fr;
-		}
-
-		/* A lone "next" belongs on the right, where next always is. */
-		.info__step--next:only-child {
-			grid-column: 2;
-		}
-	}
 
 	@media (min-width: 64rem) {
 		.info__head {

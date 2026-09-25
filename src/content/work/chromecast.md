@@ -9,7 +9,6 @@ tags: ['JavaScript', 'Chromecast', 'Shaka player']
 channel: ultramarine
 cover: ../../assets/work/chromecast.jpg
 coverAlt: A Google Chromecast dongle and its remote on a white surface.
-coverTone: light # a white product shot
 order: 2
 ---
 

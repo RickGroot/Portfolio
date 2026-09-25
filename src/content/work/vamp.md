@@ -9,7 +9,6 @@ tags: ['SvelteKit', 'Tone.js', 'PWA', 'Web Audio']
 channel: navy
 cover: ../../assets/work/vamp.png
 coverAlt: The VAMP chord sketchpad showing a jazz ii–V–I progression in C with chord chart notation.
-coverTone: light # a white app screenshot
 order: 3
 links:
   - label: Live app

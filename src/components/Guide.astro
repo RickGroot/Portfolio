@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import { buildGuide } from '@lib/guide';
 import { formatPeriod, type PublishedWorkEntry } from '@lib/work';
-import { channelStyle, coverPrint } from '@lib/channels';
+import { channelStyle } from '@lib/channels';
 import { vt } from '@lib/vt';
 
 /**
@@ -146,13 +146,10 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 							</p>
 						</div>
 
-						<a
-							class="guide__screen duo"
-							href={`/work/${e.id}`}
-							tabindex="-1"
-							aria-hidden="true"
-							style={coverPrint(e.data.channel, e.data.coverTone)}
-						>
+						{/* The key art as it is, not printed in the channel's two colours */}
+						{/* like the site's photographs: NLZIET's pink logo printed in */}
+						{/* crimson and pink came out as one pink block (Rick, 2026-09-25). */}
+						<a class="guide__screen" href={`/work/${e.id}`} tabindex="-1" aria-hidden="true">
 							<Image
 								src={e.data.cover}
 								alt=""
@@ -453,7 +450,6 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 		inline-size: 100%;
 		block-size: 100%;
 		object-fit: cover;
-		transition: filter var(--speed-slow) var(--ease-out);
 	}
 
 	/* Idle: the picture on the screen breathes, a slow push that never stops */
@@ -472,21 +468,6 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 			scale: 1.12;
 			translate: -2% -1%;
 		}
-	}
-
-	/* Under the pointer the print comes off and the picture is its own colours. */
-	.guide__screen::before,
-	.guide__screen::after {
-		transition: opacity var(--speed-slow) var(--ease-out);
-	}
-
-	.guide__screen:hover::before,
-	.guide__screen:hover::after {
-		opacity: 0;
-	}
-
-	.guide__screen:hover :global(img) {
-		filter: none;
 	}
 
 	/* The tuning burst: a flash of static when the screen changes channel. */

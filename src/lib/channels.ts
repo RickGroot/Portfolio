@@ -271,25 +271,6 @@ export function channelStyle(name: Channel): string {
 	].join(';');
 }
 
-/** Whether a picture is mostly light or mostly dark -- see coverPrint(). */
-export type Tone = 'light' | 'dark';
-
-/**
- * How a cover prints on a channel. A print should come out mostly as the
- * FIELD, and a cover whose tone is the field's opposite would not: a white app
- * screenshot on a deep ground prints as a bright block, a logo on black on a
- * light ground as a dark one. Those print as negatives, with the contrast
- * pushed harder -- a negative's background only inverts to a grey, and the
- * extra contrast takes it the rest of the way to the field.
- *
- * The content says what the picture IS (`coverTone`); this decides what to do
- * about it, so moving an entry to another channel cannot leave a stale flag.
- */
-export function coverPrint(name: Channel, tone: Tone): string | undefined {
-	const negative = SOLVED[name].dark ? tone === 'light' : tone === 'dark';
-	return negative ? '--duo-invert:1;--duo-contrast:1.45' : undefined;
-}
-
 /** The palette as custom properties, for the <html> element. */
 export function paletteStyle(): string {
 	return [

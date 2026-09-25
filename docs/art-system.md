@@ -175,14 +175,14 @@ Two full-bleed sections sit on the one-pager. They are not the character field �
 photographs printed in their channel's two colours: greyed, then two flat layers laid over them — the
 highlight colour multiplied (`--duo-hi`) and the shadow colour screened (`--duo-lo`). On a light
 channel that prints the photo in ink on the field; on a deep channel its shadows are the field and
-its highlights the channel's signal colour — the NLZIET logo in red out of crimson. That is `.duo`
-in `src/styles/surfaces.css`, and every photograph on the site uses it, the guide's key art and
-the case studies' included.
+its highlights the channel's signal colour. That is `.duo` in `src/styles/surfaces.css`, and every
+photograph on the site uses it.
 
-A picture whose tone is the opposite of its field prints as a negative, so it comes out mostly as
-the field rather than as a bright or dark block: a white screenshot on the navy channel, say. The
-content only says whether a cover is `light` or `dark` (`coverTone`); `coverPrint()` in
-`src/lib/channels.ts` decides.
+**Key art does not.** A programme's picture on the guide and on its case study is shown as it is:
+a logo is already its own colours, and printed in its channel's it lost them — NLZIET's pink logo in
+crimson and pink was one pink block (Rick, 2026-09-25). The channel's colour stays in the screen's
+frame and in the ground around it. Until then a cover whose tone was the opposite of its field
+printed as a negative (`coverTone`, `coverPrint()`); both are gone.
 
 The previous treatment greyscaled each photograph, pushed it down to 42–68% brightness and laid a dot
 screen over it in the page colour. Every image came out as a darkened photo on a dark page, which is

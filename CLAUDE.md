@@ -74,7 +74,9 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
   flat field — and declares which one; its text colour is solved against the field at build time and
   the build fails below 4.5:1. Stylesheets only read `--field`, `--mark`, `--mark-dim`, `--accent`.
   No hex values in CSS, and no darkening a photograph to make text legible — photos print in their
-  channel's colours (`.duo`), and text that crosses one sits on a plate of the field.
+  channel's colours (`.duo`), and text that crosses one sits on a plate of the field. A
+  programme's key art is the exception: it is shown as it is, because a logo printed in its channel's
+  colours loses its own.
 - **Public files are not hashed.** `/fonts/**` is cached `immutable` for a year, so a changed font
   gets a new file name. Never overwrite one in place.
 - **After a content schema change, delete `node_modules/.astro/data-store.json`** and restart the dev

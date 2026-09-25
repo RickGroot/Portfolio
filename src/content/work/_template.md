@@ -11,7 +11,6 @@ tags: ['Tag one', 'Tag two'] # 1-4. The card layout breaks past four.
 channel: crimson # ink, paper, yellow, crimson, ultramarine or navy. See src/lib/channels.ts.
 cover: ../../assets/work/your-image.jpg
 coverAlt: What is actually in the image, for someone who cannot see it.
-coverTone: dark # or light: is the picture mostly dark or mostly light?
 order: 99
 # draft: true      # hides it everywhere. Use this instead of commenting entries out.
 #                  # Publishing an entry also means updating the guard in

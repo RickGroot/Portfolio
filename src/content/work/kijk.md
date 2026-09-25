@@ -9,7 +9,6 @@ tags: ['Connected TV', 'Advertisements', 'THEOplayer']
 channel: ink
 cover: ../../assets/work/kijk.jpg
 coverAlt: The KIJK logo, an eye shape, on a purple to blue gradient.
-coverTone: dark # a logo on a dark gradient
 order: 4
 ---
 

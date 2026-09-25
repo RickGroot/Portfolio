@@ -29,8 +29,6 @@ export async function getStaticPaths() {
 		props: {
 			entry,
 			index: String(i + 1).padStart(2, '0'),
-			prev: entries[i - 1],
-			next: entries[i + 1],
 		},
 	}));
 }
@@ -38,14 +36,12 @@ export async function getStaticPaths() {
 interface Props {
 	entry: PublishedWorkEntry;
 	index: string;
-	prev?: PublishedWorkEntry | undefined;
-	next?: PublishedWorkEntry | undefined;
 }
 
-const { entry, index, prev, next } = Astro.props;
+const { entry, index } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<WorkLayout entry={entry} index={index} prev={prev} next={next}>
+<WorkLayout entry={entry} index={index}>
 	<Content />
 </WorkLayout>

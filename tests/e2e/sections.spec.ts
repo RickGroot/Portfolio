@@ -514,24 +514,25 @@ test.describe('programme guide', () => {
 		await expect.poll(async () => (await active(page)).preview).toBe('chromecast');
 	});
 
-	test('the picture comes back in its own colours under the pointer', async ({ page }) => {
-		await page.goto('/#work');
-		const screen = page.locator('#work [data-preview][data-active] .guide__screen');
-		const state = () =>
-			screen.evaluate((el) => ({
-				print: Number(getComputedStyle(el, '::before').opacity),
+	// Rick: "for NLZIET with the image now also having this color overlay it's
+	// just all pink now". Key art is not printed in its channel's colours --
+	// on the guide or on the case study the view transition carries it to.
+	test('the key art is shown in its own colours', async ({ page }) => {
+		const unprinted = (selector: string) =>
+			page.locator(selector).evaluate((el) => ({
+				overlay: getComputedStyle(el, '::before').content,
 				filter: getComputedStyle(el.querySelector('img') as Element).filter,
 			}));
 
-		const rest = await state();
-		expect(rest.print, 'the two-tone print should be on at rest').toBeGreaterThan(0.9);
-		expect(rest.filter, 'the picture should be grey at rest').toContain('grayscale(1)');
+		await page.goto('/#work');
+		const guide = await unprinted('#work [data-preview][data-active] .guide__screen');
+		expect(guide.overlay, 'guide: a print is laid over the key art').toBe('none');
+		expect(guide.filter, 'guide: the key art is filtered').toBe('none');
 
-		await screen.hover();
-		await page.waitForTimeout(700);
-		const revealed = await state();
-		expect(revealed.print, 'the print did not come off on hover').toBeLessThan(0.1);
-		expect(revealed.filter, 'the picture stayed grey on hover').toBe('none');
+		await page.goto('/work/nlziet');
+		const study = await unprinted('.info__screen');
+		expect(study.overlay, 'case study: a print is laid over the key art').toBe('none');
+		expect(study.filter, 'case study: the key art is filtered').toBe('none');
 	});
 
 	// The overflow flag can be stale for a moment after a resize. On the old

@@ -65,18 +65,6 @@ const work = defineCollection({
 				// test should be first to notice.
 				coverAlt: z.string().min(1).optional(),
 
-				/**
-				 * Whether the cover is mostly light or mostly dark. Covers are
-				 * printed in their channel's two colours, and a cover whose tone
-				 * is the opposite of its field prints as a negative so it comes
-				 * out mostly as the field -- a white screenshot on a deep ground
-				 * would otherwise be a bright block. This field says what the
-				 * picture IS; coverPrint() in src/lib/channels.ts decides what to
-				 * do about it, so changing an entry's channel cannot leave a
-				 * stale flag behind.
-				 */
-				coverTone: z.enum(['light', 'dark']).default('dark'),
-
 				links: z
 					.array(z.object({ label: z.string().min(1), href: z.url() }))
 					.max(3)

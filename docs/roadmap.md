@@ -135,6 +135,13 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
 - Found on the way: a case study's screen, sinking as the page scrolls (the depth above), slid over
   the facts and hid them, because a transform lifts an element above in-flow content. The reading
   area is an opaque layer now, and the screen slides under it.
+- Rick: _"The work cards with the images have too much color … for NLZIET … it's just all pink
+  now."_ Of three candidates (own colours, black and white, a light wash) he chose **own colours**:
+  key art, on the guide and on its case study, is shown as it is, and only photographs print in
+  their channel's colours. `coverTone` and `coverPrint()`, which existed to print a cover as a
+  negative, are gone with the print.
+- Rick: _"Don't think we need the previous/next buttons on the detail pages when we have the EPG
+  underneath."_ Gone; the guide strip is the way to every other programme.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
