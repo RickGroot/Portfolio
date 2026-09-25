@@ -8,7 +8,7 @@ summary: A responsive Smart TV app experience for the KIJK streaming platform ac
 tags: ['Connected TV', 'Advertisements', 'THEOplayer']
 channel: ink
 cover: ../../assets/work/kijk.jpg
-coverAlt: The KIJK logo, an eye shape, on a purple to blue gradient.
+coverAlt: The KIJK app on a TV on a dark wall, a strip of yellow light along the floor below it.
 order: 4
 ---
 

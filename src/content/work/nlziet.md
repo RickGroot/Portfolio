@@ -8,7 +8,7 @@ summary: Building the NLZIET streaming app across Smart TV platforms in Svelte a
 tags: ['Svelte', 'Connected TV', 'Bitmovin player']
 channel: crimson
 cover: ../../assets/work/nlziet.jpg
-coverAlt: The NLZIET wordmark in pink on a dark background.
+coverAlt: The NLZIET app on a TV on a low sideboard against a deep red wall, a pink light glowing beneath it.
 order: 1
 ---
 

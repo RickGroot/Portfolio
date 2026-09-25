@@ -7,8 +7,8 @@ status: ongoing
 summary: A local-first, offline PWA for sketching chord progressions and looping backing tracks to practise over. No login, no backend, no accounts.
 tags: ['SvelteKit', 'Tone.js', 'PWA', 'Web Audio']
 channel: navy
-cover: ../../assets/work/vamp.png
-coverAlt: The VAMP chord sketchpad showing a jazz ii–V–I progression in C with chord chart notation.
+cover: ../../assets/work/vamp.jpg
+coverAlt: VAMP open on a tablet on a music stand, beside a brass trumpet on a wooden stool, under a warm spotlight.
 order: 3
 links:
   - label: Live app

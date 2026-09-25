@@ -1,47 +1,55 @@
-# Photographs — provenance
+# Images: provenance
 
-Every photograph on the one-pager is Rick's own. None is stock and none is generated.
+No image here is stock. The photographs are Rick's own, and two of them were retouched with an
+image model; the programme covers are illustrations built around his real screenshots. Which is
+which, and how, is recorded below, because a portfolio should be able to say.
 
 ## How they were prepared
 
-All of them were re-encoded through sharp, which drops every metadata block. **That matters here
-specifically:** five of the phone originals carried GPS coordinates. Nothing in this directory does,
-and `check-assets` fails the build on EXIF in `src/assets` and in `dist`, so a future photo cannot
-slip one through. The original file names are not kept either — phone file names are capture
-timestamps.
+All of them were re-encoded through sharp, which drops every metadata block, the content
+credentials an image model attaches included. **That matters here specifically:** five of the phone
+originals carried GPS coordinates. Nothing in this directory does, and `check-assets` fails the
+build on EXIF in `src/assets` and in `dist`, so a future image cannot slip one through. The original
+file names are not kept either: phone file names are capture timestamps.
 
-| File                 | What it is                                               | Used in                  |
-| -------------------- | -------------------------------------------------------- | ------------------------ |
-| `portrait.jpg`       | A tight face crop from the talk photo, with a soft matte | The hero character field |
-| `talk.jpg`           | Rick presenting                                          | Backdrop of _How I work_ |
-| `art/lighthouse.jpg` | A lighthouse silhouetted at sunset                       | Interlude / Signal       |
-| `art/tower.jpg`      | A stone clock tower against the sky                      | Interlude / Field        |
-| `about.jpg`          | Rick on a bridge by a canal                              | Contact                  |
+| File                  | What it is                                               | Used in                  |
+| --------------------- | -------------------------------------------------------- | ------------------------ |
+| `portrait.jpg`        | A tight face crop from the talk photo, with a soft matte | The hero character field |
+| `talk.jpg`            | Rick presenting, in front of a blank screen: retouched   | Backdrop of _How I work_ |
+| `about.jpg`           | Rick on a bridge by a canal: retouched                   | Contact                  |
+| `art/lighthouse.jpg`  | A lighthouse silhouetted at sunset                       | Interlude / Signal       |
+| `art/tower.jpg`       | A stone clock tower against the sky                      | Interlude / Field        |
+| `work/nlziet.jpg`     | Illustration: the NLZIET app on a TV, a real screenshot  | NLZIET key art           |
+| `work/kijk.jpg`       | Illustration: the KIJK app on a TV, a real screenshot    | KIJK key art             |
+| `work/vamp.jpg`       | Illustration: VAMP on a tablet, a real screenshot        | VAMP key art             |
+| `work/chromecast.jpg` | A Chromecast and its remote on a white surface           | Chromecast key art       |
 
-## The talk photo is edited, deliberately
+## The three retouched photographs
 
-The slide on screen named an internal tool at an internal event. That is the employer's to publish,
-not this site's, so **the slide is blurred in the file itself** — not with a CSS filter, which
-anyone opening the image directly would bypass. Both audience members are blurred the same way:
-colleagues at a work event did not agree to appear here, backs of heads or not.
+On 2026-09-25 Rick edited three of his own photographs with an image model, from prompts that asked
+for the lighting, the background and the crop to change and for his face to stay exactly as it is:
+edits of real photos, never a generated face.
 
-The blur is feathered through a soft mask so it reads as shallow depth of field rather than as a
-patch, and every blurred region stops short of Rick.
+Two of them are on the site, `talk.jpg` and `about.jpg`. The third, a portrait on flat black, was
+tried in the hero and not kept: lit hard from one side, half the face fell into the black at the
+field's resolution, and the old crop from the talk photo still reads better as characters. That
+crop keeps its soft elliptical matte, which crushes its lit background to black so the face comes
+out of empty field.
 
-## The portrait is interim
+## The covers are illustrations
 
-`portrait.jpg` is the best face in the set — no cap, eyes visible, side-lit by the screen — but it
-was not taken for this, and its background is lit. Every lit cell gets a glyph, so without the
-matte the portrait read as a textured rectangle with a face somewhere in it. The matte crushes
-everything outside a feathered ellipse to black, so the face comes out of empty field instead.
+A programme's key art is a generated scene, a TV or a tablet in a room lit in its channel's
+colours, with Rick's own screenshot of the app composited into the screen locally, pixel for pixel:
+the scene was generated with a flat green screen, and the screenshot was keyed into it rather than
+redrawn by the model, so the interface is the real one and no client screen went to the model. The
+programme art inside those screenshots belongs to the broadcasters.
 
-It works; it is not the finished signature piece. A purpose-shot portrait is pending: see
-`docs/art-system.md` § Changing the portrait.
+`work/chromecast.jpg` is the older cover and stays until a receiver screenshot replaces it.
 
-## How the set was chosen
+## How the photographs were chosen
 
-Twelve photographs were supplied. Each was put through a 1-bit Bayer dither at image resolution —
-the treatment they will actually get — rather than judged as a photograph. Seven did not survive
+Twelve photographs were supplied. Each was put through a 1-bit Bayer dither at image resolution,
+the treatment they will actually get, rather than judged as a photograph. Seven did not survive
 it: in most the subject is small in frame and the rest is mid-tone landscape with no dominant
 shape, which dithers to noise. Good photographs, poor dither sources.
 

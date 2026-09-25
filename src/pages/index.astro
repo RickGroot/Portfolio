@@ -91,7 +91,7 @@ const rail = [
 		<div class="practice__backdrop duo" style="--duo-lift:1.2;--duo-contrast:1.15">
 			<Image
 				src={talkPhoto}
-				alt="Rick giving a talk about AI-assisted development."
+				alt="Rick giving a talk, in front of a bright, blank projection screen."
 				widths={[800, 1200, 1600]}
 				sizes="100vw"
 				loading="lazy"
@@ -139,11 +139,14 @@ const rail = [
 				<SocialLinks />
 			</div>
 			<figure class="contact__photo duo">
+				{/* Quality 72: the retouched photo is all fine detail, sky and water, and at */}
+				{/* the default it came out over the 150 KB mark for one picture at 30vw. */}
 				<Image
 					src={aboutPhoto}
 					alt="Rick Groot, smiling, on a bridge by a canal."
 					widths={[500, 800, 1000]}
 					sizes="(min-width: 52rem) 30vw, 90vw"
+					quality={72}
 					loading="lazy"
 					decoding="async"
 				/>
