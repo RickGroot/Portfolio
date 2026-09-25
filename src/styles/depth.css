@@ -42,7 +42,6 @@
 		.hero__eyebrow,
 		.hero__copy h1 > span,
 		.hero .lede,
-		.hero__copy > .tags,
 		.guide--screen .guide__bar,
 		.guide--screen .guide__info,
 		.guide--screen .guide__screen,
@@ -78,9 +77,6 @@
 		}
 		.hero .lede {
 			--depth: 0.18;
-		}
-		.hero__copy > .tags {
-			--depth: 0.1;
 		}
 
 		/* The guide: its screen sits back, its listings come forward. */
@@ -145,7 +141,6 @@
 			.hero__eyebrow,
 			.hero__copy h1 > span,
 			.hero .lede,
-			.hero__copy > .tags,
 			.guide--screen .guide__bar,
 			.guide--screen .guide__info,
 			.guide--screen .guide__grid,

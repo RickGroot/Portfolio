@@ -10,10 +10,8 @@ import artSignal from '@assets/art/lighthouse.jpg';
 import artField from '@assets/art/tower.jpg';
 import talkPhoto from '@assets/talk.jpg';
 import aboutPhoto from '@assets/about.jpg';
-import TagList from '@components/TagList.astro';
 import SocialLinks from '@components/SocialLinks.astro';
 import { getPublishedWork } from '@lib/work';
-import { skills } from '@lib/skills';
 import { site } from '@lib/site';
 import { channelStyle } from '@lib/channels';
 
@@ -67,11 +65,7 @@ const rail = [
 				video players underneath them. Most of it is performance work: the devices they run on are
 				older and slower than the machine I write on.
 			</p>
-			<TagList tags={skills} label="What I work on" />
 		</div>
-		<p class="hero__cue" aria-hidden="true">
-			Scroll
-		</p>
 	</section>
 
 	{/* ---- Work: the programme guide ---- */}
@@ -175,15 +169,22 @@ const rail = [
 <style>
 	/* ---- Masthead -------------------------------------------------------- */
 
+	/* A title card (Rick, 2026-09-25: "the art can maybe be full-screen ... */
+	/* focus lies on the text now more"). The character field fills the whole */
+	/* screen with the face in the middle, and the name stands small at its */
+	/* foot with one caption, the way a programme's title card does. */
 	.hero {
 		position: relative;
 		display: grid;
-		align-content: center;
+		align-content: end;
 		min-block-size: 100svh;
 		overflow: clip;
 	}
 
-	/* Scrim. A static gradient, painted once — never animated. */
+	/* Scrim. A static gradient, painted once -- never animated. The field */
+	/* runs out into its own ground at the foot, where the copy stands, and */
+	/* nowhere else, so the art has the screen. tests/a11y/hero-contrast */
+	/* measures the copy against the brightest pixel behind it. */
 	.hero::after {
 		content: '';
 		position: absolute;
@@ -191,36 +192,27 @@ const rail = [
 		z-index: 1;
 		pointer-events: none;
 		background:
+			linear-gradient(to bottom, var(--field), transparent 10%),
 			linear-gradient(
-				100deg,
-				var(--field) 0 30%,
-				color-mix(in oklab, var(--field) 45%, transparent) 55%,
-				transparent 80%
-			),
-			linear-gradient(to bottom, var(--field), transparent 14%, transparent 84%, var(--field));
+				to top,
+				var(--field) 0%,
+				var(--field) max(12%, 11rem),
+				color-mix(in oklab, var(--field) 72%, transparent) max(30%, 19rem),
+				transparent max(52%, 30rem)
+			);
 	}
 
 	.hero__copy {
 		position: relative;
 		z-index: 2;
 		display: grid;
-		gap: var(--s-6);
+		justify-items: start;
+		gap: var(--s-3);
 		/* Same formula as .wrap, so the left edge lines up with every section */
-		/* below. --measure goes on the children, not on this box. */
+		/* below. */
 		width: min(100% - var(--gutter) * 2, var(--wrap));
 		margin-inline: auto;
-	}
-
-	/* Everything but the name sits on a plate of the field, so it stays */
-	/* legible wherever the portrait's cells fall behind it -- on a phone the */
-	/* whole copy column crosses the portrait. The spread paints the plate */
-	/* past the text without moving the box, so the column still lines up. */
-	/* :global because the tag list is another component's element. */
-	.hero__copy > :global(:not(h1)) {
-		justify-self: start;
-		max-width: var(--measure);
-		background: var(--field);
-		box-shadow: 0 0 0 0.5rem var(--field);
+		padding-block-end: var(--s-8);
 	}
 
 	.hero__eyebrow {
@@ -231,17 +223,11 @@ const rail = [
 		color: var(--accent);
 	}
 
-	/* The name is the loudest thing on the site: two planes, one word each. */
-	/* GROOT is five Martian Mono glyphs, 3.4em at -0.02em tracking, so the */
-	/* 12vw slope keeps it inside a 390px phone's column with room to spare. */
-	/* The svh term sizes it by height too. Two lines are 1.76em, and the rest */
-	/* of the column is about 411px on a short screen, so the name fits below */
-	/* (100svh - 411px) / 1.76; 56svh - 15rem stays under that with 20px to */
-	/* spare from 630px to 800px tall. It only bites below 757px: a 1280x720 */
-	/* or 1366x657 laptop was 62-143px too tall, and paged natively instead of */
-	/* changing channel. */
+	/* Still two planes, one word each, but a title now, not the whole screen: */
+	/* the art is the loudest thing on it. The svh term keeps a short laptop */
+	/* screen from pushing the name into the face. */
 	.hero__copy h1 {
-		font-size: clamp(3.5rem, min(1rem + 12vw, 56svh - 15rem), 11.5rem);
+		font-size: clamp(3rem, min(1rem + 6.5vw, 14svh), 8rem);
 		line-height: 0.88;
 		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;
@@ -251,62 +237,24 @@ const rail = [
 		display: block;
 	}
 
-	/* On a wide screen the portrait takes the right of the stage and the name */
-	/* the left, so the two do not fight over the same cells. Below this the */
-	/* column is too narrow to split and the field sits behind the copy, under */
-	/* the scrim. */
-	@media (min-width: 60rem) {
-		.hero :global(.field) {
-			inset-inline-start: 40%;
-		}
-
-		/* 41vw: at 1280 wide the lede needs 510px for five lines, and at 38vw */
-		/* its sixth made the hero taller than a 720px screen. It still ends */
-		/* well short of the face, which sits in the middle of the field. */
-		.hero__copy > :global(:not(h1)) {
-			max-width: min(36rem, 41vw);
-		}
+	.hero .lede {
+		max-width: 36rem;
+		font-size: var(--t-base);
 	}
 
-	.hero__cue {
-		position: absolute;
-		z-index: 2;
-		inset-block-end: var(--s-8);
-		inset-inline-start: 50%;
-		translate: -50% 0;
-		font-family: var(--font-mono);
-		font-size: var(--t-xs);
-		letter-spacing: var(--tracking-meta);
-		text-transform: uppercase;
-		color: var(--mark-dim);
-		animation: cue 2.4s ease-in-out infinite;
-	}
-
-	@keyframes cue {
-		0%,
-		100% {
-			translate: -50% 0;
-			opacity: 0.5;
-		}
-		50% {
-			translate: -50% 6px;
-			opacity: 1;
-		}
-	}
-
-	/* A short screen gives the column the room the name's svh term counts on: */
-	/* less padding and tighter gaps. The bottom padding still clears the cue. */
-	@media (max-height: 820px) {
-		.hero {
-			padding-block: var(--s-8) var(--s-12);
-		}
-
-		.hero__copy {
-			gap: var(--s-4);
-		}
-
-		.hero__cue {
-			inset-block-end: var(--s-4);
+	/* On a phone the face fills the width and the copy crosses its foot, so */
+	/* the ground comes further up. */
+	@media (max-width: 47.99rem) {
+		.hero::after {
+			background:
+				linear-gradient(to bottom, var(--field), transparent 10%),
+				linear-gradient(
+					to top,
+					var(--field) 0%,
+					var(--field) max(30%, 15rem),
+					color-mix(in oklab, var(--field) 72%, transparent) max(45%, 21rem),
+					transparent max(62%, 27rem)
+				);
 		}
 	}
 
@@ -552,12 +500,6 @@ const rail = [
 		.contact__photo {
 			justify-self: end;
 			inline-size: min(26rem, 100%, (100svh - 13rem) * 0.8);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.hero__cue {
-			animation: none;
 		}
 	}
 </style>

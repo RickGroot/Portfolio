@@ -249,6 +249,11 @@ low-resolution face legible), strong directional light, and **a dark or plain ba
 last one is not a nicety. Every lit cell gets a glyph, so a mid-tone background turns the portrait
 into a textured rectangle with a face somewhere in it; the face has to come out of empty field.
 
+The hero is a title card: the field fills the screen, and the name and its caption stand over the
+lower third, on a ground the field runs out into. So the face belongs in the upper two-thirds,
+centred. After a new portrait, run `tests/a11y/hero-contrast.spec.ts`: a brighter face can put
+the copy under its floor.
+
 **Current state: interim.** `portrait.jpg` is a face crop from the talk photo with a soft
 elliptical matte, because its background is lit. The photo worth taking: facing a window after
 dark or on an overcast day, a plain dark wall behind, no cap, one side of the face lit and the other

@@ -152,6 +152,15 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
 
 **Rick's desktop run (2026-09-25):**
 
+- **The hero is a title card.** _"The art can maybe be full-screen ... focus lies on the text now
+  more."_ Of three candidates (a title card, a poster, the name behind the portrait) he chose the
+  title card: the character field fills the screen with the face in the middle, and the name, at
+  about half its old size, stands at the foot with one caption. The skills list and the Scroll cue
+  are gone, and nothing stands on a plate: the field runs out into its own ground at the foot. The
+  ground has a floor in rem as well as its share of the screen, because on a short screen the copy
+  climbs higher than any fixed share: as a share alone it left the eyebrow at 3.4:1 on a 360×640
+  phone. `tests/a11y/hero-contrast.spec.ts` measures the copy over the live field, with the pointer
+  away and over the name, on two laptops and two phones.
 - **Case studies.** The back button sits level with the channel, on the column's edge rather than
   the screen's corner. The title, its status and the synopsis share one left edge — title first,
   as a programme page reads — and they stand on a gradient where the picture runs out into the
@@ -172,6 +181,8 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   expertise built into the tooling — each with a proof that can be checked in this repository.
   Drafts, for Rick to put in his own voice.
 - The Signal and Field interludes stay; Rick will replace their pictures and their text.
+- **Streamz & VTM GO** (DPG Media, 2022–2024) is in as a draft with the facts Rick gave. It waits
+  on a cover and on the case study itself.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
@@ -326,7 +337,10 @@ Nothing on this list may be installed without moving it off the list first.
 
 2. **NOS is held back on image rights.** Its cover was an ANP Kippa press photo. The entry is
    `draft: true` and carries no cover, so nothing ships. Needs an image Rick owns or is licensed to
-   use. **Ajax and NH Nieuws covers need the same provenance check.**
+   use. **Ajax and NH Nieuws covers need the same provenance check.** Rick is making screenshots
+   of his own work for mockup key art (2026-09-25), which would clear NOS: the scene is generated
+   with a flat green screen and the real screenshot composited in locally, so the UI stays
+   pixel-exact and no client screen goes to an image model.
 3. **`nlziet.jpg` is 1200×675** — soft for a 2× hero if ever used at that size.
 4. **Confirm the LinkedIn URL.** The README used `/in/rick-groot-469777193/`, the unreleased branch
    used `/in/r-groot/`. The vanity URL is assumed current but unverified.
@@ -356,3 +370,6 @@ Nothing on this list may be installed without moving it off the list first.
     script (about a fifth). Worth an adaptive step: the loop measures its own frames and narrows
     the grid, or halves its rate, when they run long. Phase 6's gate already says "holds 60fps or
     narrows its grid".
+13. **Streamz & VTM GO is a draft** (`src/content/work/streamz-vtm-go.md`). It needs a cover, the
+    TV platforms, the stack and what Rick built. Its screenshots should come from 2022–2024, the
+    years he worked on it.
