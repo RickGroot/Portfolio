@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import sharp from 'sharp';
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
@@ -106,6 +107,55 @@ test.describe('parallax', () => {
 			);
 			expect(m!.gapTop, `at ${y}px the picture's top edge shows`).toBeLessThanOrEqual(0.5);
 			expect(m!.gapBottom, `at ${y}px the picture's bottom edge shows`).toBeLessThanOrEqual(0.5);
+		}
+	});
+
+	// The gradient lifts with the title while the stage moves with the page, so
+	// a strip of bare picture used to open under its solid base -- 57px of white
+	// photograph by 300px of scroll (Rick: "broken on the gradient"), and then a
+	// one-pixel seam once a band filled it edge to edge. Read from the pixels:
+	// everything between the foot's lower edge and the stage's is the field.
+	// Chromecast's white photograph is the worst case there is.
+	test('a case study picture never shows bare under the lifting gradient', async ({ page }) => {
+		for (const size of [
+			{ width: 1280, height: 800 },
+			{ width: 390, height: 844 },
+		]) {
+			await page.setViewportSize(size);
+			await page.goto('/work/chromecast');
+			await page.mouse.move(size.width - 2, size.height - 2);
+			for (const y of [120, 260, 400, 540]) {
+				await jumpTo(page, y);
+				const box = await page.evaluate(() => {
+					const foot = document.querySelector('.info__foot')?.getBoundingClientRect();
+					const head = document.querySelector('.info__head')?.getBoundingClientRect();
+					const back = document.querySelector('.info__back')?.getBoundingClientRect();
+					return foot && head && back
+						? { top: foot.bottom - 3, bottom: head.bottom, left: back.right + 8 }
+						: null;
+				});
+				expect(box, 'no stage').not.toBeNull();
+				const top = Math.max(0, Math.floor(box!.top));
+				const bottom = Math.min(size.height, Math.floor(box!.bottom));
+				if (bottom - top < 2) continue; // the stage has gone
+				// Right of the pinned Guide button, which sits over this strip.
+				const clip = { x: Math.ceil(box!.left), y: top, width: 0, height: bottom - top };
+				clip.width = size.width - 20 - clip.x;
+				const { data, info } = await sharp(await page.screenshot({ clip }))
+					.raw()
+					.toBuffer({ resolveWithObject: true });
+				// Ultramarine, Chromecast's channel: #05005e.
+				let worst = 0;
+				for (let i = 0; i < data.length; i += info.channels) {
+					const d =
+						Math.abs(data[i]! - 5) + Math.abs(data[i + 1]! - 0) + Math.abs(data[i + 2]! - 94);
+					if (d > worst) worst = d;
+				}
+				expect(
+					worst,
+					`${size.width}px, ${y}px down: picture shows under the gradient`,
+				).toBeLessThan(8);
+			}
 		}
 	});
 

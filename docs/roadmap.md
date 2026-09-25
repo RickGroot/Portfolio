@@ -198,6 +198,14 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   the headline decode relied on it not being: it now holds every letter's measured width while it
   scrambles, and a motion test watches every frame of one for a word moving. The font budget counts
   what a visitor downloads, 76 KB of WOFF2 against 80, and no longer the licence texts beside it.
+- _"The paralax effect on detail pages is broken on the gradient."_ The gradient lifts with the
+  title while the stage moves with the page, so a strip of bare picture opened under its solid
+  base: 57px of white photograph by 300px of scroll. A band of the field now waits below the
+  stage's bottom edge, inside its clip, and rises on the same timeline, always 4px ahead of the
+  lift so it runs under the gradient's base. Grown to meet that edge exactly, it left a one-pixel
+  seam of photograph. The stage's accent line went with it: the gradient hid it at rest, so it
+  only ever showed mid-scroll. A motion test reads the strip from the pixels, on a laptop and a
+  phone.
 - **Two stalls on slow hardware, found while testing the fonts.** Under load the section advance
   sometimes skipped a channel: a slow scroll's lock timed out inside a long task, and the next wheel
   tick advanced again. The long tasks were two old bugs. The field never stopped behind the guide:

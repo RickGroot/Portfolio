@@ -136,7 +136,7 @@ const lastYear = entry.data.period.split('–').pop();
 	import { decode } from '../lib/decode';
 
 	// The title tunes in as the page arrives -- once the display face is in, so
-	// the noise glyphs are the same width as the letters.
+	// each letter is measured in it rather than in the fallback.
 	void document.fonts.ready.then(() => decode(document.querySelector<HTMLElement>('.info__title')));
 
 	/*
@@ -272,14 +272,32 @@ const lastYear = entry.data.period.split('–').pop();
 		view-timeline: --head block;
 	}
 
-	/* The frame is a line of the channel's accent along the foot: the screen's */
-	/* edge, now that the screen is the width of the page. */
+	/* No frame line along the foot: the gradient's solid base covers the */
+	/* screen's bottom edge at rest, so a line there only ever showed mid-scroll, */
+	/* as a hairline of its own. */
 	.info__screen {
 		position: absolute;
 		inset: 0;
 		overflow: clip;
-		border-block-end: 2px solid var(--accent);
 		view-transition-class: vt-cover;
+	}
+
+	/* What the foot leaves behind as it lifts. The stage moves with the page */
+	/* and the foot lifts faster, so a strip of bare picture opened under the */
+	/* gradient's solid base -- 57px of white photograph by 300px of scroll */
+	/* (Rick, 2026-09-25: "broken on the gradient"). A band of the field, */
+	/* waiting below the screen's bottom edge where its clip hides it, rises on */
+	/* the foot's timeline: always 4px higher than the foot has lifted, so it */
+	/* runs UNDER the foot's solid base. Grown to meet the foot's edge exactly, */
+	/* it left a one-pixel seam of photograph where the two edges met. */
+	.info__screen::after {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		inset-block-start: 100%;
+		block-size: calc(16vh + 4px);
+		background: var(--field);
+		transform: translateY(-4px);
 	}
 
 	/* The picture runs out into the field at its foot, where the title stands */
@@ -341,10 +359,17 @@ const lastYear = entry.data.period.split('–').pop();
 					exit 0% exit 100%;
 			}
 
-			/* The foot lifts with the title, so the title never leaves its field. */
+			/* The foot lifts with the title, so the title never leaves its field, */
+			/* and the screen's band rises behind it at the same rate. */
 			.info__titles,
 			.info__foot {
 				animation: info-lift linear both;
+				animation-timeline: --head;
+				animation-range: exit 0% exit 100%;
+			}
+
+			.info__screen::after {
+				animation: info-fill linear both;
 				animation-timeline: --head;
 				animation-range: exit 0% exit 100%;
 			}
@@ -369,6 +394,14 @@ const lastYear = entry.data.period.split('–').pop();
 	@keyframes info-lift {
 		to {
 			transform: translateY(-16vh);
+		}
+	}
+
+	/* The lift is 16vh; the band starts 4px up and rises 16vh more on the */
+	/* same range, so it always stands 4px above the foot's lower edge. */
+	@keyframes info-fill {
+		to {
+			transform: translateY(calc(-16vh - 4px));
 		}
 	}
 
