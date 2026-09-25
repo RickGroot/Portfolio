@@ -246,9 +246,37 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 		/* The label column of the grid. Everything on the time axis is measured */
 		/* from its right edge. */
 		--label: 11rem;
-		--row: 3.25rem;
+		--row-base: 3.25rem;
+		--row: var(--row-base);
 		--axis: 1.75rem;
 		--screen-h: 50svh;
+	}
+
+	/* Opened, Load more adds its programmes' rows, and with six programmes the */
+	/* open guide ran 29-61px past a laptop's screen. The rows tighten by a */
+	/* fifth instead: still a line of label, and the preview and every row */
+	/* share one screen again. The picture cannot give the room up: the */
+	/* previews share one cell, and their text sets its height, not the screen. */
+	.guide:has(.guide__more[open]) {
+		--row: calc(var(--row-base) * 0.8);
+	}
+
+	/* The shortest laptops, 1366x657 and 1280x720, need a step more: tighter */
+	/* rows and a little less padding while the guide is open. */
+	@media (min-width: 60rem) and (max-height: 730px) {
+		.guide:has(.guide__more[open]) {
+			--row: calc(var(--row-base) * 0.72);
+		}
+
+		.guide--screen:has(.guide__more[open]) {
+			padding-block: var(--s-4);
+		}
+	}
+
+	@media (min-width: 60rem) and (max-height: 680px) {
+		.guide:has(.guide__more[open]) {
+			--row: calc(var(--row-base) * 0.66);
+		}
 	}
 
 	/* The next channel's ground, wiping over the current one (guide.ts). It */
@@ -822,7 +850,7 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 	/* tightens a step so the preview and all four rows share one screen. */
 	@media (min-width: 60rem) and (max-height: 820px) {
 		.guide {
-			--row: 2.75rem;
+			--row-base: 2.75rem;
 			--axis: 1.5rem;
 			--screen-h: 40svh;
 		}

@@ -27,7 +27,7 @@ for (const size of [
 	{ width: 1440, height: 900 },
 	{ width: 390, height: 844 },
 ]) {
-	for (const slug of ['nlziet', 'chromecast', 'vamp', 'kijk']) {
+	for (const slug of ['nlziet', 'chromecast', 'vamp', 'kijk', 'nos', 'streamz-vtm-go']) {
 		test(`${size.width}px /work/${slug}: the stage's text clears its floor over the picture`, async ({
 			page,
 		}) => {

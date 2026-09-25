@@ -51,11 +51,10 @@ test('every shipped image is referenced by something', () => {
 });
 
 test('no draft entry cover reaches the build', () => {
-	// Named explicitly: the drafts there are. NOS's first cover was a press photo
-	// we are not licensed to publish, and NOS and Streamz & VTM GO have mockups
-	// waiting outside the repository until they are published.
+	// Named explicitly: the drafts there are, now only NH Nieuws. (The press
+	// photo that was once NOS's cover is gone; NOS has a cover of its own.)
 	const built = walk(DIST).map((f) => f.split(/[\\/]/).pop() as string);
-	const leaked = ['nos', 'nhnieuws', 'streamz-vtm-go'].filter((slug) =>
+	const leaked = ['nhnieuws'].filter((slug) =>
 		built.some((name) => name.toLowerCase().startsWith(`${slug}.`)),
 	);
 

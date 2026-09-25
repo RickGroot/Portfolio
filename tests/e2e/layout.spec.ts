@@ -158,7 +158,7 @@ test.describe('display titles fit their column', () => {
 			await page.goto('/');
 			expect(await offenders(page, '.guide__title'), `one-pager at ${v.w}px`).toEqual([]);
 
-			for (const slug of ['nlziet', 'chromecast', 'vamp', 'kijk']) {
+			for (const slug of ['nlziet', 'chromecast', 'vamp', 'kijk', 'nos', 'streamz-vtm-go']) {
 				await page.goto(`/work/${slug}`);
 				expect(await offenders(page, 'h1'), `/work/${slug} at ${v.w}px`).toEqual([]);
 			}

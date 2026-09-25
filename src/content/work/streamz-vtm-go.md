@@ -4,23 +4,15 @@ role: Connected TV developer
 company: Hypersolid
 period: '2022–2024'
 status: completed
-summary: The Smart TV apps of Streamz and VTM GO, two Belgian streaming services, for DPG Media.
-tags: ['Connected TV']
+summary: The Smart TV apps of Streamz and VTM GO, two Belgian streaming services, for DPG Media, from browsing to playback.
+tags: ['Connected TV', 'Smart TV', 'Video streaming']
 channel: ultramarine
-# No cover yet: a mockup of Rick's own screenshot is coming. Add `cover` +
-#   `coverAlt`, fill in the case study below, then drop `draft: true`, and add
-#   the slug to the guard in src/pages/work/[id].astro and to the list in
-#   tests/a11y/stage-contrast.spec.ts.
-order: 8
-draft: true
+cover: ../../assets/work/streamz-vtm-go.jpg
+coverAlt: The VTM GO app on a TV in a living room at night, with Streamz on a second TV through the bedroom door.
+order: 6
 ---
 
-<!-- DRAFT - WAITING ON A COVER AND THE CASE STUDY.
-     The facts so far, from Rick (2026-09-25): DPG Media, 2022 to 2024, the
-     Smart TV apps of Streamz and VTM GO. Still needed from him: the TV
-     platforms, the stack, what he built or owned, and anything worth a line
-     (a feature, a problem solved, a number). Nothing below this comment may
-     be written from guesses. -->
-
 From 2022 to 2024 I worked on the Smart TV apps of Streamz and VTM GO, two Belgian streaming
-services, for DPG Media.
+services, for DPG Media. VTM GO is free to watch; Streamz is a subscription. Both live on the TV in
+the living room, so the work was the app on the TV itself: the screens you steer with a remote, from
+browsing to playback, kept quick on the TVs people actually own.

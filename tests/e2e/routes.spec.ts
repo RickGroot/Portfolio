@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-const ROUTES = ['/', '/work/nlziet', '/work/chromecast', '/work/vamp'];
+const ROUTES = [
+	'/',
+	'/work/nlziet',
+	'/work/chromecast',
+	'/work/vamp',
+	'/work/kijk',
+	'/work/nos',
+	'/work/streamz-vtm-go',
+];
 
 test.describe('routing', () => {
 	for (const path of ROUTES) {

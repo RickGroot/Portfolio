@@ -59,7 +59,8 @@ Before setting `draft: false`, confirm you have the right to publish the cover.
 
 **This has already caught one entry.** The NOS cover supplied with the original content is an ANP
 Kippa press photograph carrying a visible credit line. A press-agency photo cannot be republished on
-a portfolio without a licence, so NOS is held back on image rights — its copy is fine and unchanged.
+a portfolio without a licence, so NOS was held back on image rights until 2026-09-25, when it went
+live with a cover made from Rick's own screenshot. Its copy was never the problem.
 The NH Nieuws cover needs the same check.
 
 Using a client's logo to identify work you did for that client is ordinarily defensible. Republishing

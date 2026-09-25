@@ -212,6 +212,12 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   seam of photograph. The stage's accent line went with it: the gradient hid it at rest, so it
   only ever showed mid-scroll. A motion test reads the strip from the pixels, on a laptop and a
   phone.
+- **Round two of the images.** Each programme is seen from inside a lived-in room now, with a
+  soft foreground and space round a smaller screen, instead of a TV on a sideboard seen straight
+  on; on a case study the stage shows the room, not only the screen. Rick's screenshots are keyed
+  in through a perspective warp, since these screens are at an angle. NOS went live with its
+  picture (_"publish NOS"_), and Streamz & VTM GO with a case study written from the facts Rick
+  gave, for his copy check.
 - **Two stalls on slow hardware, found while testing the fonts.** Under load the section advance
   sometimes skipped a channel: a slow scroll's lock timed out inside a long task, and the next wheel
   tick advanced again. The long tasks were two old bugs. The field never stopped behind the guide:
@@ -373,9 +379,9 @@ Nothing on this list may be installed without moving it off the list first.
    a talk — real, but not taken for this. A purpose-shot portrait is pending; what it needs is in
    `docs/art-system.md` § Changing the portrait.
 
-2. **NOS is held back on image rights.** Its cover was an ANP Kippa press photo. The entry is
-   `draft: true` and carries no cover, so nothing ships. Needs an image Rick owns or is licensed to
-   use. **The NH Nieuws cover needs the same provenance check.** On 2026-09-25 the supplied
+2. **Done for NOS (2026-09-25):** its first cover was an ANP Kippa press photo, so it waited as a
+   draft; it is published now, with a cover made from Rick's own screenshot. **The NH Nieuws cover
+   still needs a provenance check.** On 2026-09-25 the supplied
    covers left the tree (they are still in the branch's pushed history, which only a rewrite
    removes), and NOS (2023 to 2025) gets a mockup of Rick's own screenshot: the scene is
    generated with a flat green screen and the real screenshot composited in locally, so the UI
@@ -411,9 +417,10 @@ Nothing on this list may be installed without moving it off the list first.
     script (about a fifth). Worth an adaptive step: the loop measures its own frames and narrows
     the grid, or halves its rate, when they run long. Phase 6's gate already says "holds 60fps or
     narrows its grid".
-13. **Streamz & VTM GO is a draft** (`src/content/work/streamz-vtm-go.md`). It needs a cover, the
-    TV platforms, the stack and what Rick built. Its screenshots should come from 2022–2024, the
-    years he worked on it.
+13. **Streamz & VTM GO is published, waiting on Rick's copy check** (`src/content/work/streamz-vtm-go.md`).
+    Its case study was written on his request from the facts he gave; the lines that go beyond
+    them are listed in its frontmatter. Still worth adding: the TV platforms, the stack and one
+    feature or number, and a Streamz screen other than the login.
 14. **The way back can morph into the wrong programme.** When the one-pager is not restored from
     the back-forward cache (the dev server, whose HMR socket rules the cache out, or a case study
     opened directly and left by its back link), the guide starts on its first programme, so the

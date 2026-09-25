@@ -12,17 +12,19 @@ originals carried GPS coordinates. Nothing in this directory does, and `check-as
 build on EXIF in `src/assets` and in `dist`, so a future image cannot slip one through. The original
 file names are not kept either: phone file names are capture timestamps.
 
-| File                  | What it is                                               | Used in                  |
-| --------------------- | -------------------------------------------------------- | ------------------------ |
-| `portrait.jpg`        | A tight face crop from the talk photo, with a soft matte | The hero character field |
-| `talk.jpg`            | Rick presenting, in front of a blank screen: retouched   | Backdrop of _How I work_ |
-| `about.jpg`           | Rick on a bridge by a canal: retouched                   | Contact                  |
-| `art/lighthouse.jpg`  | A lighthouse silhouetted at sunset                       | Interlude / Signal       |
-| `art/tower.jpg`       | A stone clock tower against the sky                      | Interlude / Field        |
-| `work/nlziet.jpg`     | Illustration: the NLZIET app on a TV, a real screenshot  | NLZIET key art           |
-| `work/kijk.jpg`       | Illustration: the KIJK app on a TV, a real screenshot    | KIJK key art             |
-| `work/vamp.jpg`       | Illustration: VAMP on a tablet, a real screenshot        | VAMP key art             |
-| `work/chromecast.jpg` | A Chromecast and its remote on a white surface           | Chromecast key art       |
+| File                      | What it is                                                    | Used in                  |
+| ------------------------- | ------------------------------------------------------------- | ------------------------ |
+| `portrait.jpg`            | A tight face crop from the talk photo, with a soft matte      | The hero character field |
+| `talk.jpg`                | Rick presenting, in front of a blank screen: retouched        | Backdrop of _How I work_ |
+| `about.jpg`               | Rick on a bridge by a canal: retouched                        | Contact                  |
+| `art/lighthouse.jpg`      | A lighthouse silhouetted at sunset                            | Interlude / Signal       |
+| `art/tower.jpg`           | A stone clock tower against the sky                           | Interlude / Field        |
+| `work/nlziet.jpg`         | Illustration: the NLZIET app on a TV, a real screenshot       | NLZIET key art           |
+| `work/kijk.jpg`           | Illustration: the KIJK app on a TV, a real screenshot         | KIJK key art             |
+| `work/vamp.jpg`           | Illustration: VAMP on a tablet, a real screenshot             | VAMP key art             |
+| `work/nos.jpg`            | Illustration: the NOS app on a TV, a real screenshot          | NOS key art              |
+| `work/streamz-vtm-go.jpg` | Illustration: VTM GO and Streamz on two TVs, real screenshots | Streamz & VTM GO key art |
+| `work/chromecast.jpg`     | A Chromecast and its remote on a white surface                | Chromecast key art       |
 
 ## The three retouched photographs
 

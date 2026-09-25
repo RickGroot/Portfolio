@@ -368,7 +368,14 @@ test.describe('programme guide', () => {
 			.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
 		// KIJK never had a panel and still gets a programme: the guide is the
 		// complete record, which the old one-pager needed a separate list for.
-		expect(hrefs).toEqual(['/work/nlziet', '/work/chromecast', '/work/vamp', '/work/kijk']);
+		expect(hrefs).toEqual([
+			'/work/nlziet',
+			'/work/chromecast',
+			'/work/vamp',
+			'/work/kijk',
+			'/work/nos',
+			'/work/streamz-vtm-go',
+		]);
 	});
 
 	test('the preview and the channel follow the pointer and the keyboard', async ({ page }) => {
@@ -398,15 +405,51 @@ test.describe('programme guide', () => {
 					.map((b) => b.dataset.block),
 			);
 
+		// Six programmes, and the open guide ran 29-61px past a laptop's screen:
+		// the rows tighten while it is open, so it stays one channel on one screen.
+		test('with Load more open, the guide still fits one screen', async ({ page }) => {
+			for (const size of [
+				{ width: 1440, height: 900 },
+				{ width: 1366, height: 657 },
+				{ width: 1280, height: 720 },
+			]) {
+				// A fresh document each time: going to /#work from /#work only scrolls,
+				// and Load more would still be open from the last size.
+				await page.goto('about:blank');
+				await page.setViewportSize(size);
+				await page.goto('/#work');
+				await page.locator('#work summary', { hasText: 'Load more' }).click();
+				const { height, overflows } = await page.evaluate(() => {
+					const guide = document.getElementById('work') as HTMLElement;
+					return {
+						height: guide.getBoundingClientRect().height,
+						overflows: guide.hasAttribute('data-overflows'),
+					};
+				});
+				const at = `${size.width}x${size.height}`;
+				expect(height, `${at}: the open guide is taller than the screen`).toBeLessThanOrEqual(
+					size.height + 1,
+				);
+				expect(overflows, `${at}: the open guide scrolls by itself`).toBe(false);
+			}
+		});
+
 		test('the guide opens on three programmes, and loads the rest on request', async ({ page }) => {
 			await page.goto('/#work');
 			expect(await shownBlocks(page)).toEqual(['nlziet', 'chromecast', 'vamp']);
 
 			const load = page.locator('#work summary', { hasText: 'Load more' });
-			await expect(load).toHaveAccessibleName(/1 more programme/);
+			await expect(load).toHaveAccessibleName(/3 more programmes/);
 			await load.click();
 
-			expect(await shownBlocks(page)).toEqual(['nlziet', 'chromecast', 'vamp', 'kijk']);
+			expect(await shownBlocks(page)).toEqual([
+				'nlziet',
+				'chromecast',
+				'vamp',
+				'kijk',
+				'nos',
+				'streamz-vtm-go',
+			]);
 			// The button has done its job and goes, and focus is not left on
 			// nothing: it is on the first new programme, which is previewed.
 			await expect(load).toBeHidden();

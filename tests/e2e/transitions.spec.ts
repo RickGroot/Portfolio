@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test';
 
-const ROUTES = ['/', '/work/nlziet', '/work/chromecast', '/work/vamp', '/work/kijk', '/404-x'];
+const ROUTES = [
+	'/',
+	'/work/nlziet',
+	'/work/chromecast',
+	'/work/vamp',
+	'/work/kijk',
+	'/work/nos',
+	'/work/streamz-vtm-go',
+	'/404-x',
+];
 
 /**
  * A SINGLE duplicated `view-transition-name` in a document makes the browser
@@ -29,7 +38,7 @@ test('the names actually pair up between the one-pager and each detail page', as
 				.filter((n) => n && n !== 'none'),
 		);
 
-	for (const id of ['nlziet', 'chromecast', 'vamp', 'kijk']) {
+	for (const id of ['nlziet', 'chromecast', 'vamp', 'kijk', 'nos', 'streamz-vtm-go']) {
 		// Only the programme in focus carries names -- one set per document,
 		// or the browser skips the whole transition -- and it is the one you
 		// click, because focus follows the pointer. So focus it first.
