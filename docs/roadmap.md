@@ -198,6 +198,15 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   the headline decode relied on it not being: it now holds every letter's measured width while it
   scrambles, and a motion test watches every frame of one for a word moving. The font budget counts
   what a visitor downloads, 76 KB of WOFF2 against 80, and no longer the licence texts beside it.
+- **Two stalls on slow hardware, found while testing the fonts.** Under load the section advance
+  sometimes skipped a channel: a slow scroll's lock timed out inside a long task, and the next wheel
+  tick advanced again. The long tasks were two old bugs. The field never stopped behind the guide:
+  the advance leaves the next channel flush with the top, where the hero only touches the viewport,
+  and a box that touches counts as intersecting, so the loop drew two full-screen `<pre>` every
+  frame (90 in 1.5 s). And publishing a channel read a computed style after each write to
+  `<html>`, eight full-document recalcs per change: 1.1–2.1 s tasks at 6x CPU, now 0.1–0.3 s. The
+  field observes a pixel in from each edge, and the channel is read from the region's inline
+  style before anything is written.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
@@ -379,8 +388,9 @@ Nothing on this list may be installed without moving it off the list first.
     identical bytes. The trip-wire sits above the slow mode so the gate is honest, but the real fix
     is to stop the live render registering as a new, later LCP: keep its painted box no larger than
     the static frame's.
-12. **On a slow CPU the character field fills the main thread.** At 4× throttle the idle hero keeps
-    it 100% busy and manages about 28 renders a second, at 30fps or 60. Most of that is the
+12. **On a slow CPU the character field fills the main thread** while the hero is on screen (it
+    also ran behind the guide until 2026-09-25; see the desktop run). At 4× throttle the idle hero
+    keeps it 100% busy and manages about 28 renders a second, at 30fps or 60. Most of that is the
     browser laying out and painting two full-screen `<pre>` of up to 6000 characters, not the
     script (about a fifth). Worth an adaptive step: the loop measures its own frames and narrows
     the grid, or halves its rate, when they run long. Phase 6's gate already says "holds 60fps or

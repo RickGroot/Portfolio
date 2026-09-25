@@ -38,14 +38,25 @@ export function boot(): void {
 	function publish(region: HTMLElement, force = false): void {
 		if (region === current && !force) return;
 		current = region;
-		const cs = getComputedStyle(region);
-		for (const name of VARS) {
-			const value = cs.getPropertyValue(name).trim();
-			if (value) root.style.setProperty(name, value);
-		}
+		// Every value is read before any is written. Reading a computed style
+		// after writing to <html> recomputes the whole document, and the old
+		// read-write-read of eight properties did that eight times over: long
+		// tasks of a second and more at 4x CPU on every change of channel, and
+		// a slow scroll that skipped a channel because the advance's lock timed
+		// out inside one. A region carries its colours inline, so they are
+		// read from there, which computes nothing at all; the computed style is
+		// only asked for what is not.
+		let cs: CSSStyleDeclaration | null = null;
+		const values = VARS.map((name) => {
+			const inline = region.style.getPropertyValue(name).trim();
+			if (inline) return [name, inline] as const;
+			cs ??= getComputedStyle(region);
+			return [name, cs.getPropertyValue(name).trim()] as const;
+		});
+		for (const [name, value] of values) if (value) root.style.setProperty(name, value);
 		// The browser's own chrome follows too, so on a phone the address bar
 		// changes channel with the page.
-		const field = cs.getPropertyValue('--field').trim();
+		const field = values.find(([name]) => name === '--field')?.[1];
 		if (themeColor && field) themeColor.content = field;
 	}
 

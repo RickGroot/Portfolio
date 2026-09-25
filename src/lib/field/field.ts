@@ -353,7 +353,14 @@ export function mountField(host: HTMLElement): FieldHandle {
 				unsubscribe = null;
 			}
 		},
-		{ threshold: steps },
+		// A pixel in from each edge. The section advance leaves the next
+		// channel exactly at the top of the screen, where the hero's bottom
+		// edge TOUCHES the viewport's top one -- and a box that only touches
+		// counts as intersecting, at a ratio of 0. So the field never
+		// unsubscribed, and drew two full-screen <pre> every frame behind the
+		// guide: at 4x CPU, long tasks of a second and more, and a slow scroll
+		// that skipped a channel because the lock timed out inside one.
+		{ threshold: steps, rootMargin: '-1px 0px' },
 	);
 
 	const ro = new ResizeObserver(() => {

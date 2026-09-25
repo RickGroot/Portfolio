@@ -305,6 +305,33 @@ test.describe('character field', () => {
 		expect(b - a, 'the loop kept running with the hero offscreen').toBeLessThan(5);
 	});
 
+	// Where the section advance actually leaves the page: the next channel
+	// exactly at the top, the hero's bottom edge touching the viewport's top
+	// one. A box that only touches counts as intersecting, so the loop used to
+	// keep drawing the field behind the guide. Scrolling far past, as the test
+	// above does, never finds that.
+	test('it stops when the next channel sits exactly on screen', async ({ page }) => {
+		await instrument(page);
+		await page.goto('/');
+		await page.waitForTimeout(800);
+
+		await page.evaluate(() => {
+			document.documentElement.style.scrollBehavior = 'auto';
+			document.getElementById('work')?.scrollIntoView({ block: 'start' });
+		});
+		await page.waitForTimeout(900); // the observer, and any decode on arrival
+		const top = await page.evaluate(() =>
+			Math.round(document.getElementById('work')?.getBoundingClientRect().top ?? 9999),
+		);
+		expect(top, 'the guide is not flush with the top of the screen').toBe(0);
+
+		const a = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
+		await page.waitForTimeout(1500);
+		const b = await page.evaluate(() => (window as unknown as { __raf: number }).__raf);
+
+		expect(b - a, 'the loop kept running behind the guide').toBeLessThan(5);
+	});
+
 	test('reduced motion shows the resolved portrait and never animates', async ({ browser }) => {
 		const context = await browser.newContext({ reducedMotion: 'reduce' });
 		const page = await context.newPage();
