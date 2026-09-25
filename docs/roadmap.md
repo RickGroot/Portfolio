@@ -190,6 +190,14 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   `.vt-static` exists only while a transition runs.
 - **Streamz & VTM GO** (DPG Media, 2022–2024) is in as a draft with the facts Rick gave. It waits
   on a cover and on the case study itself.
+- **Fonts.** _"Can you suggest some more cool fonts?"_ Of five display candidates he chose
+  **Bricolage Grotesque**; of three body-and-label pairs under it, **Instrument Sans** with
+  **JetBrains Mono** (_"like the instrument due to trumpet playing"_). They replace Martian Mono and
+  Lato; labels were a system monospace, and the character field keeps one. Every fallback was
+  re-measured, so the cold-cache swap still shifts nothing. The display face is proportional, which
+  the headline decode relied on it not being: it now holds every letter's measured width while it
+  scrambles, and a motion test watches every frame of one for a word moving. The font budget counts
+  what a visitor downloads, 76 KB of WOFF2 against 80, and no longer the licence texts beside it.
 
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there

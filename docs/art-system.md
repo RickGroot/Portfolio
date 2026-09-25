@@ -204,9 +204,9 @@ Three props exist because real photographs are not uniform:
 
 The statement crosses the photograph — the lighthouse's tower, at most sizes — so it sits on a plate
 of the field, one band per line (`box-decoration-break: clone`). On the field the plate cannot be
-seen; it shows only where the picture is dark. The plates are cut to Martian Mono's metrics, so
-they meet without one covering the descenders of the line above; the numbers are in the comment on
-`.art__plate`.
+seen; it shows only where the picture is dark. The plates are cut to the display face's metrics
+(Bricolage Grotesque's, since 2026-09-25), so they meet without one covering the descenders of the
+line above; the numbers are in the comment on `.art__plate`, and change with the face.
 
 **Treat at display time, not at bake time.** An earlier version quantised its source through an
 ordered Bayer dither, which looked right in isolation and was wrong twice over: the page applied
@@ -234,9 +234,11 @@ the dev server, which does not minify, looked fine.
 on: the readout's name, a section's heading, the guide's programme titles and the interludes'
 statements (`data-decode`). It runs on the one animation loop (`subscribe` from `loop.ts`) and
 never starts its own. While it runs, the element's `aria-label` holds the real text, so a screen
-reader is never read noise. The noise glyphs are in the Martian Mono subset and the face is
-monospaced, so nothing reflows. Whitespace, and the zero-width characters that hold a word
-together, are left alone. Under reduced motion nothing scrambles.
+reader is never read noise. The display face is proportional, so a noise glyph is not the width
+of its letter: before it starts, the decode measures every letter as rendered and holds each in a
+box of exactly that width, words kept together, so nothing reflows; `tests/e2e/motion.spec.ts`
+watches every frame of one for a word moving. Whitespace, and the zero-width characters that hold a
+word together, are left alone. Under reduced motion nothing scrambles.
 
 ## Changing the portrait
 

@@ -171,6 +171,70 @@ test.describe('changing channel', () => {
 		expect(label, 'the decode left its aria-label behind').toBeNull();
 	});
 
+	// The display face is proportional, so a noise glyph is not the width of
+	// its letter. src/lib/decode.ts holds every letter's measured width while
+	// it runs; this watches every frame of a decode for anything moving.
+	test('a decode never moves layout, though the display face is proportional', async ({ page }) => {
+		type Frame = { text: string; spaces: number[]; h: number; lines: number; gap: number };
+		await page.goto('/#interlude-signal');
+		await page.waitForTimeout(600);
+		await page.evaluate(() => {
+			const h = document.getElementById('practice-heading') as HTMLElement;
+			const frames: Frame[] = [];
+			(window as unknown as { __frames: Frame[] }).__frames = frames;
+			const tick = (): void => {
+				const r = h.getBoundingClientRect();
+				const range = document.createRange();
+				range.selectNodeContents(h);
+				const rects = [...range.getClientRects()].filter((q) => q.width > 0);
+				// Where each word starts: the spaces between words are never
+				// scrambled, and they move only if a word before them changed
+				// width. A noise glyph may overhang its letter's box; that is
+				// paint, not layout, and moves nothing.
+				const spaces: number[] = [];
+				const walker = document.createTreeWalker(h, NodeFilter.SHOW_TEXT);
+				for (let n = walker.nextNode() as Text | null; n; n = walker.nextNode() as Text | null) {
+					for (let i = 0; i < n.data.length; i++) {
+						if (n.data[i] !== ' ') continue;
+						const at = document.createRange();
+						at.setStart(n, i);
+						at.setEnd(n, i + 1);
+						spaces.push(at.getBoundingClientRect().left - r.left);
+					}
+				}
+				frames.push({
+					text: h.textContent ?? '',
+					spaces,
+					h: r.height,
+					lines: new Set(rects.map((q) => Math.round(q.top))).size,
+					// What follows the heading, measured from it: moves only if it does.
+					gap: (h.nextElementSibling?.getBoundingClientRect().top ?? r.bottom) - r.bottom,
+				});
+				if (frames.length < 90) requestAnimationFrame(tick);
+			};
+			requestAnimationFrame(tick);
+		});
+		await page.keyboard.press('PageDown');
+		await page.waitForTimeout(1600);
+
+		const frames = await page.evaluate(() => (window as unknown as { __frames: Frame[] }).__frames);
+		const end = frames[frames.length - 1]!;
+		expect(end.text.trim(), 'noise was left in the headline').toBe('How I work');
+		const noisy = frames.filter((f) => f.text !== end.text);
+		expect(noisy.length, 'the heading never decoded').toBeGreaterThan(2);
+		// Against where the heading lands. The page is still moving in the first
+		// frames, so what follows is measured from the heading, and sizes directly.
+		for (const f of noisy) {
+			expect(f.spaces.length, 'a space was scrambled').toBe(end.spaces.length);
+			f.spaces.forEach((x, i) => {
+				expect(Math.abs(x - end.spaces[i]!), `a word moved in "${f.text}"`).toBeLessThan(0.5);
+			});
+			expect(Math.abs(f.h - end.h), 'the heading changed height').toBeLessThan(0.5);
+			expect(f.lines, 'the heading rewrapped').toBe(end.lines);
+			expect(Math.abs(f.gap - end.gap), 'what follows the heading moved').toBeLessThan(0.5);
+		}
+	});
+
 	test('in the guide, a change of programme brings static, never more than one burst at a time', async ({
 		page,
 	}) => {

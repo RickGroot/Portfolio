@@ -1,84 +1,126 @@
 /*
- * Self-hosted Lato. The previous setup declared format('ttf') -- not a valid
- * token (it is 'truetype') -- so the local fonts never loaded and the page
- * silently fell back to two render-blocking Google Fonts CDN imports,
- * duplicated into all 8 component stylesheets.
+ * Three self-hosted faces, Latin subset, WOFF2, each with its SIL OFL licence
+ * alongside in public/fonts/. Google's own builds, downloaded once and
+ * committed: there is deliberately no font build dependency. Public files are
+ * not hashed and /fonts/** is cached immutable, so a changed face gets a new
+ * file name -- the weight and optical size are in each name for that reason.
  *
- * Only the two faces actually used are shipped. Ten TTFs (1.1 MB) became two
- * WOFF2 (45 KB). Licence travels with them: public/fonts/OFL.txt.
+ * Chosen by Rick, 2026-09-25, from full-size candidates on the real pages:
+ *
+ *   - Bricolage Grotesque 800 at its 96pt optical size, for display. It
+ *     replaces Martian Mono; a proportional face, so src/lib/decode.ts holds
+ *     every letter's width itself instead of relying on a fixed grid.
+ *   - Instrument Sans 400 and 600, for reading. It replaces Lato.
+ *   - JetBrains Mono 500, for labels, which were a system monospace. The
+ *     character field keeps the system face: see --font-field.
+ *
+ * Each file is declared across a weight RANGE, so a rule asking for 700 gets
+ * the real 800 or 600 rather than a bold the browser fakes from the regular.
+ * The Latin subset's range is Google's.
  */
 @font-face {
-	font-family: 'Lato';
+	font-family: 'Bricolage Grotesque';
 	font-style: normal;
-	font-weight: 400;
+	font-weight: 700 800;
 	font-display: swap;
-	src: url('/fonts/lato-400.woff2') format('woff2');
+	src: url('/fonts/bricolage-grotesque-96-800.woff2') format('woff2');
 	unicode-range:
 		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
 		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 @font-face {
-	font-family: 'Lato';
+	font-family: 'Instrument Sans';
 	font-style: normal;
-	font-weight: 700;
+	font-weight: 400 500;
 	font-display: swap;
-	src: url('/fonts/lato-700.woff2') format('woff2');
+	src: url('/fonts/instrument-sans-400.woff2') format('woff2');
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+	font-family: 'Instrument Sans';
+	font-style: normal;
+	font-weight: 600 700;
+	font-display: swap;
+	src: url('/fonts/instrument-sans-600.woff2') format('woff2');
+	unicode-range:
+		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* One weight for every label: the labels differ by case, colour and size. */
+@font-face {
+	font-family: 'JetBrains Mono';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('/fonts/jetbrains-mono-500.woff2') format('woff2');
 	unicode-range:
 		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
 		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 /*
- * Martian Mono 700, display only.
+ * Metric-matched fallbacks, so each swap is dimensionally neutral and nothing
+ * shifts when a face arrives.
  *
- * A wide, deliberately blunt monospace drawn for display rather than for code.
- * The site is about software on television hardware, and a monospace headline
- * sits on the same fixed grid as the character field, so the two read as one
- * system. Chosen on /design/type against the other candidates; Space Grotesk,
- * which it replaces, is named in the brief as a default to avoid.
+ * MEASURED, not copied: canvas measureText at 100px, after each face had
+ * loaded from its own bytes (docs/performance.md says how, and why "after"
+ * matters). The two proportional faces are matched to Arial across the site's
+ * own strings -- its headings for Bricolage, its ledes and card bodies for
+ * Instrument Sans -- which matches the average, not every string. JetBrains
+ * Mono and Courier New are both monospaced at 0.6em, so every string matches.
  *
- * 10.6 KB, Latin subset. SIL OFL, licence alongside
- * (public/fonts/OFL-MartianMono.txt). The subset has no arrows and no U+2011
- * non-breaking hyphen, so neither may appear in display text -- a missing glyph
- * falls through to whatever system face has it, mid-word.
- */
-@font-face {
-	font-family: 'Martian Mono';
-	font-style: normal;
-	font-weight: 700;
-	font-display: swap;
-	src: url('/fonts/martian-mono-700.woff2') format('woff2');
-	unicode-range:
-		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
-		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-/*
- * Metric-matched fallback, so the swap is dimensionally neutral and the LCP
- * heading does not shift.
+ *                      advance   ascent    descent
+ *   Bricolage 800      / Arial Bold    90.94%    102.26%   29.69%
+ *   Instrument 400     / Arial        101.36%     95.70%   24.66%
+ *   Instrument 600     / Arial Bold    99.50%     97.49%   25.13%
+ *   JetBrains Mono 500 / Courier New  100%       102.02%   30.00%
  *
- * MEASURED, not copied (canvas measureText at 100px, after the face loaded):
- * every Martian Mono 700 glyph advances exactly 70px, with an ascent of 100 and
- * a descent of 20. Courier New Bold advances 60.01px, ascent 83, descent 30.
- * Both are monospaced, so matching the advance matches EVERY string exactly --
- * which a proportional fallback like Arial could only do on average.
- *
- *   size-adjust      70 / 60.01 = 116.65%
- *   ascent-override  100 / 1.1665 = 85.73%
- *   descent-override  20 / 1.1665 = 17.15%
- *
- * The caps come out smaller than Martian's (Courier's cap height is lower), but
- * the line box and every advance are identical, and those are what move layout.
- * See docs/performance.md for how to re-measure.
+ * ascent- and descent-override are the face's own ascent and descent over its
+ * size-adjust, so the line box comes out the face's height at the adjusted
+ * size: 1.2em for Bricolage, as the face has.
  */
 @font-face {
 	font-family: 'Display Fallback';
-	src: local('Courier New Bold'), local('CourierNewPS-BoldMT'), local('Courier New');
-	font-weight: 700;
-	size-adjust: 116.65%;
-	ascent-override: 85.73%;
-	descent-override: 17.15%;
+	src: local('Arial Bold'), local('Arial-BoldMT'), local('Arial');
+	font-weight: 700 800;
+	size-adjust: 90.94%;
+	ascent-override: 102.26%;
+	descent-override: 29.69%;
+	line-gap-override: 0%;
+}
+
+@font-face {
+	font-family: 'Body Fallback';
+	src: local('Arial'), local('ArialMT');
+	font-weight: 400 500;
+	size-adjust: 101.36%;
+	ascent-override: 95.7%;
+	descent-override: 24.66%;
+	line-gap-override: 0%;
+}
+
+@font-face {
+	font-family: 'Body Fallback';
+	src: local('Arial Bold'), local('Arial-BoldMT');
+	font-weight: 600 700;
+	size-adjust: 99.5%;
+	ascent-override: 97.49%;
+	descent-override: 25.13%;
+	line-gap-override: 0%;
+}
+
+@font-face {
+	font-family: 'Label Fallback';
+	src: local('Courier New'), local('CourierNewPSMT');
+	font-weight: 400 700;
+	size-adjust: 100%;
+	ascent-override: 102.02%;
+	descent-override: 30%;
 	line-gap-override: 0%;
 }
 
@@ -96,7 +138,7 @@ h3 {
 	font-family: var(--font-display);
 	line-height: var(--lh-tight);
 	letter-spacing: var(--tracking-display);
-	font-weight: 700;
+	font-weight: 800;
 }
 
 /* Tabular figures wherever numbers sit in a column or a meta line. */
@@ -130,4 +172,18 @@ a:hover {
 ::selection {
 	background: var(--accent);
 	color: var(--field);
+}
+
+/*
+ * While src/lib/decode.ts runs, each letter it is scrambling stands in a box
+ * of its own measured width, and each word is held together, so a noise
+ * glyph -- narrower or wider than its letter in a proportional face -- moves
+ * nothing. Global, because it decodes headings in every component.
+ */
+.decode-word {
+	white-space: nowrap;
+}
+
+.decode-ch {
+	display: inline-block;
 }

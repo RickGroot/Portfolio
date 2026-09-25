@@ -67,38 +67,63 @@ which is the behaviour we want. Phase 2 makes this a CI gate.
 
 ## Font pipeline
 
-Lato 400 and 700 only, self-hosted as WOFF2 in `public/fonts/`, with `font-display: swap` and the
-licence alongside them (`OFL.txt` — Lato is SIL OFL and redistribution requires it).
+Three faces, self-hosted as WOFF2 in `public/fonts/`, Latin subset, `font-display: swap`, each with
+its SIL OFL licence alongside (`OFL-<Family>.txt` — redistribution requires it):
+
+| Role    | Face                          | File                               | Size    | Preloaded |
+| ------- | ----------------------------- | ---------------------------------- | ------- | --------- |
+| Display | Bricolage Grotesque 800, 96pt | `bricolage-grotesque-96-800.woff2` | 21.7 KB | yes       |
+| Reading | Instrument Sans 400           | `instrument-sans-400.woff2`        | 16.9 KB | yes       |
+| Reading | Instrument Sans 600           | `instrument-sans-600.woff2`        | 17.4 KB | no        |
+| Labels  | JetBrains Mono 500            | `jetbrains-mono-500.woff2`         | 21.8 KB | no        |
+
+Chosen by Rick on 2026-09-25 from full-size candidates on the real pages. They replace Martian Mono
+(display) and Lato (reading); labels were a system monospace. The character field is not a label
+and keeps its system face, `--font-field`: it needs a uniform advance, and a web font would also
+make the LCP element wait on a download. The `check-assets` budget is 80 KB of WOFF2 — what a
+visitor downloads; the licence texts are not counted — and the set is 76 KB of it.
 
 These are Google's own WOFF2 builds, downloaded once and committed. **There is deliberately no font
-build dependency.** To refresh them:
+build dependency.** To refresh one, or add a weight:
 
 ```bash
-# 1. Get the current face URLs (the latin subset is the one with U+0000-00FF):
-curl -s -A "Mozilla/5.0" "https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" \
-  | grep -B4 "U+0000-00FF" | grep -o "https://[^)]*\.woff2"
+# 1. Get the face URL. The latin subset is the one with U+0000-00FF, so ask as a browser:
+curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/140.0" \
+  "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400&display=swap" \
+  | awk '/\/\* latin \*\//{f=1} f && /src: url/{match($0,/https:[^)]*/); print substr($0,RSTART,RLENGTH); exit}'
 
-# 2. Download them to public/fonts/lato-400.woff2 and public/fonts/lato-700.woff2
-# 3. Verify the magic bytes are "wOF2" before committing.
+# 2. Download it under a NEW name -- /fonts/** is cached immutable, so never overwrite a file.
+# 3. Verify the magic bytes are "wOF2", and that its OFL is alongside, before committing:
+#    https://raw.githubusercontent.com/google/fonts/main/ofl/<family>/OFL.txt
 ```
 
-### Display face: Martian Mono 700
+Each file is declared across a weight range (`font-weight: 700 800` for the 800), so a rule asking
+for 700 gets the real face rather than a bold the browser fakes from a lighter one.
 
-`public/fonts/martian-mono-700.woff2` — 10.6 KB, Latin subset, OFL alongside, preloaded — with a
-metric-matched fallback declared in `src/styles/typography.css`. Re-measure the fallback whenever the
-face changes. Load the face with `new FontFace()`, **await it**, then read `measureText()` on a
-canvas at 100px, for the face and for the local fallback: one glyph's `width` (both are monospaced,
-so one glyph is every glyph), `fontBoundingBoxAscent` and `fontBoundingBoxDescent`.
+### Metric-matched fallbacks
+
+Each face has a local fallback in `src/styles/typography.css` whose `size-adjust` and overrides make
+the swap dimensionally neutral; the cold-cache test in `tests/budgets/vitals.spec.ts` holds the swap
+to no layout shift. **Re-measure whenever a face changes.** Load the face from its own bytes with
+`new FontFace()`, **await it**, then read `measureText()` on a canvas at 100px for the face and for
+the local fallback:
 
 ```text
-size-adjust      = face advance / fallback advance     70 / 60.01 = 116.65%
-ascent-override  = face ascent  / size-adjust          100 / 1.1665 = 85.73%
-descent-override = face descent / size-adjust           20 / 1.1665 = 17.15%
+size-adjust      = face width  / fallback width     over strings the face actually sets
+ascent-override  = face fontBoundingBoxAscent  / size-adjust
+descent-override = face fontBoundingBoxDescent / size-adjust
 ```
 
+For a monospaced pair (JetBrains Mono and Courier New, both 0.6em) one glyph is every glyph and
+every string matches. For a proportional pair only the average can: Bricolage is matched to Arial
+Bold across the site's own headings, Instrument Sans to Arial across its ledes and card bodies.
+
 Measuring before the face has loaded silently measures the fallback: four different candidates once
-all came out at an identical 6.61em. The subset has no arrows and no U+2011 non-breaking hyphen, so
-neither may appear in display text.
+all came out at an identical 6.61em.
+
+The display face is proportional, which the headline decode used to rely on it not being: see
+`src/lib/decode.ts`, which now holds every letter's measured width while it scrambles, and the
+motion test that watches every frame of one for a word moving.
 
 The previous setup declared `format('ttf')` — not a valid token, it is `truetype` — so the local
 fonts never loaded and the page fell back to two render-blocking Google Fonts CDN imports,

@@ -117,7 +117,7 @@ const rail = [
 	</Section>
 
 	{/* U+2060 WORD JOINER holds "re-run" together at a line end. The non-breaking */}
-	{/* hyphen this used before, U+2011, is not in the Martian Mono subset. */}
+	{/* hyphen this used before, U+2011, was missing from an earlier display subset. */}
 	<ArtSection
 		id="interlude-field"
 		image={artField}
@@ -158,7 +158,7 @@ const rail = [
 		boot();
 		bootZap();
 		// The name tunes in with the portrait on first sight -- once the display
-		// face is in, so the noise glyphs are the same width as the letters.
+		// face is in, so each letter is measured in it rather than in the fallback.
 		// Not on a deep link that lands further down the page.
 		void document.fonts.ready.then(() => {
 			if (window.scrollY < window.innerHeight / 2) decode(document.getElementById('top-heading'));

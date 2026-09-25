@@ -37,14 +37,17 @@
 	--art-cell: clamp(10px, 1.25vw, 17px);
 
 	/* ---- Type ----------------------------------------------------------- */
-	--font-sans:
-		'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
-		sans-serif;
-	--font-display: 'Martian Mono', 'Display Fallback', var(--font-mono);
-	/* The character field REQUIRES a uniform advance width. A stack is a risk
-	   here: `ui-monospace` resolved to a proportional face in testing, which
-	   shears the grid. tests/e2e/field.spec.ts asserts uniformity. */
-	--font-mono: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+	/* Bricolage Grotesque for display, Instrument Sans for reading, JetBrains
+	   Mono for labels (Rick, 2026-09-25: "like the instrument due to trumpet
+	   playing"). Each has a metric-matched local fallback in typography.css. */
+	--font-sans: 'Instrument Sans', 'Body Fallback', ui-sans-serif, system-ui, sans-serif;
+	--font-display: 'Bricolage Grotesque', 'Display Fallback', ui-sans-serif, system-ui, sans-serif;
+	--font-mono: 'JetBrains Mono', 'Label Fallback', ui-monospace, monospace;
+	/* The character field is not a label and keeps a system face. It REQUIRES
+	   a uniform advance width, and a stack is a risk here: `ui-monospace`
+	   resolved to a proportional face in testing, which shears the grid.
+	   tests/e2e/field.spec.ts asserts uniformity. */
+	--font-field: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
 
 	--t-xs: 0.8125rem;
 	--t-sm: 0.9375rem;
@@ -57,9 +60,9 @@
 	--lh-tight: 1.15;
 	--lh-body: 1.6;
 	--measure: 68ch;
-	/* A monospace display face: its letters already sit on a fixed grid, so
-	   tracking only tightens a little before glyphs start to touch. */
-	--tracking-display: -0.02em;
+	/* Bricolage at 800 is already tightly spaced; a hair less keeps the
+	   capitals from reading as separate blocks. */
+	--tracking-display: -0.01em;
 	--tracking-meta: 0.08em;
 
 	/* ---- Space ---------------------------------------------------------- */

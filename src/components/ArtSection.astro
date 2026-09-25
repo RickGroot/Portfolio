@@ -151,15 +151,17 @@ const levels = [
 	/* photograph -- the lighthouse's tower, at most sizes -- and text never */
 	/* sits on a picture bare. On the field the plate cannot be seen; it only */
 	/* shows where the picture is dark, as a band of the channel's colour. */
-	/* Martian Mono's line box is 1.192em (1.000 up, 0.192 down), and its */
-	/* descenders reach 0.231em. Each plate runs from 0.91em above its baseline */
-	/* to 0.262em below: the padding takes it past the descenders, and the */
-	/* background leaves off the top 0.09em, so at the 1.16 pitch it overlaps */
-	/* the plate above by a hair -- no seam -- and clears that line's descenders. */
+	/* Bricolage's line box is 1.2em (0.93 up, 0.27 down), its capitals stand */
+	/* 0.66em and its descenders reach 0.17em. Each plate runs from 0.81em above */
+	/* its baseline to 0.36em below: the background leaves off the top 0.12em, */
+	/* so the band sits evenly around the letters, and the padding takes the */
+	/* bottom down to meet the next plate. At the 1.16 pitch that one starts */
+	/* 0.35em below this baseline -- over it by a hair, no seam, and clear of */
+	/* this line's descenders, which it would otherwise paint over. */
 	.art__plate {
-		padding: 0 0.12em 0.07em;
+		padding: 0 0.12em 0.09em;
 		margin-inline: -0.12em;
-		background: linear-gradient(var(--field), var(--field)) bottom / 100% calc(100% - 0.09em)
+		background: linear-gradient(var(--field), var(--field)) bottom / 100% calc(100% - 0.12em)
 			no-repeat;
 		-webkit-box-decoration-break: clone;
 		box-decoration-break: clone;

@@ -44,6 +44,18 @@ const image = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : undefine
 <meta name="theme-color" content={themeColor} />
 
 <!-- Self-hosted, so preload is safe and there is no third-party connection. -->
-<link rel="preload" href="/fonts/lato-400.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="preload" href="/fonts/martian-mono-700.woff2" as="font" type="font/woff2" crossorigin />
+<link
+	rel="preload"
+	href="/fonts/instrument-sans-400.woff2"
+	as="font"
+	type="font/woff2"
+	crossorigin
+/>
+<link
+	rel="preload"
+	href="/fonts/bricolage-grotesque-96-800.woff2"
+	as="font"
+	type="font/woff2"
+	crossorigin
+/>
 <link rel="sitemap" href="/sitemap-index.xml" />

@@ -411,13 +411,13 @@ const lastYear = entry.data.period.split('–').pop();
 		container-type: inline-size;
 	}
 
-	/* 14cqi: CHROMECAST is 6.8em in Martian Mono at the display tracking. */
-	/* The -0.05em is the capitals' own side bearing: without it the title's */
+	/* 16cqi: CHROMECAST is 6.1em in Bricolage at the display tracking. */
+	/* The -0.03em is the capitals' own side bearing: without it the title's */
 	/* ink starts a few pixels right of the lines above and below it. */
 	.info__title {
 		view-transition-class: vt-title;
-		margin-inline-start: -0.05em;
-		font-size: min(clamp(2.75rem, 1rem + 6vw, 7rem), 14cqi);
+		margin-inline-start: -0.03em;
+		font-size: min(clamp(2.75rem, 1rem + 6vw, 7rem), 16cqi);
 		line-height: 0.92;
 		letter-spacing: var(--tracking-display);
 		text-transform: uppercase;

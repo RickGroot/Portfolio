@@ -42,7 +42,8 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		display: grid;
 		place-items: center;
 
-		font-family: var(--font-mono);
+		/* A system monospace, not the label face: see --font-field in tokens.css. */
+		font-family: var(--font-field);
 		font-size: var(--art-cell);
 		line-height: 1.05;
 		white-space: pre;

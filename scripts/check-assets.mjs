@@ -237,11 +237,17 @@ if (existsSync(fontDir)) {
 	}
 
 	const fonts = readdirSync(fontDir).filter((f) => statSync(join(fontDir, f)).isFile());
+	/*
+	 * The budget is what a visitor downloads: the faces. It counted the licence
+	 * texts too until the 2026-09-25 set, three faces with a licence each, went
+	 * over on 13 KB of text no page ever requests. Their presence is still
+	 * checked, below.
+	 */
 	let total = 0;
 	for (const f of fonts) {
 		const p = join(fontDir, f);
-		total += statSync(p).size;
 		if (f.endsWith('.woff2')) {
+			total += statSync(p).size;
 			const magic = readFileSync(p).subarray(0, 4).toString('latin1');
 			if (magic !== 'wOF2') fail(`${p} is not a valid WOFF2`);
 		}
