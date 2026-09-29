@@ -381,6 +381,10 @@ agree.
 **Gate:** typing `jazz` inside an `<input>` does nothing · Escape dismisses · zero timers and zero
 listeners survive dismissal · reduced motion yields a static frame.
 
+Landed ahead of the phase (2026-09-28): the console line and the number keys as a remote, both in
+`docs/easter-eggs.md`. The number keys set the pattern the typed `jazz` must follow for WCAG 2.1.4:
+live only while focus is in the page's content.
+
 ## Phase 6 — Real-hardware validation & launch
 
 Where the Connected-TV thesis is actually earned; it cannot be faked in a lab. Real Smart TV

@@ -39,6 +39,22 @@ test('no dead read.cv link survives anywhere', async ({ page }) => {
 	}
 });
 
+test('the console says one thing, once, on every page', async ({ page }) => {
+	// docs/easter-eggs.md: one line, "Signal acquired." A second log line is
+	// either debugging left in or an easter egg that stopped being restrained.
+	for (const path of ['/', '/work/vamp', '/404-not-a-page']) {
+		const logs: string[] = [];
+		const listen = (m: import('@playwright/test').ConsoleMessage): void => {
+			if (m.type() === 'log') logs.push(m.text());
+		};
+		page.on('console', listen);
+		await page.goto(path, { waitUntil: 'networkidle' });
+		page.off('console', listen);
+		expect(logs, `${path}: console.log lines`).toHaveLength(1);
+		expect(logs[0], path).toContain('Signal acquired.');
+	}
+});
+
 test('no third-party font or script origins are requested', async ({ page }) => {
 	const external: string[] = [];
 	page.on('request', (r) => {

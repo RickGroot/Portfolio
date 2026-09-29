@@ -12,6 +12,7 @@
  *   - Ctrl + wheel and a trackpad pinch still zoom.
  *   - Keyboard keeps working: PageUp/PageDown, Space, Home/End and arrows all
  *     move between sections, and Tab moves focus normally without hijacking.
+ *     The number keys tune straight to a channel, as on a remote.
  *   - Deep links (`/#work`) land on the right section.
  *   - A section can have steps of its own. The programme guide takes each
  *     scroll as a step through its programmes, and the page only moves on
@@ -50,14 +51,57 @@ const SWIPE_THRESHOLD = 48;
 const CONTROLS =
 	'button, summary, audio, video, [role="button"], [role="checkbox"], [role="switch"], [role="tab"], [role="option"], [role="menuitem"]';
 
+/**
+ * The number keys are a remote: 1 is the test card and each channel after it
+ * the next number, as the readout in the corner counts them. Returns the
+ * channel's index, or -1.
+ *
+ * A single character is a shortcut that speech input can type by accident
+ * (WCAG 2.1.4), so the keys are live only while focus is in the page's
+ * content -- which is where every change of channel leaves it. On a page
+ * nobody has touched yet, focus is on the body and a number does nothing.
+ * Shift is allowed: on AZERTY the digits are shifted, and `key` is still the
+ * digit.
+ */
+function channelKey(ev: KeyboardEvent, count: number): number {
+	if (ev.defaultPrevented || ev.metaKey || ev.ctrlKey || ev.altKey) return -1;
+	if (!/^[1-9]$/.test(ev.key)) return -1;
+	const el = ev.target;
+	if (!(el instanceof HTMLElement) || !el.closest('main')) return -1;
+	if (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return -1;
+	const i = Number(ev.key) - 1;
+	return i < count ? i : -1;
+}
+
+/**
+ * Move focus with the view. Without this a keyboard user's next Tab continues
+ * from wherever they were, which is now off-screen.
+ */
+function focusIn(section: HTMLElement): void {
+	const target = section.querySelector<HTMLElement>('h1, h2') ?? section;
+	target.setAttribute('tabindex', '-1');
+	target.focus({ preventScroll: true });
+}
+
 export function boot(): void {
 	const sections = [...document.querySelectorAll<HTMLElement>('[data-section]')];
 	if (sections.length < 2) return;
 
 	// Asking for less motion and getting smooth-scroll-jacking would be the
 	// exact opposite of the request. Leave the page as a normal long scroll.
+	// The remote still works there: a number jumps, the way a rail link does
+	// with smooth scrolling off, with no static and no readout.
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-	if (reduced.matches) return;
+	if (reduced.matches) {
+		window.addEventListener('keydown', (ev) => {
+			const target = sections[channelKey(ev, sections.length)];
+			if (!target) return;
+			ev.preventDefault();
+			target.scrollIntoView({ behavior: 'instant', block: 'start' });
+			focusIn(target);
+		});
+		return;
+	}
 
 	const root = document.documentElement;
 
@@ -153,12 +197,7 @@ export function boot(): void {
 
 		setCurrent(next);
 		target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-		// Move focus with the view. Without this a keyboard user's next Tab
-		// continues from wherever they were, which is now off-screen.
-		const focusTarget = target.querySelector<HTMLElement>('h1, h2') ?? target;
-		focusTarget.setAttribute('tabindex', '-1');
-		focusTarget.focus({ preventScroll: true });
+		focusIn(target);
 	}
 
 	/**
@@ -227,6 +266,16 @@ export function boot(): void {
 	}
 
 	function onKey(ev: KeyboardEvent): void {
+		// A number goes straight to its channel, but not while a change is still
+		// settling: every change is a burst of static, and the lock is what keeps
+		// those under two a second however fast the keys are pressed.
+		const channel = channelKey(ev, sections.length);
+		if (channel >= 0) {
+			ev.preventDefault();
+			if (!locked && channel !== index) go(channel);
+			return;
+		}
+
 		// Something inside the page already used the key -- the programme guide
 		// moving between its rows. Only what is left over advances a section.
 		if (ev.defaultPrevented) return;

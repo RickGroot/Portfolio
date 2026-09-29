@@ -304,6 +304,80 @@ test.describe('one-page sections', () => {
 		});
 	});
 
+	/**
+	 * The number keys are a remote. A single character is a shortcut speech
+	 * input can type by accident (WCAG 2.1.4), so they are live only while focus
+	 * is in the page's content -- which is where every change of channel leaves it.
+	 */
+	test.describe('the number keys', () => {
+		const topOf = (page: import('@playwright/test').Page, id: string): Promise<number> =>
+			page.evaluate(
+				(id) => Math.round(document.getElementById(id)?.getBoundingClientRect().top ?? 9999),
+				id,
+			);
+
+		test('tune straight to a channel, and show its number', async ({ page }) => {
+			await page.goto('/');
+			// Nothing touched yet: focus is on the body, and a number is not a shortcut.
+			await page.keyboard.press('4');
+			await page.waitForTimeout(700);
+			expect(await page.evaluate(() => window.scrollY), 'a number moved an untouched page').toBe(0);
+
+			// Under parallel load a smooth scroll can start seconds late, as the
+			// walk above found: poll as long as it does.
+			const slow = { timeout: 8000 };
+
+			// Changing channel is what puts focus in the page.
+			await page.keyboard.press('PageDown');
+			await expect.poll(() => topOf(page, 'work'), slow).toBe(0);
+			await page.waitForTimeout(700);
+
+			await page.keyboard.press('4');
+			await expect.poll(() => topOf(page, 'practice'), slow).toBe(0);
+			await expect(page.locator('.osd__num')).toHaveText('04', slow);
+			await expect(page.locator('.osd__name')).toHaveText('How I work', slow);
+			await expect(page.locator('#practice-heading')).toBeFocused();
+
+			// There are six channels. Nothing is on 9.
+			await page.waitForTimeout(700);
+			await page.keyboard.press('9');
+			await page.waitForTimeout(700);
+			expect(await topOf(page, 'practice'), 'a channel that does not exist moved the page').toBe(0);
+
+			await page.keyboard.press('1');
+			await expect.poll(() => page.evaluate(() => Math.round(window.scrollY)), slow).toBe(0);
+		});
+
+		test('are typing inside a field, not a shortcut', async ({ page }) => {
+			await page.goto('/');
+			// Inside a channel, so only the typing guard stands between the key and a jump.
+			await page.evaluate(() => {
+				const input = document.createElement('input');
+				input.id = 'probe';
+				document.getElementById('top')?.append(input);
+				input.focus({ preventScroll: true });
+			});
+			await page.keyboard.press('5');
+			await page.waitForTimeout(700);
+			await expect(page.locator('#probe')).toHaveValue('5');
+			expect(await page.evaluate(() => window.scrollY), 'a number typed in a field jumped').toBe(0);
+		});
+
+		test('still work under reduced motion, as a jump', async ({ browser }) => {
+			const context = await browser.newContext({
+				reducedMotion: 'reduce',
+				viewport: { width: 1280, height: 800 },
+			});
+			const page = await context.newPage();
+			await page.goto('/');
+			await page.locator('[data-rail] a').first().focus();
+			await page.keyboard.press('6');
+			await expect.poll(() => topOf(page, 'contact')).toBe(0);
+			await expect(page.locator('#contact-heading')).toBeFocused();
+			await context.close();
+		});
+	});
+
 	test('the rail is real navigation, not decoration', async ({ page }) => {
 		await page.goto('/');
 		const hrefs = await page.evaluate(() =>

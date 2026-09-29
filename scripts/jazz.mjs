@@ -13,22 +13,26 @@ const ESC = String.fromCharCode(27);
 const NO_COLOR = process.env.NO_COLOR !== undefined || process.env.TERM === 'dumb';
 const c = (code, s) => (NO_COLOR ? s : `${ESC}[${code}m${s}${ESC}[0m`);
 const dim = (s) => c('2', s);
-const mint = (s) => c('38;5;48', s);
-const gold = (s) => c('38;5;178', s);
+// The palette in src/lib/channels.ts, as the nearest xterm-256 colours: a
+// terminal cannot read a custom property, and 256 colours is what every
+// terminal that has colour at all can show.
+const blue = (s) => c('38;5;27', s); // signal blue #2340ff, the field's
+const yellow = (s) => c('38;5;220', s); // signal yellow #ffd400, the ink channel's accent
+const brass = (s) => c('38;5;178', s); // brass #e0a526, the music work's
 
 // The signal resolves from noise into a steady reading — the same idea as the
 // Decode treatment, at roughly one-thousandth of the budget.
 const RAMP = ['░', '▒', '▓', '█'];
 const bars = [1, 2, 3, 4, 4, 3, 2, 3, 4, 4, 4, 3];
 
-const meter = bars.map((n) => mint(RAMP[n - 1])).join('');
+const meter = bars.map((n) => blue(RAMP[n - 1])).join('');
 const noise = Array.from({ length: 12 }, () => dim(RAMP[Math.floor(Math.random() * 2)])).join('');
 
 const trumpet = [
 	'        ______',
 	'   ____/  |  /|',
-	'  /  o o o | / |   ' + gold('♪'),
-	' |__________|/  |      ' + gold('♫'),
+	'  /  o o o | / |   ♪',
+	' |__________|/  |      ♫',
 	'    |__|__|    /',
 ].join('\n');
 
@@ -37,9 +41,9 @@ process.stdout.write(
 		'',
 		`  ${noise}  ${dim('…')}  ${meter}`,
 		'',
-		`  ${mint('SIGNAL ACQUIRED')}`,
+		`  ${yellow('SIGNAL ACQUIRED')}`,
 		'',
-		gold(trumpet),
+		brass(trumpet),
 		'',
 		dim('  ii – V – I. Back to work.'),
 		'',

@@ -5,8 +5,8 @@
 | Budget                | Limit               | How it is measured                                             |
 | --------------------- | ------------------- | -------------------------------------------------------------- |
 | Initial JS, homepage  | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`                                |
-| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 3.6 KB (2026-09-25)                        |
-| Total JS, homepage    | ≤ 45 KB gzip        | measured 12.1 KB, 1.0 KB of it inline (2026-09-25)             |
+| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 4.3 KB (2026-09-28)                        |
+| Total JS, homepage    | ≤ 45 KB gzip        | measured 13.4 KB, 1.2 KB of it inline (2026-09-28)             |
 | LCP                   | < 2.5 s             | `tests/budgets/vitals.spec.ts`, 4× CPU, read before any scroll |
 | CLS                   | < 0.1               | `tests/budgets/vitals.spec.ts`, 4× CPU, the whole page walked  |
 | INP                   | < 200 ms            | **Field only** — see below                                     |
@@ -30,9 +30,9 @@ The original brief said "< 60 KB gzip initial, deferred renderer excluded". An _
 is not a budget: it ignores main-thread cost, and metered connections pay for the bytes whenever
 they arrive. So the plan replaced it with three bounded numbers.
 
-Then the exemption stopped mattering. The signature treatment renders as **text in two `<pre>`
+Then the exemption stopped mattering. The signature treatment renders as **text in `<pre>`
 elements** — no canvas, no WebGL, no shader compile, no texture upload. The whole art system
-measures **3.6 KB gzip**, against the 25 KB a GPU renderer would have taken on its own.
+measures **4.3 KB gzip** (2026-09-28), against the 25 KB a GPU renderer would have taken on its own.
 
 For calibration on what was avoided: the realistic tree-shaken OGL subset for a fullscreen textured
 quad measures 25.5 KB gzip unminified, roughly 12–16 KB minified — plus a quality governor,
@@ -43,7 +43,7 @@ string assignment produces.
 
 |                      | Old site (measured live)               | Now                                           |
 | -------------------- | -------------------------------------- | --------------------------------------------- |
-| Total JS             | 26 KB gzip                             | **10.7 KB gzip** (incl. the whole art system) |
+| Total JS             | 26 KB gzip                             | **13.4 KB gzip** (incl. the whole art system) |
 | Homepage images      | **5.7 MB**                             | none — the hero is text                       |
 | Fonts                | 1.1 MB of TTF, none of which loaded    | 45 KB of WOFF2                                |
 | Third-party requests | 2 render-blocking Google Fonts imports | **0**                                         |
