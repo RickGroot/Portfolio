@@ -1,25 +1,38 @@
 /**
- * The character field.
+ * The character field: the test card.
  *
- * Renders a grid of characters into two stacked <pre> elements -- one per
- * colour -- recomputed at 60fps and written as two strings. No canvas, no WebGL,
- * no graphics context to lose.
+ * Renders a grid of characters into stacked <pre> elements -- one per colour --
+ * recomputed at 60fps and written as strings. No canvas, no WebGL, no graphics
+ * context to lose.
  *
- * One blue, two strengths: the field in the palette's signal blue, and the lit
- * part of the portrait in a lighter tint of it (--art-signal), so the face reads
- * as the field brightening, not as a second picture laid over it. The field's
- * motion carries on through the face as a shimmer.
+ * Channel 01 is the card a television shows before the programmes start (Rick,
+ * 2026-09-28, of three candidates: "more visually impressive"). A test card's
+ * grid of lines, drawn in characters, runs edge to edge; a circle sits in the
+ * middle of it, and the portrait develops inside the circle out of a field of
+ * its own. The name, the colour bars and the synopsis are the card's boxes, in
+ * HTML, and the clock is a real one (src/scripts/testcard.ts).
+ *
+ * One blue, two strengths: the grid and the field in the palette's signal blue,
+ * and the lit part of the portrait in a lighter tint of it (--art-signal), so
+ * the face reads as the field brightening, not as a second picture laid over
+ * it. The field's motion carries on through the face as a shimmer.
  *
  * Measured on this approach (120x60 = 7200 cells, forced layout every frame):
  *   one <pre>, single colour      1.18 ms/frame
- *   two stacked <pre>, two colours 2.22 ms/frame   <- this
+ *   two stacked <pre>, two colours 2.22 ms/frame   <- the two that move
  *   one <span> per cell            40.71 ms/frame  <- 2.5x over a 60fps budget
  *
  * The colour split is free because it IS the resolve state: a cell that has
  * developed into the lit portrait goes to layer B, anything else to layer A,
- * and each writes a space to the other. At rest one layer is entirely spaces
- * and its write is skipped, so the field spends almost all its life at
- * single-layer cost.
+ * and each writes a space to the other. The circle is layer C, in the face's
+ * tint: it never moves, so it is written once per layout and never per frame,
+ * and costs paint rather than layout. A and B leave its cells blank.
+ *
+ * The card's geometry -- where the circle's centre and the face's are, the
+ * circle's radius, the grid's step -- belongs to the stylesheet (index.astro),
+ * not to this module. The boxes on the card are laid out from the same custom
+ * properties before any script runs, so reading them here, rather than
+ * deciding them, is what keeps the handover from moving a box.
  */
 
 import { subscribe } from './loop';
@@ -37,12 +50,19 @@ const MAX_CELLS = 6000;
 const MIN_COLS = 24;
 /** Pointer energy half-life. */
 const ENERGY_TAU = 350;
+/** How far the pointer's ripple reaches, in cells: it disturbs the card near it, not the whole screen. */
+const RIPPLE_CELLS = 16;
 /** How fast resolve catches up to its target. */
 const P_TAU = 260;
 /** Length of the load-time scatter-and-decode sequence. */
 const ENTRY_MS = 3200;
 /** How much of the resolve a cell takes to develop, in units of p. */
 const DEVELOP = 0.14;
+/** The field inside the circle sits well below the face: the card is the frame, the face is the picture. */
+const FIELD_WEIGHT = 0.36;
+/** The face box: this share of the host's height, or of its width where that runs out first. */
+const FACE_HEIGHT = 0.64;
+const FACE_WIDTH = 0.8;
 /**
  * The darkest map level belongs to the field, not the portrait: where the
  * photograph is black, the live field shows through. As portrait, those
@@ -96,6 +116,28 @@ function measure(host: HTMLElement): { cellW: number; rowH: number } | null {
 	return { cellW: narrow / 64, rowH };
 }
 
+/**
+ * The card's geometry, as the stylesheet resolved it, in the host's pixels.
+ * Custom properties are not resolved to lengths by getComputedStyle unless
+ * they are registered, so a probe is laid out with them instead.
+ */
+function measureCard(host: HTMLElement): { ringY: number; faceY: number; r: number; step: number } {
+	const probe = document.createElement('i');
+	probe.style.cssText =
+		'position:absolute;left:0;visibility:hidden;pointer-events:none;' +
+		'top:var(--ring-cy,50%);inline-size:var(--ring-r,40%);block-size:var(--grid,10%)';
+	const face = document.createElement('i');
+	face.style.cssText =
+		'position:absolute;left:0;visibility:hidden;pointer-events:none;top:var(--face-cy,50%);block-size:0';
+	host.append(probe, face);
+	const origin = host.getBoundingClientRect().top;
+	const p = probe.getBoundingClientRect();
+	const faceY = face.getBoundingClientRect().top - origin;
+	probe.remove();
+	face.remove();
+	return { ringY: p.top - origin, faceY, r: p.width, step: Math.max(8, p.height) };
+}
+
 export function mountField(host: HTMLElement): FieldHandle {
 	const layerA = host.querySelector<HTMLPreElement>('[data-layer="a"]');
 	const layerB = host.querySelector<HTMLPreElement>('[data-layer="b"]');
@@ -104,6 +146,8 @@ export function mountField(host: HTMLElement): FieldHandle {
 	// Bound after the guard so the narrowing survives into the frame closure.
 	const preA: HTMLPreElement = layerA;
 	const preB: HTMLPreElement = layerB;
+	const preC = host.querySelector<HTMLPreElement>('[data-layer="c"]');
+	const layers = preC ? [preA, preB, preC] : [preA, preB];
 
 	let cols = 0;
 	let rows = 0;
@@ -112,8 +156,13 @@ export function mountField(host: HTMLElement): FieldHandle {
 	let rowH = 0;
 	let gridX = 0;
 	let gridY = 0;
+	let aspect = 1;
 	let thresh = new Float32Array(0);
 	let portrait = new Int16Array(0);
+	/** The test card: the grid's glyph in each cell ('' where it has none), the circle's cells, and what lies inside it. */
+	let line: string[] = [];
+	let ring = new Uint8Array(0);
+	let inside = new Uint8Array(0);
 	let rowsA: string[] = [];
 	let rowsB: string[] = [];
 
@@ -155,8 +204,8 @@ export function mountField(host: HTMLElement): FieldHandle {
 
 		cols = c;
 		rows = r;
-		px = cols / 2;
-		py = rows / 2;
+		px = -1e4;
+		py = -1e4;
 
 		// Capped, the grid is fewer cells than the host holds, so the glyphs
 		// grow instead and the grid still covers the host edge to edge. At the
@@ -168,47 +217,49 @@ export function mountField(host: HTMLElement): FieldHandle {
 		// again on a resize starts from the same base.
 		const fit = Math.max(rect.width / (c * m.cellW), rect.height / (r * m.rowH));
 		const base = parseFloat(getComputedStyle(host).fontSize);
-		for (const pre of [preA, preB]) pre.style.fontSize = `${base * fit}px`;
+		for (const pre of layers) pre.style.fontSize = `${base * fit}px`;
 		cellW = m.cellW * fit;
 		rowH = m.rowH * fit;
 		gridX = (rect.width - c * cellW) / 2;
 		gridY = (rect.height - r * rowH) / 2;
+		aspect = m.cellW / m.rowH;
 
-		const cellAspect = m.cellW / m.rowH;
+		const card = measureCard(host);
+		const cx = rect.width / 2;
 
-		// The portrait occupies a box, not the whole grid: a face emerging from
-		// a still-live field reads far better than a rectangle appearing. And
-		// only the lit part of the box is portrait: see FIELD_LEVEL.
-		//
-		// The box is a square in pixels, as big as fits: 82% of the height on a
-		// wide screen, 90% of the width on a tall one. Sized in cells to 82% of
-		// the rows, a phone's face -- where the width ran out first -- was
-		// stretched to twice its height, which the photograph under it (see
-		// CharacterField.astro) would have shown at once. On a tall screen the
-		// copy takes the lower part, so the face sits in the part above it.
-		const side = Math.min(rows * rowH * 0.82, cols * cellW * 0.9);
+		// The face sits in the circle, above its centre on a wide screen, so the
+		// name's box under it crosses the chin rather than the smile. The box is
+		// a square in pixels, as big as its share allows: sized in cells, a
+		// phone's face -- where the width ran out first -- was stretched to
+		// twice its height, which the photograph under it (CharacterField.astro)
+		// would have shown at once.
+		const side = Math.min(rect.height * FACE_HEIGHT, rect.width * FACE_WIDTH);
 		const portRows = Math.max(4, Math.round(side / rowH));
 		const portCols = Math.max(4, Math.round(side / cellW));
-		const ox = Math.floor((cols - portCols) / 2);
-		const oy =
-			rect.height > rect.width ? Math.round(rows * 0.08) : Math.floor((rows - portRows) / 2);
+		const ox = Math.round((cx - gridX) / cellW - portCols / 2);
+		const oy = Math.round((card.faceY - gridY) / rowH - portRows / 2);
 
-		// Where the face is, for the photograph laid under it: its size, and
-		// its corner measured from the host's centre, where the photograph's own
-		// box stays pinned (see CharacterField.astro).
-		host.style.setProperty('--port-dx', `${gridX + ox * cellW - rect.width / 2}px`);
-		host.style.setProperty('--port-dy', `${gridY + oy * rowH - rect.height / 2}px`);
+		// Where the face is, for the photograph laid under it: its size, and its
+		// corner, measured across from the host's centre and down from the face's
+		// own, where the photograph's box stays pinned (see CharacterField.astro).
+		host.style.setProperty('--port-dx', `${gridX + ox * cellW - cx}px`);
+		host.style.setProperty('--port-dy', `${gridY + oy * rowH - card.faceY}px`);
 		host.style.setProperty('--port-w', `${portCols * cellW}px`);
 		host.style.setProperty('--port-h', `${portRows * rowH}px`);
 
-		thresh = new Float32Array(cols * rows);
-		portrait = new Int16Array(cols * rows).fill(-1);
+		const n = cols * rows;
+		thresh = new Float32Array(n);
+		portrait = new Int16Array(n).fill(-1);
+		line = new Array<string>(n).fill('');
+		ring = new Uint8Array(n);
+		inside = new Uint8Array(n);
 		rowsA = new Array<string>(rows);
 		rowsB = new Array<string>(rows);
 
-		const cx = cols / 2;
-		const cy = rows / 2;
-		const maxR = Math.hypot(cx, cy / cellAspect);
+		const gcx = cols / 2;
+		const gcy = rows / 2;
+		const maxR = Math.hypot(gcx, gcy / aspect);
+		const G = card.step;
 
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < cols; x++) {
@@ -237,11 +288,75 @@ export function mountField(host: HTMLElement): FieldHandle {
 				 * plainly visible as a screen door. Tested side by side; this
 				 * reads as a decode, that reads as an artifact.
 				 */
-				const radial = Math.hypot(x - cx, (y - cy) / cellAspect) / maxR;
+				const radial = Math.hypot(x - gcx, (y - gcy) / aspect) / maxR;
 				thresh[i] = 0.5 * radial + 0.3 * hash(x, y) + 0.2 * (1 - lum);
+
+				// The card: inside the circle, the field; outside it, the grid, its
+				// lines laid from the circle's centre, one cell wide.
+				const dx = gridX + (x + 0.5) * cellW - cx;
+				const dy = gridY + (y + 0.5) * rowH - card.ringY;
+				if (Math.hypot(dx, dy) < card.r) {
+					inside[i] = 1;
+				} else {
+					const onV = Math.abs(dx - G * Math.round(dx / G)) < cellW * 0.5;
+					const onH = Math.abs(dy - G * Math.round(dy / G)) < rowH * 0.5;
+					line[i] = onV && onH ? '+' : onV ? '|' : onH ? '-' : '';
+				}
 			}
 		}
+
+		drawCircle(cx, card.ringY, card.r);
 		return true;
+	}
+
+	/**
+	 * The circle, rasterised as a line into layer C: one cell per column where
+	 * it runs flat, one per row where it runs steep. Where it is flat the glyph
+	 * follows the line's height inside its cell -- ' - . _ -- which is how an
+	 * ASCII drawing makes a shallow curve read smooth; steep, it is / \ and |.
+	 * Drawn as a band of every cell it touches, it came out two and three
+	 * columns thick at the sides and one row at the top: a ring of hashes, not
+	 * a line (the first prototype, 2026-09-28).
+	 */
+	function drawCircle(cx: number, cy: number, R: number): void {
+		const glyphs = new Array<string>(cols * rows).fill(' ');
+		// Rows per column along the circle at a point: under 0.9 it runs flat.
+		const slope = (dx: number, dy: number): number =>
+			(Math.abs(dx) * cellW) / (Math.abs(dy) * rowH + 1e-6);
+		const mark = (x: number, y: number, g: string): void => {
+			if (x < 0 || x >= cols || y < 0 || y >= rows) return;
+			const i = y * cols + x;
+			glyphs[i] = g;
+			ring[i] = 1;
+			line[i] = '';
+		};
+		for (let x = 0; x < cols; x++) {
+			const dx = gridX + (x + 0.5) * cellW - cx;
+			if (Math.abs(dx) > R) continue;
+			const h = Math.sqrt(R * R - dx * dx);
+			for (const Y of [cy - h, cy + h]) {
+				if (slope(dx, Y - cy) >= 0.9) continue;
+				const at = (Y - gridY) / rowH;
+				const y = Math.floor(at);
+				const f = at - y;
+				mark(x, y, f < 0.3 ? "'" : f < 0.56 ? '-' : f < 0.82 ? '.' : '_');
+			}
+		}
+		for (let y = 0; y < rows; y++) {
+			const dy = gridY + (y + 0.5) * rowH - cy;
+			if (Math.abs(dy) > R) continue;
+			const w = Math.sqrt(R * R - dy * dy);
+			for (const X of [cx - w, cx + w]) {
+				const dx = X - cx;
+				const s = slope(dx, dy);
+				if (s < 0.9) continue;
+				mark(Math.floor((X - gridX) / cellW), y, s > 2.4 ? '|' : dx * dy < 0 ? '\\' : '/');
+			}
+		}
+		if (!preC) return;
+		const out = new Array<string>(rows);
+		for (let y = 0; y < rows; y++) out[y] = glyphs.slice(y * cols, (y + 1) * cols).join('');
+		preC.textContent = out.join('\n');
 	}
 
 	/* ---- frame ---------------------------------------------------------- */
@@ -283,6 +398,7 @@ export function mountField(host: HTMLElement): FieldHandle {
 		}
 
 		const t = now * 0.0012;
+		const reach = 2 * RIPPLE_CELLS * RIPPLE_CELLS;
 		let anyA = false;
 		let anyB = false;
 		let i = 0;
@@ -291,15 +407,31 @@ export function mountField(host: HTMLElement): FieldHandle {
 			let a = '';
 			let b = '';
 			for (let x = 0; x < cols; x++) {
+				// The circle is layer C's, drawn once; both of these leave it blank.
+				if (ring[i]) {
+					a += ' ';
+					b += ' ';
+					i++;
+					continue;
+				}
 				const pv = portrait[i] as number;
+				const lineGlyph = line[i] as string;
 
-				// The field. Broad and slow, so it rolls rather than flickers.
-				// Cheap, periodic, and deliberately digital.
-				let fv = 0.5 + 0.22 * (Math.sin(x * 0.13 + t * 0.7) + Math.cos(y * 0.23 - t * 0.55));
-				if (energy > 0.01) {
+				// The field, inside the circle only. Broad and slow, so it rolls
+				// rather than flickers. Cheap, periodic, and deliberately digital.
+				let fv = inside[i]
+					? FIELD_WEIGHT *
+						(0.5 + 0.22 * (Math.sin(x * 0.13 + t * 0.7) + Math.cos(y * 0.23 - t * 0.55)))
+					: 0;
+				// A fast pointer disturbs the card near it: the field inside the
+				// circle, and the empty squares of the grid, as interference.
+				if (energy > 0.01 && !lineGlyph) {
 					const dx = x - px;
-					const dy = y - py;
-					fv += Math.sin((dx * dx + dy * dy) * 0.012 - t * 6) * energy * 0.5;
+					const dy = (y - py) / aspect;
+					const d2 = dx * dx + dy * dy;
+					if (d2 < reach * 4) {
+						fv += Math.sin(d2 * 0.012 - t * 6) * energy * 0.5 * Math.exp(-d2 / reach);
+					}
 				}
 
 				// How far this cell has developed into the portrait: eased across a
@@ -314,10 +446,18 @@ export function mountField(host: HTMLElement): FieldHandle {
 					w = d <= 0 ? 0 : d >= 1 ? 1 : d * d * (3 - 2 * d);
 				}
 
+				if (lineGlyph) {
+					a += lineGlyph;
+					b += ' ';
+					anyA = true;
+					i++;
+					continue;
+				}
+
 				// The field runs on through the face as a faint shimmer, so the two
-				// read as one surface. The field sits below the portrait in weight.
+				// read as one surface.
 				const shimmer = 0.07 * Math.sin(x * 0.13 + y * 0.09 - t * 1.1);
-				const v = (1 - w) * fv * 0.55 + w * clamp(lum + shimmer, 0, 1);
+				const v = (1 - w) * fv + w * clamp(lum + shimmer, 0, 1);
 				const ch = RAMP[clamp((v * RAMP.length) | 0, 0, RAMP_MAX)] as string;
 
 				// The lit face takes the portrait's tint; its darkest cells stay in
@@ -337,8 +477,8 @@ export function mountField(host: HTMLElement): FieldHandle {
 			rowsB[y] = b;
 		}
 
-		// At rest one layer is entirely spaces; skip its write. Rewriting an
-		// identical string is free anyway, but not building it is cheaper.
+		// A layer that is entirely spaces is skipped. Rewriting an identical
+		// string is free anyway, but not building it is cheaper.
 		if (anyA || wroteA) {
 			preA.textContent = rowsA.join('\n');
 			wroteA = anyA;
@@ -369,6 +509,15 @@ export function mountField(host: HTMLElement): FieldHandle {
 		// An impulse, not a level: fast movement spikes it, then it decays.
 		energy = Math.min(1, energy + speed * 0.5);
 	}
+
+	/*
+	 * The field is `pointer-events: none` -- it must never eat a click -- so it
+	 * is never the target of a pointer event, and a listener on it never runs.
+	 * One did, from the start: the pointer's disturbance was documented and
+	 * never happened (found 2026-09-28, 30 moves over the hero, 0 calls). The
+	 * hero around it receives them.
+	 */
+	const pointerTarget = host.parentElement ?? host;
 
 	/* ---- visibility ----------------------------------------------------- */
 
@@ -419,11 +568,11 @@ export function mountField(host: HTMLElement): FieldHandle {
 		unsubscribe = null;
 		io.disconnect();
 		ro.disconnect();
-		host.removeEventListener('pointermove', onPointer);
+		pointerTarget.removeEventListener('pointermove', onPointer);
 		host.dataset.fieldState = 'off';
 		// The static frame is laid out at the stylesheet's size, and the photo
 		// goes back to sitting under it.
-		for (const pre of [preA, preB]) pre.style.fontSize = '';
+		for (const pre of layers) pre.style.fontSize = '';
 		for (const v of ['--port-dx', '--port-dy', '--port-w', '--port-h'])
 			host.style.removeProperty(v);
 		thresh = new Float32Array(0);
@@ -432,7 +581,7 @@ export function mountField(host: HTMLElement): FieldHandle {
 
 	if (!layout()) return { destroy: () => undefined };
 
-	host.addEventListener('pointermove', onPointer, { passive: true });
+	pointerTarget.addEventListener('pointermove', onPointer, { passive: true });
 	io.observe(host);
 	ro.observe(host);
 	host.dataset.fieldState = 'live';

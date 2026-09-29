@@ -72,14 +72,16 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 - Content lives in `src/content/work/*.md`. **Zero content in `.ts` files.**
 - **Every colour comes from `src/lib/channels.ts`.** Each full-screen section is a _channel_ — one
   flat field — and declares which one; its text colour is solved against the field at build time and
-  the build fails below 4.5:1. Stylesheets only read `--field`, `--mark`, `--mark-dim`, `--accent`.
+  the build fails below 4.5:1. Stylesheets only read `--field`, `--mark`, `--mark-dim`, `--accent`,
+  and the art's tokens, which `tokens.css` mixes from the palette: the field's two blues, and the
+  test card's bars and castellations.
   No hex values in CSS, and no darkening a photograph to make text legible — photos print in their
   channel's colours (`.duo`), and text that crosses one sits on a plate of the field. A
   programme's key art is the exception: it is shown as it is, because a logo printed in its channel's
   colours loses its own. Its title stands on a gradient to the field instead of a plate, and because
   axe cannot judge text over a photograph, `tests/a11y/stage-contrast.spec.ts` measures it against
-  the brightest pixel behind it. The hero is the other exception: its copy stands on the character
-  field's own ground, and `tests/a11y/hero-contrast.spec.ts` measures it over the live field.
+  the brightest pixel behind it. The hero's copy stands on the test card's plates, over the live
+  field, and `tests/a11y/hero-contrast.spec.ts` measures it there, pixels and all.
 - **Public files are not hashed.** `/fonts/**` is cached `immutable` for a year, so a changed font
   gets a new file name. Never overwrite one in place.
 - **After a content schema change, delete `node_modules/.astro/data-store.json`** and restart the dev
@@ -122,8 +124,11 @@ got _stronger_ — a canvas appearing now means someone reintroduced a WebGL pat
 
 ## The art system
 
-The hero renders as text in two `<pre>` elements, over the portrait photograph printed faintly in
-the field's own blue. No canvas, no WebGL, 3.6 KB gzip.
+The hero is a test card rendered as text: the field and the face in two `<pre>` elements rewritten
+every frame, and the card's circle in a third written once per layout, over the portrait photograph
+printed faintly in the field's own blue. No canvas, no WebGL, 4.3 KB gzip. **The card's geometry
+is CSS** (`--ring-cy`, `--ring-r`, `--face-cy`, `--grid` on `.hero`): the renderer reads it and
+never decides it, which is what keeps the handover from moving a box.
 See `docs/art-system.md` before touching `src/lib/field/`.
 
 ## Content rule

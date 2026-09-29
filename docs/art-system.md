@@ -5,11 +5,14 @@ interaction-triggered.
 
 ## What it is
 
-A grid of characters recomputed 60 times a second and written into two stacked `<pre>` elements.
-**No canvas, no WebGL, no graphics context.** The whole thing is 3.6 KB gzip.
+A grid of characters recomputed 60 times a second and written into stacked `<pre>` elements.
+**No canvas, no WebGL, no graphics context.** The renderer is 4.3 KB gzip.
 
-It idles as an abstract field, decodes into a portrait on load, and dissolves again as the hero
-leaves the viewport. Fast pointer movement disturbs it.
+Since 2026-09-28 it draws channel 01 as a **test card**: the card a television shows before the
+programmes start. A grid of lines in characters runs edge to edge, a circle stands in the middle,
+and the portrait develops inside the circle out of a field of its own. It decodes on load, dissolves
+again as the hero leaves the viewport, and a fast pointer ripples the card near it. See
+[The test card](#the-test-card).
 
 ## Why text
 
@@ -48,7 +51,11 @@ layer is entirely spaces and its write is skipped — so the field spends almost
 single-layer cost and only pays the double during the ~1 s decode.
 
 Two layers measured **3×** single-layer cost, not 2× — overlapping repaint is superlinear. **Two is
-the colour budget.** A third layer colour is not affordable on mobile.
+the colour budget** for layers that change. A third changing layer is not affordable on mobile.
+
+The test card's circle is a third `<pre>`, and does not break that rule: it never moves, so it is
+written once per layout and never per frame. It costs paint, not text layout. Layers A and B leave
+its cells blank, and `tests/e2e/field.spec.ts` holds all three to one cell each.
 
 ## The resolve
 
@@ -121,10 +128,11 @@ Capped, the glyphs grow to cover the screen, so without the extra cells a 2560×
 the face in blocks too coarse to read as a face (Rick, 2026-09-25: "it's not really clear that
 it's my face on there").
 
-The portrait occupies a centred **square** box rather than the whole grid, 82% of the field's
-height (or 90% of its width, where that is smaller), because a face emerging from a still-live
-field reads far better than a rectangle appearing. On a screen taller than it is wide the box sits
-near the top, 8% down, so the copy under it crosses the chin at most.
+The portrait occupies a **square** box rather than the whole grid, 64% of the field's height (or
+80% of its width, where that is smaller), because a face emerging from a still-live field reads far
+better than a rectangle appearing. It is centred across the screen and on `--face-cy` down it: on
+a wide screen that is above the circle's centre, so the name's box crosses the chin rather than
+the smile; on a phone it is the circle's centre.
 
 Only the lit part of the box is portrait. **The map's darkest level belongs to the field**
 (`FIELD_LEVEL` in `field.ts`): where the photograph is black, the live field shows through. The box's
@@ -157,9 +165,10 @@ at the edge so it never reads as a square.
 The characters stay the picture; the photograph tells you whose it is.
 
 It needs no JavaScript. Its box starts as the static frame's (64 columns of the field's monospace
-by 32 lines, centred like the frame's text), so the no-JS and reduced-motion portrait has it too.
-Live, the field lays the face out itself and publishes the box on the host: `--port-w` and
-`--port-h`, and its corner as `--port-dx` and `--port-dy`, measured from the host's centre.
+by 32 lines, centred on `--face-cy`, as the frame's text is), so the no-JS and reduced-motion
+portrait has it too. Live, the field lays the face out itself and publishes the box on the host:
+`--port-w` and `--port-h`, and its corner as `--port-dx` and `--port-dy`, measured across from the
+host's centre and down from the face's.
 
 **The box never moves.** It stays pinned to the field's centre, and the handover changes only its
 size and its `translate`. Moved by its insets instead, it measured **0.109 CLS** at 1440×900, the
@@ -169,22 +178,68 @@ handover for no layout shift at all.
 
 Both boxes are right by construction, which is not the same as the faces lining up: the corner
 sampling above passed every box check. `tests/e2e/field.spec.ts` compares the pictures instead,
-blurred to the scale of a cell, and fails if they correlate best at any shift but none.
+blurred to the scale of a cell, in 2px steps, and fails if they correlate best more than one step
+from none. The characters carry a bias of their own, a pixel or two, which moves with the number
+of cells across the face: +1px at 69 columns, −1 to −2px at the test card's 54 (measured
+2026-09-28). Moving the face's box a whole cell moved nothing, so it is the rendering, not the
+geometry. The 4px steps the test used before put a 2px bias on the line between two steps, and the
+field's shimmer decided which way it fell.
 
-It is loaded eagerly at low priority and is not the LCP element: the `<pre>` is.
+It is loaded eagerly at low priority and is not the LCP element: a `<pre>` is.
+
+## The test card
+
+Rick asked for the header to be "more visually impressive" (2026-09-28). Of three candidates
+rendered at full size (a test card; a transmission, rings of characters leaving the head; the
+masthead printed in ink on the yellow channel) he chose the test card. It is the language of the
+Philips PM5544 card that Dutch television showed before the programmes (see
+`DESIGN_REFERENCES.md`), drawn in the field's characters rather than traced.
+
+- **The grid** is layer A outside the circle: `|`, `-` and `+` on a step of `--grid`, laid from
+  the circle's centre, one cell wide. Its squares are empty, unless the pointer ripples them.
+- **The circle** is layer C, rasterised as a line: one cell per column where it runs flat, one per
+  row where it runs steep. Where it is flat, the glyph follows the line's height inside its cell
+  (`'`, `-`, `.`, `_`), which is how an ASCII drawing makes a shallow curve read smooth; steep, it
+  is `/`, `\` and `|`. Drawn as a band of every cell it touched, the first prototype came out two
+  and three columns thick at the sides and one row thick at the top: a ring of hashes, not a line.
+- **Inside the circle** the field runs faint (`FIELD_WEIGHT`, 0.36) and the face develops out of
+  it, as it always has. The card is the frame; the face is the picture.
+- **The castellations** down each side, the name, the colour bars, the synopsis and the clock are
+  HTML, in `index.astro`. The name, the bars and the synopsis are one plate under the chin, solid,
+  so neither the grid nor the face ever runs behind text. The clock sits in a box on the top of the
+  circle and shows the visitor's own time, as the guide's does: to the second, only while the hero
+  is on screen, and to the minute under reduced motion (`src/scripts/testcard.ts`).
+- **The pointer.** The field is `pointer-events: none`, so a `pointermove` listener on it never ran:
+  the disturbance this document described had never happened (30 moves over the hero, 0 calls).
+  The hero listens now, and the ripple is local, fading over about 16 cells: as written it would
+  have rippled the whole screen, which nobody had seen because it never fired.
+
+**The geometry belongs to the stylesheet.** `index.astro` sets `--ring-cy`, `--ring-r`,
+`--face-cy`, `--grid` and `--card-at` on the hero, and the renderer reads the first four through a
+probe instead of deciding them. The boxes are laid out from the same properties before any script
+runs, so the handover to the live card cannot move one, and the no-JavaScript card lines up with the
+live one.
+
+**Where the renderer does not draw it** — no JavaScript (`@media (scripting: none)`) and reduced
+motion — the field's pseudo-elements draw the same grid and circle as plain lines, from the same
+properties, under the static portrait. Not while a script is merely on its way: the live card
+replaces the static frame within the first frames, and lines drawn twice would flash. Data saver
+and a failed import get the portrait and the boxes without the lines.
 
 ## Degradation
 
-| Rung                     | What the visitor gets                                | Cost     |
-| ------------------------ | ---------------------------------------------------- | -------- |
-| No JS                    | The resolved portrait, as text, over the photograph  | 0 JS     |
-| `prefers-reduced-motion` | The same static resolved portrait, zero frames       | 0 JS     |
-| Data saver               | Same                                                 | 0 JS     |
-| Import fails             | Same — the static frame stands                       | —        |
-| Non-monospace font       | Same — the renderer refuses to mount                 | —        |
-| Print / forced-colors    | `display: none`. It is decoration.                   | CSS only |
-| Offscreen / tab hidden   | Loop unsubscribes, RAF cancelled — it does not idle  | —        |
-| Full                     | Decode on load, pointer-reactive, dissolve on scroll | 3.6 KB   |
+| Rung                     | What the visitor gets                                                         | Cost     |
+| ------------------------ | ----------------------------------------------------------------------------- | -------- |
+| No JS                    | The resolved portrait, as text, over the photograph, on the card drawn in CSS | 0 JS     |
+| `prefers-reduced-motion` | The same, zero frames; the clock shows the minute                             | 0 JS\*   |
+| Data saver               | The portrait and the card's boxes, without its lines                          | 0 JS\*   |
+| Import fails             | Same — the static frame stands                                                | —        |
+| Non-monospace font       | Same — the renderer refuses to mount                                          | —        |
+| Print / forced-colors    | `display: none`. It is decoration.                                            | CSS only |
+| Offscreen / tab hidden   | Loop unsubscribes, RAF cancelled — it does not idle                           | —        |
+| Full                     | The test card, decode on load, pointer ripple, dissolve on scroll             | 4.3 KB   |
+
+\* No renderer. The page's own script, with the clock, still runs.
 
 The gates run **before** the dynamic import, so a visitor who will never see the animation never
 downloads it. JS only ever takes over an element that is already correct — the inverse of the usual
@@ -290,10 +345,10 @@ low-resolution face legible), strong directional light, and **a dark or plain ba
 last one is not a nicety. Every lit cell gets a glyph, so a mid-tone background turns the portrait
 into a textured rectangle with a face somewhere in it; the face has to come out of empty field.
 
-The hero is a title card: the field fills the screen, and the name and its caption stand over the
-lower third, on a ground the field runs out into. So the face belongs in the upper two-thirds,
-centred. After a new portrait, run `tests/a11y/hero-contrast.spec.ts`: a brighter face can put
-the copy under its floor.
+The hero is a test card: the face sits in the circle, and on a wide screen above its centre, so
+the name's plate crosses the chin and not the smile. A new portrait with the face lower in its
+frame puts the smile under the plate: look at it at 1440×900 and at a phone's size.
+`tests/a11y/hero-contrast.spec.ts` holds the copy's plates to their floor over the live field.
 
 **Current state: interim.** `portrait.jpg` is Rick's portrait on black, retouched with an image
 model and cropped tight to the head. Now that the photograph shows under the characters it is the

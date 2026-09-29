@@ -20,8 +20,9 @@ their turn arrives — not guessed at today.
 > treatment renders as text in two `<pre>` elements, so `ogl`, `motion`, the shared GL context, the
 > quality governor, the `potato`/`thin`/`steady`/`full` tiers, context-loss handling and build-time
 > poster generation were all cut. They existed to serve an effect a string assignment produces. The
-> whole art system measures **2.9 KB gzip** against the 25 KB that renderer would have taken on its
-> own. Later phases are renumbered accordingly.
+> whole art system measured **2.9 KB gzip** when the phase was cut (4.3 KB with the test card,
+> 2026-09-28), against the 25 KB that renderer would have taken on its own. Later phases are
+> renumbered accordingly.
 
 ---
 
@@ -228,6 +229,36 @@ channels doesn't fully take over, on desktop I can still slowly scroll past."_
   field observes a pixel in from each edge, and the channel is read from the region's inline
   style before anything is written.
 
+**The test card (2026-09-28).** Rick: _"re-check the header of the site and see if we can improve
+this so it becomes more visually impressive."_ The critique: the darkest screen on the site, a
+field that was wallpaper (two sine waves making horizontal bands), and a first screen that did not
+say television, though everything after it does. Of three candidates rendered at full size on the
+real field (a test card; a transmission, dashed and then full rings of characters leaving the head;
+the masthead printed in ink on the yellow channel) he chose the **test card**.
+
+- Channel 01 is the card a set shows before the programmes: a grid of characters edge to edge, a
+  circle drawn as a line with the face in it, castellations down the sides, the name in the station
+  box over colour bars from the palette, the synopsis under them, and a clock on the circle showing
+  the visitor's own time. The eyebrow above the name is gone; the role is under it, in the box.
+- The circle is a third `<pre>`, written once per layout and never per frame, so the colour budget
+  of two changing layers holds. The card's geometry is CSS (`--ring-cy`, `--ring-r`, `--face-cy`,
+  `--grid`, `--card-at`) and the renderer reads it through a probe, so the boxes cannot move at the
+  handover, and without JavaScript or under reduced motion the same card is drawn in plain lines.
+- The name's plate is in the flow and every screen from 630px tall fits it; a 360×640 phone ran
+  13px over and has a tighter card.
+- **Found on the way: the pointer never did anything.** The field listened for `pointermove` on
+  itself, and it is `pointer-events: none`: 30 moves over the hero, 0 calls, since the start. The hero
+  listens now, the ripple fades out over about 16 cells instead of covering the screen, and a test
+  sweeps the pointer and looks for the ripple in the grid's empty squares.
+- The photograph's alignment test measures in 2px steps now, not 4px. The characters carry a pixel
+  or two of bias that moves with the number of cells across the face, and at the smaller face it
+  landed on the line between two 4px steps, where the field's shimmer decided (docs/art-system.md).
+- Measured: the renderer is 4.3 KB gzip, was 3.7. At 4× CPU the idle card renders as often as the
+  old field did, 28.1 times a second against 28.2 (old and new built side by side and measured
+  interleaved, medians of 4), with fewer long animation frames: 53 ms over four runs against
+  1,287 ms. Homepage LCP **964 ms**, CLS 0, and the LCP element is now the circle's layer (open
+  item 11).
+
 **Stage 1b, the programme guide (2026-09-24).** Rick on stage 1: the project sections did not work
 at all, the case studies did not look good, full-screen red and blue were too bright, and there
 should be no header — it should feel like an app. Of three candidates rendered at full size (a
@@ -411,7 +442,9 @@ Nothing on this list may be installed without moving it off the list first.
     JavaScript has booted. Under 4x throttle that makes LCP bimodal — ~840–1030ms or ~1240–1470ms on
     identical bytes. The trip-wire sits above the slow mode so the gate is honest, but the real fix
     is to stop the live render registering as a new, later LCP: keep its painted box no larger than
-    the static frame's.
+    the static frame's. Since the test card (2026-09-28) the element is the circle's layer, C, which
+    the renderer writes once when it mounts: 964 ms in the vitals run, the fast side of the old race,
+    but still a paint that waits on JavaScript.
 12. **On a slow CPU the character field fills the main thread** while the hero is on screen (it
     also ran behind the guide until 2026-09-25; see the desktop run). At 4× throttle the idle hero
     keeps it 100% busy and manages about 28 renders a second, at 30fps or 60. Most of that is the

@@ -75,7 +75,16 @@ Engineering reference only; the visual direction is not taken from here.
 | **Adapt**                  | The shape of the idea: a transition-only effect with no persistent renderer, and timing coupled to real navigation state instead of a blind timeout.                                                                                                                                                                                                                  |
 | **Deliberately different** | All figures are from a React/Next App Router stack and must be re-measured here before being repeated. The orchestration is Next-specific and does not port to Astro's static output. Whether we take the WebGL path at all is an open decision — see the conflict register.                                                                                          |
 
----
+## 8. The Philips PM5544 test card
+
+Not a site: the test pattern itself, added 2026-09-28 when the hero became a test card. Described
+from the pattern, not measured from a page.
+
+|                            |                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Observed**               | A white grid on grey, edge to edge; a large circle in the middle; black and white castellations down both sides; colour bars, a greyscale step and frequency gratings inside the circle; and boxes inside it carrying the station's name, on many broadcasters' versions a clock as well. It is what Dutch sets showed before the programmes started. |
+| **Adapt**                  | The composition and its boxes: the grid, the circle round the one subject, the castellations, the name in the station box over colour bars, and a clock that is real state, the visitor's own time, as the guide's is.                                                                                                                                |
+| **Deliberately different** | Not a trace. No greyscale step, no gratings, no convergence pattern: the circle holds the face, and its field is the character field's. Everything is drawn in the field's characters and the palette, so the bars are the broadcast palette's colours, not a real card's. It is a frame for the portrait, not a test of anyone's television.         |
 
 ---
 

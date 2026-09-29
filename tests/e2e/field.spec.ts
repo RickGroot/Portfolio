@@ -47,22 +47,25 @@ async function recordResolve(page: Page): Promise<void> {
 	});
 }
 
+/** A and B are the field and the face, rewritten every frame; C is the test card's circle, written once per layout. */
 const layers = (page: Page) =>
 	page.evaluate(() => {
 		const a = document.querySelector('[data-layer="a"]')?.textContent ?? '';
 		const b = document.querySelector('[data-layer="b"]')?.textContent ?? '';
-		return { a, b };
+		const c = document.querySelector('[data-layer="c"]')?.textContent ?? '';
+		return { a, b, c };
 	});
 
 test.describe('character field', () => {
 	test('the grid never shears', async ({ page }) => {
 		await page.goto('/');
 		await page.waitForTimeout(1200);
-		const { a, b } = await layers(page);
+		const { a, b, c } = await layers(page);
 
 		for (const [name, text] of [
 			['a', a],
 			['b', b],
+			['c', c],
 		] as const) {
 			const lines = text.split('\n');
 			const widths = [...new Set(lines.map((l) => l.length))];
@@ -74,28 +77,96 @@ test.describe('character field', () => {
 		}
 	});
 
-	test('the two layers never occupy the same cell', async ({ page }) => {
+	test('no two layers ever occupy the same cell', async ({ page }) => {
 		await page.goto('/');
 		await page.waitForTimeout(1200);
-		const { a, b } = await layers(page);
+		const { a, b, c } = await layers(page);
 		expect(a.length).toBe(b.length);
+		expect(c.length, 'the circle is laid on a different grid').toBe(a.length);
 
 		let overlaps = 0;
 		for (let i = 0; i < a.length; i++) {
-			if (a[i] !== '\n' && a[i] !== ' ' && b[i] !== ' ') overlaps += 1;
+			const drawn = [a[i], b[i], c[i]].filter((ch) => ch !== ' ' && ch !== '\n').length;
+			if (drawn > 1) overlaps += 1;
 		}
 		// The colour split IS the resolve state, so a cell belongs to exactly
-		// one layer. Any overlap means the mask and the render disagree.
-		expect(overlaps, 'cells rendered into both colour layers').toBe(0);
+		// one layer, and the circle's cells to it alone. Any overlap means the
+		// mask and the render disagree.
+		expect(overlaps, 'cells rendered into more than one colour layer').toBe(0);
 	});
 
 	test('the ramp stays ASCII', async ({ page }) => {
 		await page.goto('/');
 		await page.waitForTimeout(1200);
-		const { a, b } = await layers(page);
+		const { a, b, c } = await layers(page);
 		// Anything outside printable ASCII risks a per-glyph font fallback with
 		// an unconstrained advance width, which shears the grid.
-		expect(/^[\x20-\x7E\n]*$/.test(a + b), 'non-ASCII characters in the field').toBe(true);
+		expect(/^[\x20-\x7E\n]*$/.test(a + b + c), 'non-ASCII characters in the field').toBe(true);
+	});
+
+	// The test card: a circle, drawn as a line round the face, and a grid
+	// outside it that reaches every edge of the hero. Both are the renderer's,
+	// from the geometry the stylesheet sets, so both can go missing on their own.
+	test('the test card draws its circle and its grid', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('[data-character-field]')).toHaveAttribute(
+			'data-field-state',
+			'live',
+		);
+		const { a, c } = await layers(page);
+		const ring = c.replace(/[\s]/g, '').length;
+		expect(ring, 'the circle has too few cells to be a circle').toBeGreaterThan(80);
+		expect(/^[ '\-._/\\|\n]*$/.test(c), 'the circle is drawn in something other than a line').toBe(
+			true,
+		);
+
+		const rowsA = a.split('\n');
+		const top = rowsA[0] ?? '';
+		const bottom = rowsA[rowsA.length - 1] ?? '';
+		// The grid's vertical lines cross the top and bottom rows; its
+		// horizontal ones run along some row from edge to edge.
+		expect((top.match(/[|+]/g) ?? []).length, 'no grid lines reach the top').toBeGreaterThan(3);
+		expect((bottom.match(/[|+]/g) ?? []).length, 'no grid lines reach the bottom').toBeGreaterThan(
+			3,
+		);
+		expect(
+			rowsA.some((row) => /^[-+]{2}/.test(row) && /[-+]{2}$/.test(row)),
+			'no horizontal grid line runs edge to edge',
+		).toBe(true);
+	});
+
+	// The field is pointer-events: none, so a pointermove listener on it never
+	// ran: the disturbance docs/art-system.md described had never happened
+	// (found 2026-09-28: 30 moves over the hero, 0 calls). Outside the circle
+	// the grid's squares are empty unless the pointer ripples them, so a glyph
+	// in one that is not a grid line is the ripple, and nothing else.
+	test('a fast pointer disturbs the card around it', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+		await expect(page.locator('[data-character-field]')).toHaveAttribute(
+			'data-field-state',
+			'live',
+		);
+		const stray = (): Promise<number> =>
+			page.evaluate(() => {
+				const rows = (document.querySelector('[data-layer="a"]')?.textContent ?? '').split('\n');
+				const ring = (document.querySelector('[data-layer="c"]')?.textContent ?? '').split('\n');
+				let n = 0;
+				rows.forEach((row, y) => {
+					// Left of the circle: the whole row where the circle does not reach.
+					const start = ring[y]?.search(/\S/) ?? -1;
+					const end = start < 0 ? row.length : start;
+					for (let x = 0; x < end; x++) if (!' |+-'.includes(row[x] ?? ' ')) n++;
+				});
+				return n;
+			});
+		expect(await stray(), 'the grid has glyphs in its squares before the pointer moved').toBe(0);
+
+		await page.mouse.move(60, 180);
+		for (let k = 0; k < 10; k++) await page.mouse.move(60 + (k % 2) * 220, 180 + k * 50);
+		await expect
+			.poll(stray, { message: 'a fast pointer left the card undisturbed', timeout: 3000 })
+			.toBeGreaterThan(0);
 	});
 
 	test('it decodes from noise into the portrait', async ({ page }) => {
@@ -151,9 +222,22 @@ test.describe('character field', () => {
 			})
 			.toBeGreaterThan(0.95);
 
-		const { a, b } = await layers(page);
+		const { a, b, c } = await layers(page);
 		const rowsA = a.split('\n');
 		const rowsB = b.split('\n');
+		const rowsC = c.split('\n');
+
+		// On the test card the field lives inside the circle, and outside it the
+		// grid's empty squares are meant to be empty. The face sits high in the
+		// circle, so its box's top corners cross the line: only the cells inside
+		// the circle, between its two strokes on that row, count.
+		const insideCircle = (x: number, y: number): boolean => {
+			const row = rowsC[y] ?? '';
+			const first = row.search(/\S/);
+			if (first < 0) return false;
+			const last = row.length - 1 - [...row].reverse().join('').search(/\S/);
+			return x > first && x < last && row[x] === ' ';
+		};
 
 		// The face's bounding box: every cell the portrait layer draws.
 		let top = Infinity;
@@ -185,13 +269,15 @@ test.describe('character field', () => {
 		] as const) {
 			for (let y = y0; y < y0 + ch; y++) {
 				for (let x = x0; x < x0 + cw; x++) {
+					if (!insideCircle(x, y)) continue;
 					cells += 1;
 					if (rowsA[y]?.[x] === ' ' && rowsB[y]?.[x] === ' ') blank += 1;
 				}
 			}
 		}
-		// The field has troughs of its own, about one cell in ten; the empty box
-		// was every cell.
+		expect(cells, 'too few corner cells inside the circle to judge').toBeGreaterThan(40);
+		// The field has troughs of its own, a cell in four or five inside the
+		// circle, where it runs faint; the empty box was every cell.
 		expect(
 			blank / cells,
 			`${blank} of ${cells} corner cells are empty: the face sits in a box`,
@@ -429,7 +515,7 @@ test.describe('character field', () => {
 			expect(clip.width * clip.height, 'the photograph has no box on screen').toBeGreaterThan(1e4);
 
 			const hideCopy =
-				'.hero__copy, .cursor__dot, .cursor__ring { visibility: hidden !important; } ';
+				'.hero__card, .hero__clock, .cursor__dot, .cursor__ring { visibility: hidden !important; } ';
 			const shoot = async (css: string): Promise<Buffer> => {
 				const tag = await page.addStyleTag({ content: hideCopy + css });
 				await page.waitForTimeout(200);
@@ -440,26 +526,37 @@ test.describe('character field', () => {
 				return png;
 			};
 			const photo = await shoot(
-				'.field__layer { visibility: hidden !important; } ' +
+				'.field__layer, .field::before, .field::after { visibility: hidden !important; } ' +
 					'.field__photo { opacity: 1 !important; mix-blend-mode: normal !important; mask-image: none !important; }',
 			);
-			// Live, layer A is the field everywhere and the face is layer B;
-			// static, layer A is the face.
+			// Live, layer A is the field everywhere and the face is layer B, and
+			// the test card's circle, layer C, crosses the photograph's corners;
+			// static, layer A is the face. The reduced-motion card draws its
+			// circle as a line of its own, on the field's pseudo-elements.
 			const chars = await shoot(
-				'.field__photo { visibility: hidden !important; }' +
-					(state === 'live' ? ' .field__layer--a { visibility: hidden !important; }' : ''),
+				'.field__photo, .field::before, .field::after { visibility: hidden !important; }' +
+					(state === 'live'
+						? ' .field__layer--a, .field__layer--c { visibility: hidden !important; }'
+						: ''),
 			);
 
-			// A quarter of the size, blurred past the glyphs' shapes: what is left
-			// is the brightness of each patch of the face, in both.
-			const SCALE = 0.25;
+			// Half the size, blurred past the glyphs' shapes -- 10px, as it always
+			// was -- so what is left is the brightness of each patch of the face,
+			// in both. In 2px steps: the characters carry a bias of their own, a
+			// pixel or two either way depending on how many cells span the face
+			// (measured 2026-09-28: +1px at 69 columns, -1 to -2px at 54, with the
+			// photograph following the face's box exactly -- moving the box a whole
+			// cell moved nothing). A quarter of the size, in 4px steps, put a 2px
+			// bias on the line between two steps, and the field's shimmer chose.
+			// The bug this exists for drew the face half a cell off: 5px and more.
+			const SCALE = 0.5;
 			const w = Math.round(clip.width * SCALE);
 			const h = Math.round(clip.height * SCALE);
 			const grey = (png: Buffer): Promise<Buffer> =>
-				sharp(png).greyscale().resize(w, h, { fit: 'fill' }).blur(2.5).raw().toBuffer();
+				sharp(png).greyscale().resize(w, h, { fit: 'fill' }).blur(5).raw().toBuffer();
 			const [pa, pb] = await Promise.all([grey(photo), grey(chars)]);
 
-			const R = 8; // 32px each way
+			const R = 16; // 32px each way
 			let best = { r: -2, dx: 0, dy: 0 };
 			for (let dy = -R; dy <= R; dy++) {
 				for (let dx = -R; dx <= R; dx++) {
@@ -489,10 +586,10 @@ test.describe('character field', () => {
 			expect(best.r, 'the photograph and the characters are not the same picture').toBeGreaterThan(
 				0.8,
 			);
-			expect(
-				[best.dx / SCALE, best.dy / SCALE],
-				`the face is drawn ${best.dx / SCALE}px across and ${best.dy / SCALE}px down from the photograph`,
-			).toEqual([0, 0]);
+			// Within one step of none, each way.
+			const off = `the face is drawn ${best.dx / SCALE}px across and ${best.dy / SCALE}px down from the photograph`;
+			expect(Math.abs(best.dx / SCALE), off).toBeLessThanOrEqual(2);
+			expect(Math.abs(best.dy / SCALE), off).toBeLessThanOrEqual(2);
 			await context.close();
 		});
 	}

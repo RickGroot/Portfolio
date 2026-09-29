@@ -48,19 +48,20 @@ test.describe('parallax', () => {
 
 	test('the layers of a section move at different depths as it scrolls', async ({ page }) => {
 		await page.goto('/');
-		expect(Math.abs(await offsetOf(page, '.hero__copy h1 > span:last-child'))).toBeLessThan(1.5);
+		expect(Math.abs(await offsetOf(page, '.hero__card'))).toBeLessThan(1.5);
 
 		await jumpTo(page, 320);
-		const rick = await offsetOf(page, '.hero__copy h1 > span:first-child');
-		const groot = await offsetOf(page, '.hero__copy h1 > span:last-child');
+		const clock = await offsetOf(page, '.hero__clock');
+		const card = await offsetOf(page, '.hero__card');
 		const field = await offsetOf(page, '.hero .field');
 
 		// Scrolling down, a forward layer moves up faster than the page (a
-		// negative offset) and a back layer lags behind it (positive). The
-		// name's two words are two planes: GROOT is nearer than RICK.
-		expect(rick, 'RICK should come forward').toBeLessThan(-4);
-		expect(groot, 'GROOT should come further forward than RICK').toBeLessThan(rick);
-		expect(field, 'the portrait should sit back').toBeGreaterThan(4);
+		// negative offset) and a back layer lags behind it (positive). The test
+		// card's boxes come off it in two planes: the name's plate is nearer
+		// than the clock on the circle.
+		expect(clock, 'the clock should come forward').toBeLessThan(-4);
+		expect(card, 'the name plate should come further forward than the clock').toBeLessThan(clock);
+		expect(field, 'the card behind them should sit back').toBeGreaterThan(4);
 	});
 
 	// The key art is the stage the case study stands on (Rick: "the image can
@@ -209,11 +210,7 @@ test.describe('parallax', () => {
 		const page = await context.newPage();
 		await page.goto('/');
 		await jumpTo(page, 320);
-		for (const layer of [
-			'.hero__copy h1 > span:last-child',
-			'.hero .field',
-			'.guide--screen .guide__grid',
-		]) {
+		for (const layer of ['.hero__card', '.hero .field', '.guide--screen .guide__grid']) {
 			expect(await offsetOf(page, layer), `${layer} moved under reduced motion`).toBe(0);
 		}
 		await context.close();

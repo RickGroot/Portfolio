@@ -2,21 +2,23 @@ import { test, expect } from '@playwright/test';
 import sharp from 'sharp';
 
 /**
- * The hero's copy stands on the character field itself, over the portrait, on
- * a ground the field runs out into -- no plates (Rick, 2026-09-25, the title
- * card). axe cannot judge that: the background is a moving field of glyphs. So
- * this reads the pixels, as stage-contrast.spec.ts does for the case studies:
- * hide the copy, take the brightest pixel behind each block's ink across
- * several frames -- the field never stands still -- first with the pointer
- * away and then with it over the name, where the lens changes the glyphs.
+ * The hero's copy stands on the test card's boxes (Rick, 2026-09-28): plates of
+ * the field over the character field, the grid and the face. Until then it
+ * stood on the field itself, on a ground the field ran out into, and this test
+ * was the only thing that could judge it. On plates axe can, but a plate that
+ * lost its background -- or a box the field's layers came to paint over -- would
+ * put the moving glyphs straight behind the text, and axe reads the CSS, not
+ * the pixels. So this still reads the pixels, as stage-contrast.spec.ts does
+ * for the case studies: hide the copy, take the brightest pixel behind each
+ * block's ink across several frames -- the field never stands still -- first
+ * with the pointer away and then with it over the name, where it ripples the
+ * card.
  *
- * The ink, not the box: each word of the name is a block, as wide as the
- * column, and its box runs straight across the face.
+ * The ink, not the box: a plate is wider than its words.
  *
- * The sizes are the ones that failed while the ground was tuned: a short
- * laptop, where the copy climbs into the chin, and a small phone, where it
- * crosses the whole face. And a large screen, where the photograph under the
- * characters is at its biggest and brightest.
+ * The sizes: a short laptop, where the card sits highest on the face; two
+ * phones, where it crosses the chin; and a large screen, where the photograph
+ * under the characters is at its biggest and brightest.
  */
 
 const luminance = (r: number, g: number, b: number): number => {
@@ -27,13 +29,13 @@ const luminance = (r: number, g: number, b: number): number => {
 	return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 };
 
-/** The name is large text: 3:1. The eyebrow and the lede are body text: 4.5:1. */
-const FLOORS = { eyebrow: 4.5, rick: 3, groot: 3, lede: 4.5 } as const;
+/** The name is large text: 3:1. The role, the synopsis and the clock are body text: 4.5:1. */
+const FLOORS = { name: 3, role: 4.5, lede: 4.5, clock: 4.5 } as const;
 const SELECTORS = {
-	eyebrow: '.hero__eyebrow',
-	rick: '.hero__copy h1 > span:first-child',
-	groot: '.hero__copy h1 > span:last-child',
-	lede: '.hero .lede',
+	name: '.hero__id h1',
+	role: '.hero__role',
+	lede: '.hero__lede',
+	clock: '.hero__clock',
 } as const;
 
 /** The field's entry, ENTRY_MS in src/lib/field/field.ts, plus a margin. */
@@ -75,9 +77,15 @@ for (const size of [
 				const c = (getComputedStyle(el).color.match(/\d+(\.\d+)?/g) ?? []).map(Number);
 				out[k] = { rects, c };
 			}
+			// The plates' own rules go with the copy. A text box is the face's
+			// content area, and at line-height 0.9 that reaches past the line into
+			// the name plate's border: the paper rule measured as "behind" the
+			// name at 1:1, while the capitals stand well clear of it. A plate's
+			// background runs under its border, so its ground stays its own.
 			const hide = document.createElement('style');
 			hide.textContent =
-				'.hero__copy, .hero__copy * { color: transparent !important; } ' +
+				'.hero__card, .hero__card *, .hero__clock { color: transparent !important; ' +
+				'border-color: transparent !important; } ' +
 				'.cursor__dot, .cursor__ring { display: none !important; }';
 			document.head.append(hide);
 			return out;
@@ -99,7 +107,7 @@ for (const size of [
 		const brightest: Record<string, number> = {};
 		for (const pointer of ['away', 'over'] as const) {
 			if (pointer === 'over') {
-				const g = blocks.groot!.rects[0]!;
+				const g = blocks.name!.rects[0]!;
 				await page.mouse.move(g.x + g.w / 2, g.y + g.h / 2, { steps: 8 });
 			}
 			for (let frame = 0; frame < 3; frame++) {

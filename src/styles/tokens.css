@@ -35,6 +35,19 @@
 	   so the face is the brightest thing on it (2026-09-25). */
 	--art-noise: color-mix(in oklab, var(--signal-blue) 58%, var(--ink));
 	--art-signal: color-mix(in oklab, var(--signal-blue) 22%, var(--paper));
+	/* The hero's test card (2026-09-28): its castellations a step under the
+	   grid's blue, and its colour bars the broadcast palette, brightest to
+	   darkest, as the bars on a real card run. */
+	--castle: color-mix(in oklab, var(--signal-blue) 46%, var(--ink));
+	--bars: linear-gradient(
+		to right,
+		var(--paper) 0 16.667%,
+		var(--signal-yellow) 0 33.333%,
+		var(--brass) 0 50%,
+		var(--signal-red) 0 66.667%,
+		var(--signal-blue) 0 83.333%,
+		var(--navy) 0
+	);
 
 	--art-cell: clamp(10px, 1.25vw, 17px);
 

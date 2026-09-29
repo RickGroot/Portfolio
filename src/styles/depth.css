@@ -39,9 +39,8 @@
 
 		/* ---- the layers ---- */
 		.hero .field,
-		.hero__eyebrow,
-		.hero__copy h1 > span,
-		.hero .lede,
+		.hero__clock,
+		.hero__card,
 		.guide--screen .guide__bar,
 		.guide--screen .guide__info,
 		.guide--screen .guide__screen,
@@ -61,22 +60,17 @@
 
 		/* ---- the depths ---- */
 
-		/* The masthead: the portrait falls behind, and the name's two words
-		   pull apart as it leaves -- two planes, not one line of type. */
+		/* The masthead: the card's picture falls behind, and its boxes come
+		   forward off it as it leaves -- the name's plate furthest, the clock on
+		   the circle less. The castellations are the frame, and stay put. */
 		.hero .field {
 			--depth: -0.5;
 		}
-		.hero__eyebrow {
+		.hero__clock {
 			--depth: 0.25;
 		}
-		.hero__copy h1 > span:first-child {
-			--depth: 0.4;
-		}
-		.hero__copy h1 > span:last-child {
-			--depth: 0.85;
-		}
-		.hero .lede {
-			--depth: 0.18;
+		.hero__card {
+			--depth: 0.6;
 		}
 
 		/* The guide: its screen sits back, its listings come forward. */
@@ -138,9 +132,8 @@
 				--depth-unit: 7vh;
 			}
 
-			.hero__eyebrow,
-			.hero__copy h1 > span,
-			.hero .lede,
+			.hero__clock,
+			.hero__card,
 			.guide--screen .guide__bar,
 			.guide--screen .guide__info,
 			.guide--screen .guide__grid,

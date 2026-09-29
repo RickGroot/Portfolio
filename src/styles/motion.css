@@ -57,16 +57,13 @@
 		 * should settle as it lands rather than pop. Only opacity and translate,
 		 * so nothing here can shift layout.
 		 */
+		/* The masthead is at the top of the document and never "arrives": it */
+		/* has neither of these, and its card rides depth.css instead. */
 		[data-section] .section__inner,
 		[data-section] .panel {
 			animation: arrive linear both;
 			animation-timeline: view();
 			animation-range: entry 4% cover 34%;
-		}
-
-		/* The masthead is at the top of the document and never "arrives". */
-		.hero .hero__copy {
-			animation: none;
 		}
 	}
 }

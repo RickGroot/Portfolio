@@ -3,12 +3,14 @@ import { test, expect, type Page } from '@playwright/test';
 test.use({ viewport: { width: 1440, height: 900 } });
 
 /**
- * The hero bleeds the full viewport width so the character field can fill it.
- * That made its copy re-centre in the viewport rather than align to the page
- * column, leaving the h1 221px right of every heading below it -- obvious on
- * screen, invisible to every other test we had.
+ * Every section's content column is the page's. The hero bleeds the full
+ * viewport width so the character field can fill it, and once made its copy
+ * re-centre in the viewport, leaving the h1 221px right of every heading below
+ * it -- obvious on screen, invisible to every other test we had. The hero is a
+ * test card now, and its card is centred on the circle on purpose; the next
+ * test holds that.
  */
-test('the hero copy aligns to the same column as the rest of the page', async ({ page }) => {
+test('the sections align to the same column as the rest of the page', async ({ page }) => {
 	await page.goto('/');
 
 	const left = async (selector: string): Promise<number> =>
@@ -24,8 +26,6 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 		probe.remove();
 		return x;
 	});
-	const h1 = await left('.hero__copy h1');
-	const lede = await left('.hero .lede');
 	// The guide's content column.
 	const work = await left('#work .guide__inner');
 	// Also the content column: the section's '04' index marker sits before the
@@ -33,8 +33,6 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 	const contact = await left('#contact .section__inner');
 
 	for (const [name, x] of [
-		['hero h1', h1],
-		['hero lede', lede],
 		['Work guide column', work],
 		['Contact', contact],
 	] as const) {
@@ -46,13 +44,45 @@ test('the hero copy aligns to the same column as the rest of the page', async ({
 });
 
 /**
- * The name is one line (Rick, 2026-09-25: "Please make my name over 1 line").
- * Each word is its own inline block, so it can move at its own depth, and an
- * inline block wraps as a whole: nothing but this notices when a size change
- * sends "Groot" down under "Rick". Below 360 wide it may wrap, rather than run
- * off the screen.
+ * The test card is symmetrical, and the boxes on it read as one plate only if
+ * they share one centre with the circle and the clock: a card nudged off it is
+ * a mistake anyone can see and nothing else would catch. And one plate: the
+ * name's box, the bars and the synopsis the same width.
  */
-test('the name sits on one line, from a small phone to a large screen', async ({ page }) => {
+test('the test card is centred on its circle, one plate wide', async ({ page }) => {
+	for (const size of [
+		{ width: 1440, height: 900 },
+		{ width: 390, height: 844 },
+	]) {
+		await page.setViewportSize(size);
+		await page.goto('/');
+		await expect(page.locator('[data-hero-clock]')).toBeVisible();
+		const m = await page.evaluate(() => {
+			const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
+			const mid = (r: DOMRect) => r.left + r.width / 2;
+			const hero = box('.hero');
+			return {
+				hero: mid(hero),
+				card: mid(box('.hero__card')),
+				clock: mid(box('.hero__clock')),
+				widths: ['.hero__id', '.hero__bars', '.hero__lede'].map((s) => Math.round(box(s).width)),
+			};
+		});
+		expect(Math.abs(m.card - m.hero), `${size.width}px: the card is off centre`).toBeLessThan(1);
+		expect(Math.abs(m.clock - m.hero), `${size.width}px: the clock is off centre`).toBeLessThan(1);
+		expect(new Set(m.widths).size, `${size.width}px: the plate's boxes differ in width`).toBe(1);
+	}
+});
+
+/**
+ * The name is one line (Rick, 2026-09-25: "Please make my name over 1 line"),
+ * in its box on the test card. `nowrap` holds it there, so a size that makes
+ * it too big for its box does not wrap it: it runs out of the box, which is
+ * what this looks for, from a small phone to a large screen.
+ */
+test('the name sits on one line inside its box, from a small phone to a large screen', async ({
+	page,
+}) => {
 	for (const size of [
 		{ width: 360, height: 640 },
 		{ width: 390, height: 844 },
@@ -63,13 +93,20 @@ test('the name sits on one line, from a small phone to a large screen', async ({
 		await page.setViewportSize(size);
 		await page.goto('/');
 		await page.evaluate(() => document.fonts.ready);
-		const tops = await page.evaluate(() =>
-			[...document.querySelectorAll('.hero__copy h1 > span')].map((s) =>
-				Math.round(s.getBoundingClientRect().top),
-			),
-		);
-		expect(tops, `${size.width}x${size.height}: the name has ${tops.length} words`).toHaveLength(2);
-		expect(tops[1], `${size.width}x${size.height}: "Groot" wrapped under "Rick"`).toBe(tops[0]);
+		const m = await page.evaluate(() => {
+			const h1 = document.querySelector('.hero__id h1')!;
+			const range = document.createRange();
+			range.selectNodeContents(h1);
+			const rects = [...range.getClientRects()].filter((r) => r.width > 1);
+			const text = range.getBoundingClientRect();
+			const box = document.querySelector('.hero__id')!.getBoundingClientRect();
+			return {
+				lines: new Set(rects.map((r) => Math.round(r.top))).size,
+				inside: text.left >= box.left && text.right <= box.right,
+			};
+		});
+		expect(m.lines, `${size.width}x${size.height}: the name wrapped`).toBe(1);
+		expect(m.inside, `${size.width}x${size.height}: the name runs out of its box`).toBe(true);
 	}
 });
 

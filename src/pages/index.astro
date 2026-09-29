@@ -42,7 +42,7 @@ const rail = [
 		))}
 	</nav>
 
-	{/* ---- Masthead ---- */}
+	{/* ---- Masthead: the test card ---- */}
 	<section
 		id="top"
 		class="section hero"
@@ -53,15 +53,21 @@ const rail = [
 		style={channelStyle('ink')}
 	>
 		<CharacterField />
-		<div class="hero__copy">
-			<p class="hero__eyebrow">Connected TV developer</p>
-			{/* One line (Rick, 2026-09-25), still two planes: each word moves at its */}
-			{/* own depth. The space between the spans is what keeps the accessible */}
-			{/* name "Rick Groot" rather than "RickGroot". */}
-			<h1 id="top-heading" data-decode>
-				<span>Rick</span> <span>Groot</span>
-			</h1>
-			<p class="lede">
+		<span class="hero__castle hero__castle--start" aria-hidden="true"></span>
+		<span class="hero__castle hero__castle--end" aria-hidden="true"></span>
+		{/* Real state: the visitor's own time, as the guide's clock is. Filled */}
+		{/* and shown by src/scripts/testcard.ts, so without JavaScript there is */}
+		{/* no clock rather than a stopped one. */}
+		<p class="hero__clock" data-hero-clock aria-hidden="true" hidden></p>
+		<div class="hero__card">
+			<div class="hero__id">
+				<h1 id="top-heading" data-decode>
+					Rick Groot
+				</h1>
+				<p class="hero__role">Connected TV developer</p>
+			</div>
+			<span class="hero__bars" aria-hidden="true"></span>
+			<p class="hero__lede">
 				I build Connected TV apps at Hypersolid, from NLZIET on Smart TVs to Chromecast receivers
 				and the video players underneath them. Most of it is performance work: the devices they run
 				on are older and slower than the machine I write on.
@@ -158,9 +164,11 @@ const rail = [
 	<script>
 		import { boot } from '../scripts/sections';
 		import { boot as bootZap } from '../scripts/zap';
+		import { boot as bootTestcard } from '../scripts/testcard';
 		import { decode } from '../lib/decode';
 		boot();
 		bootZap();
+		bootTestcard();
 		// The name tunes in with the portrait on first sight -- once the display
 		// face is in, so each letter is measured in it rather than in the fallback.
 		// Not on a deep link that lands further down the page.
@@ -171,55 +179,134 @@ const rail = [
 </BaseLayout>
 
 <style>
-	/* ---- Masthead -------------------------------------------------------- */
+	/* ---- Masthead: the test card ------------------------------------------ */
 
-	/* A title card (Rick, 2026-09-25: "the art can maybe be full-screen ... */
-	/* focus lies on the text now more"). The character field fills the whole */
-	/* screen with the face in the middle, and the name stands small at its */
-	/* foot with one caption, the way a programme's title card does. */
+	/*
+	 * Channel 01 is the card a television shows before the programmes start
+	 * (Rick, 2026-09-28, of three candidates: this, a transmission of rings, and
+	 * a yellow poster). The grid runs edge to edge, drawn in characters by the
+	 * field; the circle stands in the middle with the face in it; the name, the
+	 * colour bars and the synopsis are the card's boxes, one plate under the
+	 * chin; the clock is in the box on the top of the circle.
+	 *
+	 * The geometry is here and only here. The field reads it through a probe
+	 * (src/lib/field/field.ts), and the boxes are laid out from it before any
+	 * script runs, so the handover to the live card cannot move one.
+	 *   --ring-cy  the circle's centre, down from the top of the hero
+	 *   --ring-r   its radius
+	 *   --face-cy  the face's centre: above the circle's on a wide screen, so
+	 *              the name's box crosses the chin rather than the smile
+	 *   --grid     the grid's step
+	 *   --card-at  where the name's box starts, in radii below the centre
+	 */
 	.hero {
+		--ring-cy: 47svh;
+		--ring-r: min(43svh, 38vw);
+		--face-cy: calc(var(--ring-cy) - var(--ring-r) * 0.14);
+		--grid: calc(100svh / 8.4);
+		--card-at: 0.36;
 		position: relative;
 		display: grid;
-		align-content: end;
+		justify-items: center;
+		align-content: start;
 		min-block-size: 100svh;
+		/* The card is in the flow, so a screen too short for it grows the */
+		/* section rather than clipping the synopsis. */
+		padding-block: calc(var(--ring-cy) + var(--ring-r) * var(--card-at)) var(--s-6);
 		overflow: clip;
 	}
 
-	/* Scrim. A static gradient, painted once -- never animated. The field */
-	/* runs out into its own ground at the foot, where the copy stands, and */
-	/* nowhere else, so the art has the screen. tests/a11y/hero-contrast */
-	/* measures the copy against the brightest pixel behind it. */
-	.hero::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		z-index: 1;
-		pointer-events: none;
-		background:
-			linear-gradient(to bottom, var(--field), transparent 10%),
-			linear-gradient(
-				to top,
-				var(--field) 0%,
-				var(--field) max(12%, 11rem),
-				color-mix(in oklab, var(--field) 72%, transparent) max(30%, 19rem),
-				transparent max(52%, 30rem)
-			);
+	/* A phone: the circle across the width, high up, with the face centred in */
+	/* it, and the card lower, under the chin. */
+	@media (max-aspect-ratio: 1 / 1) {
+		.hero {
+			--ring-cy: 35svh;
+			--ring-r: 45vw;
+			--face-cy: var(--ring-cy);
+			--grid: 20vw;
+			--card-at: 0.62;
+		}
 	}
 
-	.hero__copy {
+	/* The castellations down each side: squares of the grid, alternately */
+	/* filled, as on the Philips card every Dutch set showed before the */
+	/* programmes. Narrow, so the rail stands clear of them. */
+	.hero__castle {
+		position: absolute;
+		z-index: 1;
+		inset-block: 0;
+		inline-size: clamp(10px, 1.2vw, 18px);
+		background: repeating-linear-gradient(
+			to bottom,
+			var(--castle) 0 var(--grid),
+			transparent var(--grid) calc(var(--grid) * 2)
+		);
+		background-position-y: var(--ring-cy);
+	}
+
+	.hero__castle--start {
+		inset-inline-start: 0;
+	}
+
+	.hero__castle--end {
+		inset-inline-end: 0;
+		background-position-y: calc(var(--ring-cy) + var(--grid));
+	}
+
+	@media (max-width: 47.99rem) {
+		.hero__castle {
+			display: none;
+		}
+	}
+
+	/* The clock, in its box on the top of the circle, the way a card carries */
+	/* the time. */
+	.hero__clock {
+		position: absolute;
+		z-index: 2;
+		inset-inline-start: 50%;
+		inset-block-start: calc(var(--ring-cy) - var(--ring-r));
+		translate: -50% -50%;
+		padding: var(--s-1) var(--s-4);
+		background: var(--field);
+		border: 2px solid var(--mark);
+		font-family: var(--font-mono);
+		font-size: var(--t-lg);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.06em;
+		line-height: 1.3;
+	}
+
+	/* One column, centred under the face: the name in its box, then the bars */
+	/* and the synopsis at the same width, so the three read as one plate. */
+	/* Solid, so neither the grid nor the face ever runs behind the text. */
+	.hero__card {
 		position: relative;
 		z-index: 2;
 		display: grid;
-		justify-items: start;
-		gap: var(--s-3);
-		/* Same formula as .wrap, so the left edge lines up with every section */
-		/* below. */
-		width: min(100% - var(--gutter) * 2, var(--wrap));
-		margin-inline: auto;
-		padding-block-end: var(--s-8);
+		inline-size: min(max(34rem, var(--ring-r) * 1.1), 100% - var(--gutter) * 2);
 	}
 
-	.hero__eyebrow {
+	.hero__id {
+		display: grid;
+		justify-items: center;
+		gap: var(--s-2);
+		padding: var(--s-3) var(--s-4) var(--s-4);
+		background: var(--field);
+		border: 2px solid var(--mark);
+		border-block-end: 0;
+	}
+
+	/* One line (Rick, 2026-09-25). The svh term keeps a short laptop screen's */
+	/* name from outgrowing its share of the circle. */
+	.hero__id h1 {
+		font-size: clamp(2.25rem, min(1rem + 4.2vw, 8.6svh), 5rem);
+		line-height: 0.9;
+		text-transform: uppercase;
+		white-space: nowrap;
+	}
+
+	.hero__role {
 		font-family: var(--font-mono);
 		font-size: var(--t-xs);
 		letter-spacing: var(--tracking-meta);
@@ -227,39 +314,53 @@ const rail = [
 		color: var(--accent);
 	}
 
-	/* Two planes on one line, a title rather than the whole screen: the art is */
-	/* the loudest thing on it. The svh term keeps a short laptop screen from */
-	/* pushing the name into the face. */
-	.hero__copy h1 {
-		font-size: clamp(3rem, min(1rem + 6.5vw, 14svh), 8rem);
-		line-height: 0.88;
-		letter-spacing: var(--tracking-display);
-		text-transform: uppercase;
+	/* The colour bars: the broadcast palette, brightest to darkest, the way */
+	/* the bars on a real card run. --bars is in tokens.css, with the art's */
+	/* other colours. */
+	.hero__bars {
+		display: block;
+		block-size: clamp(1rem, 3svh, 1.75rem);
+		border-inline: 2px solid var(--mark);
+		background: var(--bars);
 	}
 
-	/* Inline blocks, so each word can still take its own transform. */
-	.hero__copy h1 span {
-		display: inline-block;
+	.hero__lede {
+		padding: var(--s-3) var(--s-4);
+		background: var(--field);
+		border: 2px solid var(--mark);
+		border-block-start: 0;
+		font-size: var(--t-sm);
+		color: var(--mark-dim);
 	}
 
-	.hero .lede {
-		max-width: 36rem;
-		font-size: var(--t-base);
+	@media (min-width: 110rem) {
+		.hero__lede {
+			font-size: var(--t-base);
+		}
 	}
 
-	/* On a phone the face fills the width and the copy crosses its foot, so */
-	/* the ground comes further up. */
-	@media (max-width: 47.99rem) {
-		.hero::after {
-			background:
-				linear-gradient(to bottom, var(--field), transparent 10%),
-				linear-gradient(
-					to top,
-					var(--field) 0%,
-					var(--field) max(30%, 15rem),
-					color-mix(in oklab, var(--field) 72%, transparent) max(45%, 21rem),
-					transparent max(62%, 27rem)
-				);
+	/* A short screen: 1280x720 leaves 630px under the browser's own chrome, */
+	/* and every section fits one screen from there; a 360x640 phone ran 13px */
+	/* over at the full size. */
+	@media (max-height: 760px) and (min-aspect-ratio: 1 / 1), (max-height: 700px) {
+		.hero {
+			--card-at: 0.3;
+		}
+
+		.hero__id {
+			gap: var(--s-1);
+			padding-block: var(--s-2) var(--s-3);
+		}
+
+		.hero__lede {
+			padding-block: var(--s-2);
+			font-size: var(--t-xs);
+		}
+	}
+
+	@media (max-aspect-ratio: 1 / 1) and (max-height: 700px) {
+		.hero {
+			--card-at: 0.55;
 		}
 	}
 

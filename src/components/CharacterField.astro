@@ -4,19 +4,24 @@ import portrait from '@assets/portrait.jpg';
 import { STATIC_FRAME } from '../generated/portrait-map';
 
 /**
- * The hero character field.
+ * The hero character field: channel 01's test card.
  *
  * Layer A holds the static, fully-resolved portrait, rendered at build time.
  * That is what no-JS, reduced-motion, data-saver and import-failure visitors
  * see -- the real thing, not a spinner. The renderer only ever takes over an
- * element that already looks right.
+ * element that already looks right. Live, layer A is the card's grid and the
+ * field inside its circle, layer B the lit face, and layer C the circle.
  *
- * Under both, the portrait the characters are drawn from, faint and in the
+ * Under them, the portrait the characters are drawn from, faint and in the
  * field's own blue (Rick, 2026-09-25: "it's not really clear that it's my face
  * on there"). At character resolution a face is a shape; with the photograph
  * glowing through, it is someone. It sits exactly where the characters draw
- * the face: over the static frame's box, and once the field is live, where
- * the field says it put the face (--port-*).
+ * the face: centred on the face's own centre (--face-cy) in the static frame's
+ * box, and once the field is live, where the field says it put the face
+ * (--port-*).
+ *
+ * The card's geometry -- --ring-cy, --face-cy, --ring-r, --grid -- is set by
+ * the hero (index.astro). The field reads it; it never decides it.
  */
 ---
 
@@ -34,6 +39,7 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 	</span>
 	<pre class="field__layer field__layer--a" data-layer="a">{STATIC_FRAME}</pre>
 	<pre class="field__layer field__layer--b" data-layer="b"></pre>
+	<pre class="field__layer field__layer--c" data-layer="c"></pre>
 </div>
 
 <script>
@@ -91,12 +97,8 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		unicode-bidi: isolate;
 		text-size-adjust: none;
 
-		/* Fade the edges so the grid does not end in a hard rectangle. */
-		/* Barely a mask. The previous radial faded the field out well before the */
-		/* edges, so a full-bleed element still read as a small patch in the */
-		/* middle of the screen. This only softens the last few percent. */
-		mask-image: radial-gradient(150% 130% at 50% 50%, #000 72%, transparent 100%);
-		opacity: 1;
+		/* No edge fade. The card is flat and runs to the edges of the screen, */
+		/* its castellations with it: a soft edge only blurred the frame. */
 	}
 
 	/*
@@ -125,20 +127,27 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 		white-space: inherit;
 	}
 
+	/* The static frame is the face alone, so it stands where the face does: */
+	/* on a phone that is well above the middle. A translate, which is paint, */
+	/* not layout, so the handover to the live grid shifts nothing. */
+	.field[data-field-state='static'] .field__layer {
+		translate: 0 calc(var(--face-cy, 50%) - 50%);
+	}
+
 	/* The photograph, printed in the field's two colours by .duo (surfaces.css): */
 	/* its shadows in the field itself, so at this opacity they vanish into it, */
 	/* and only its light parts glow through. The characters stay the picture. */
-	/* No blend mode: the field's mask makes it an isolated group, so there is */
-	/* nothing behind the photograph to blend with, and `screen` measured a */
-	/* difference of 1/255. Its box starts as the static frame's: 64 columns of */
-	/* this monospace font by 32 lines, centred like the frame's text. The */
+	/* No blend mode: the field is an isolated group (contain: strict), so */
+	/* there is nothing behind the photograph to blend with, and `screen` */
+	/* measured a difference of 1/255. Its box starts as the static frame's: */
+	/* 64 columns of this monospace font by 32 lines, centred on the face. The */
 	/* feathered edge keeps it from reading as a square. */
 	.field__photo {
 		--duo-hi: var(--art-signal);
 		--duo-lo: var(--field);
 		position: absolute;
 		inset-inline-start: 50%;
-		inset-block-start: 50%;
+		inset-block-start: var(--face-cy, 50%);
 		inline-size: 64ch;
 		block-size: calc(32 * 1.05em);
 		translate: -50% -50%;
@@ -154,10 +163,11 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 	}
 
 	/* Live, the field lays the face out itself and says where. The box stays */
-	/* pinned to the centre, and only its size and its translate change: moved */
-	/* by its insets, the photograph's handover measured 0.109 CLS at 1440x900, */
-	/* over the whole page's budget. A transform is not a layout shift, and a */
-	/* size change that keeps the box's corner where it was is not either. */
+	/* pinned to the face's centre, and only its size and its translate change: */
+	/* moved by its insets, the photograph's handover measured 0.109 CLS at */
+	/* 1440x900, over the whole page's budget. A transform is not a layout */
+	/* shift, and a size change that keeps the box's corner where it was is not */
+	/* either. */
 	.field[data-field-state='live'] .field__photo {
 		inline-size: var(--port-w);
 		block-size: var(--port-h);
@@ -165,11 +175,13 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 	}
 
 	/* The resolve state is the colour mask: the field is the signal blue, the */
-	/* lit portrait resolved out of it a lighter tint of the same blue. */
+	/* lit portrait resolved out of it a lighter tint of the same blue. The */
+	/* circle is the face's tint too: the brightest line on the card. */
 	.field__layer--a {
 		color: var(--art-noise);
 	}
-	.field__layer--b {
+	.field__layer--b,
+	.field__layer--c {
 		color: var(--art-signal);
 	}
 
@@ -177,6 +189,47 @@ import { STATIC_FRAME } from '../generated/portrait-map';
 	/* it should read as resolved rather than as field. */
 	.field[data-field-state='static'] .field__layer--a {
 		color: var(--art-signal);
+	}
+
+	/*
+	 * The card, where the renderer will not draw it: with no JavaScript, and
+	 * under reduced motion, where it is never loaded. The same grid and circle
+	 * from the same custom properties, as plain lines rather than characters,
+	 * under the static portrait. Not while a script is merely on its way: the
+	 * live card replaces the static frame within the first frames, and lines
+	 * drawn twice would flash.
+	 */
+	@media (scripting: none), (prefers-reduced-motion: reduce) {
+		.field::before,
+		.field::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+		}
+
+		/* Lines on the grid's step, laid from the circle's centre, and none */
+		/* inside the circle. */
+		.field::before {
+			background:
+				linear-gradient(to right, var(--art-noise) 0 1px, transparent 1px),
+				linear-gradient(to bottom, var(--art-noise) 0 1px, transparent 1px);
+			background-size: var(--grid, 10svh) var(--grid, 10svh);
+			background-position: calc(50% + var(--grid, 10svh) / 2) var(--ring-cy, 50%);
+			mask-image: radial-gradient(
+				circle at 50% var(--ring-cy, 50%),
+				transparent var(--ring-r, 40svh),
+				#000 calc(var(--ring-r, 40svh) + 1px)
+			);
+		}
+
+		.field::after {
+			background: radial-gradient(
+				circle at 50% var(--ring-cy, 50%),
+				transparent calc(var(--ring-r, 40svh) - 1.5px),
+				var(--art-signal) calc(var(--ring-r, 40svh) - 1px) calc(var(--ring-r, 40svh) + 1px),
+				transparent calc(var(--ring-r, 40svh) + 1.5px)
+			);
+		}
 	}
 
 	@media print {
