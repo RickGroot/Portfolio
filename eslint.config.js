@@ -4,7 +4,16 @@ import ts from 'typescript-eslint';
 import astro from 'eslint-plugin-astro';
 
 export default [
-	{ ignores: ['dist/', '.astro/', 'node_modules/', 'playwright-report/', 'test-results/'] },
+	{
+		ignores: [
+			'dist/',
+			'.astro/',
+			'node_modules/',
+			'playwright-report/',
+			'test-results/',
+			'design/',
+		],
+	},
 
 	js.configs.recommended,
 	...ts.configs.recommendedTypeChecked,
@@ -65,20 +74,20 @@ export default [
 
 	{
 		/*
-		 * One requestAnimationFrame loop, site-wide.
+		 * No requestAnimationFrame at all.
 		 *
-		 * src/lib/field/loop.ts is the only module allowed to schedule frames;
-		 * everything else subscribes to it. This is a real control -- a comment
-		 * saying 'please do not add a second loop' is not.
+		 * Everything on the table moves by CSS animation, CSS transition or one
+		 * WAAPI deal, so the page has no frame loop to keep honest. This is a
+		 * real control -- a comment saying 'please do not add a loop' is not.
+		 * A loop would have to be a deliberate edit to this block.
 		 */
 		files: ['src/**/*.ts', 'src/**/*.astro'],
-		ignores: ['src/lib/field/loop.ts'],
 		rules: {
 			'no-restricted-globals': [
 				'error',
 				{
 					name: 'requestAnimationFrame',
-					message: 'Subscribe to src/lib/field/loop.ts instead. One RAF loop, site-wide.',
+					message: 'The cards move with CSS and WAAPI. No rAF loop: see CLAUDE.md.',
 				},
 			],
 			'no-restricted-properties': [
@@ -86,7 +95,7 @@ export default [
 				{
 					object: 'window',
 					property: 'requestAnimationFrame',
-					message: 'Subscribe to src/lib/field/loop.ts instead. One RAF loop, site-wide.',
+					message: 'The cards move with CSS and WAAPI. No rAF loop: see CLAUDE.md.',
 				},
 			],
 		},

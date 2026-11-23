@@ -1,33 +1,22 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import Hero from '@components/Hero.astro';
-import Section from '@components/Section.astro';
-import Guide from '@components/Guide.astro';
-import ArtSection from '@components/ArtSection.astro';
-import { getCollection } from 'astro:content';
-import { Image } from 'astro:assets';
-import artSignal from '@assets/art/lighthouse.jpg';
-import artField from '@assets/art/tower.jpg';
-import talkPhoto from '@assets/talk.jpg';
-import praguePhoto from '@assets/prague.jpg';
-import SocialLinks from '@components/SocialLinks.astro';
+import Card from '@components/Card.astro';
 import shareCard from '@assets/share/home.png';
 import { socialLinks } from '@lib/social';
-import { getPublishedWork } from '@lib/work';
+import { getDeck } from '@lib/deck';
 import { site } from '@lib/site';
 
-// Every published entry: the guide is the complete record.
-const published = await getPublishedWork();
-const practice = (await getCollection('practice')).sort((a, b) => a.data.order - b.data.order);
+// The whole site is this deck: every card is one piece of work, or a part of
+// Rick, in the order it lies on the table.
+const deck = await getDeck();
 
-// The link preview is the masthead itself: rendered once at 1200x630 from the
-// built page, with the rail and the readout hidden, and committed. The page a
-// visitor gets, not a mock of it.
+// The link preview: the table itself, rendered once at 1200x630 from the
+// built page and committed. See src/assets/IMAGES.md.
 const share = {
 	src: shareCard.src,
 	width: shareCard.width,
 	height: shareCard.height,
-	alt: 'The site’s masthead: Rick Groot, Connected TV developer and trumpet player, beside a 1-bit print of his photograph and a tracker playing When the Saints Go Marching In.',
+	alt: 'Rick Groot’s portfolio: a table of loose cards, among them a record sleeve, a cassette and a TV listing, each a piece of TV work.',
 };
 
 // Who the site is about, for search engines. Links to no origin but his own
@@ -38,433 +27,39 @@ const person = {
 	name: site.name,
 	jobTitle: site.tagline,
 	url: `${site.url}/`,
-	worksFor: { '@type': 'Organization', name: 'Hypersolid' },
+	// Open to work: Hypersolid is a former employer, so alumniOf, not worksFor.
+	alumniOf: { '@type': 'Organization', name: 'Hypersolid' },
 	homeLocation: { '@type': 'Country', name: 'Netherlands' },
 	sameAs: socialLinks.filter((l) => !l.href.startsWith('mailto:')).map((l) => l.href),
 };
-
-/*
- * The rail mirrors the document order exactly. It is built from one list so the
- * two cannot drift -- a rail dot pointing at an id that moved is a dead link
- * that nothing would catch. The interludes are named apart: two links both
- * called "Interlude" are one link twice to anyone listing them.
- */
-const rail = [
-	{ id: 'top', label: 'Top' },
-	{ id: 'work', label: 'Work' },
-	{ id: 'interlude-signal', label: 'Interlude: Signal' },
-	{ id: 'practice', label: 'How I work' },
-	{ id: 'interlude-field', label: 'Interlude: Field' },
-	{ id: 'contact', label: 'Contact' },
-];
 ---
 
-<BaseLayout title={site.name} description={site.description} ogImage={share} jsonLd={person} bleed>
-	<nav class="rail" data-rail aria-label="Sections">
-		{rail.map((s) => (
-			<a href={`#${s.id}`}>
-				<span class="rail__label">{s.label}</span>
-			</a>
-		))}
-	</nav>
-
-	{/* ---- Masthead: channel 01, the first programme ---- */}
-	<Hero />
-
-	{/* ---- Work: the programme guide ---- */}
-	<Guide entries={published} />
-
-	<ArtSection
-		id="interlude-signal"
-		image={artSignal}
-		alt="A lighthouse and a small group of people silhouetted against a sunset over a bay."
-		focus="40% 50%"
-		lift={1.45}
-		contrast={1.35}
-		statement="A TV app has to feel fast on hardware that shipped years before the app did."
-		caption="Interlude / Signal"
-		channel="yellow"
-	/>
-
-	{/* ---- How I work ---- */}
-	<Section id="practice" label="How I work" class="section--backdrop" channel="paper">
-		{/* Rick presenting, standing at the left; his three points sit to his */}
-		{/* right on wide screens, so the cards never cover his face. The slide */}
-		{/* and both audience members are blurred in the source file itself. */}
-		<div class="practice__backdrop duo" data-dither style="--duo-lift:1.2;--duo-contrast:1.15">
-			<Image
-				src={talkPhoto}
-				alt="Rick giving a talk, in front of a bright, blank projection screen."
-				widths={[800, 1200, 1600]}
-				sizes="100vw"
-				loading="lazy"
-				decoding="async"
-			/>
-			<span class="practice__fade" data-fade aria-hidden="true"></span>
-		</div>
-		<p class="practice__lede">
-			I work AI-first. Three principles keep it honest, each with its proof from building this site.
-		</p>
-		<ol class="practice">
-			{practice.map((item) => (
-				<li class="practice__item">
-					<p class="practice__index" aria-hidden="true">
-						{String(item.data.order).padStart(2, '0')}
-					</p>
-					<h3 class="practice__title">{item.data.title}</h3>
-					<p class="practice__body">{item.data.body}</p>
-					<p class="practice__proof">{item.data.proof}</p>
+<BaseLayout title={site.name} description={site.description} ogImage={share} jsonLd={person}>
+	<div class="bar mono">
+		<ul class="reach" aria-label="Contact">
+			{socialLinks.map((l) => (
+				<li>
+					<a class="chip" href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}>
+						{l.label}
+					</a>
 				</li>
 			))}
-		</ol>
-	</Section>
-
-	{/* U+2060 WORD JOINER holds "re-run" together at a line end. The non-breaking */}
-	{/* hyphen this used before, U+2011, was missing from an earlier display subset. */}
-	<ArtSection
-		id="interlude-field"
-		image={artField}
-		alt="A stone clock tower against a bright, empty sky."
-		focus="36% 45%"
-		statement={'Every measurement quoted on this site can be re-\u2060run from the repository.'}
-		caption="Interlude / Field"
-		channel="ultramarine"
-	/>
-
-	{/* ---- Contact ---- */}
-	<Section id="contact" label="Contact" channel="paper">
-		<div class="contact">
-			<div class="contact__text">
-				<p class="lede">
-					Email is easiest. Happy to talk about Connected TV work, or the trumpet if you would
-					rather.
-				</p>
-				<SocialLinks />
-			</div>
-			<figure class="contact__photo duo" data-dither>
-				{/* Rick's own photograph, over Prague (2026-10-14). Quality 72: */}
-				{/* the rooftops are all fine detail, and one picture at 30vw should not */}
-				{/* weigh what a page does. */}
-				<Image
-					src={praguePhoto}
-					alt="Rick Groot in a cap, looking out over the rooftops of Prague."
-					widths={[500, 800, 1000]}
-					sizes="(min-width: 52rem) 30vw, 90vw"
-					quality={72}
-					loading="lazy"
-					decoding="async"
-				/>
-			</figure>
-		</div>
-	</Section>
-
-	<script>
-		import { boot } from '../scripts/sections';
-		import { boot as bootZap } from '../scripts/zap';
-		import { decode } from '../lib/decode';
-		boot();
-		bootZap();
-		// The name tunes in on first sight -- once the display
-		// face is in, so each letter is measured in it rather than in the fallback.
-		// Not on a deep link that lands further down the page.
-		void document.fonts.ready.then(() => {
-			if (window.scrollY < window.innerHeight / 2) decode(document.getElementById('top-heading'));
-		});
-	</script>
+		</ul>
+		<button class="still-toggle chip" type="button" aria-pressed="false">
+			Pause motion
+		</button>
+	</div>
+	<div class="table">
+		{/* The contact ticket carries its links on its front: they are what it is for. */}
+		{deck.map((card, i) => (
+			<Card
+				card={card}
+				index={i}
+				level={card.kind === 'player' ? 1 : 2}
+				eager={i < 2}
+				flippable={card.kind !== 'ticket'}
+				tearable={card.kind === 'ticket'}
+			/>
+		))}
+	</div>
 </BaseLayout>
-
-<style>
-	.lede {
-		font-size: var(--t-lg);
-		color: var(--mark-dim);
-	}
-
-	/* ---- How I work: a three-up horizontal grid --------------------------- */
-
-	/* The talk, full-bleed behind the section. Positioned against .section, */
-	/* which is the nearest positioned ancestor; .section--backdrop isolates it */
-	/* so a z-index of -1 lands above the section's own background instead of */
-	/* below it. */
-	.practice__backdrop {
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		overflow: clip;
-		/* The fade below, dithered by the 1-bit print: all field to 16%, the */
-		/* picture from 44%. */
-		--dither-fade: 0.44 0.16;
-		/* A face, so finer dots than the interludes' 2px, and none of the */
-		/* duotone's lift: at 2px Rick's face was some 55 dots across and read */
-		/* as a stencil, and the lift sent his skin to blank paper. */
-		--dither-dot: 1;
-		--dither-lift: 1;
-		--dither-contrast: 1;
-	}
-
-	/* Oversized top and bottom: it sits back in the depth map (depth.css), and */
-	/* the travel must never show an edge. */
-	.practice__backdrop :global(img),
-	.practice__backdrop :global(canvas) {
-		position: absolute;
-		inset-inline: 0;
-		inset-block-start: -9%;
-		inline-size: 100%;
-		block-size: 118%;
-		object-fit: cover;
-		/* Rick sits at ~18% across; on a phone this keeps him in the narrow */
-		/* centre band a cover crop leaves. */
-		object-position: 18% 45%;
-	}
-
-	/* Printed in ink on paper by .duo. The heading and lede sit on the top of */
-	/* it, so the photograph runs out into the paper there -- lighter where the */
-	/* text is, never darker. Above the overlay, or it would be printed too. */
-	.practice__fade {
-		position: absolute;
-		inset: 0;
-		z-index: 2;
-		background: linear-gradient(to bottom, var(--field) 0 16%, transparent 44%);
-	}
-
-	/* On a phone the three cards stack down the whole section, and the talk */
-	/* behind them only showed as slivers in the gaps, which read as a fault. */
-	/* There it is a picture of its own under the heading, framed like the */
-	/* cards, cropped to Rick at the lectern. */
-	@media (max-width: 51.99rem) {
-		.practice__backdrop {
-			position: relative;
-			inset: auto;
-			z-index: auto;
-			aspect-ratio: 4 / 3;
-			border: 1px solid var(--mark);
-		}
-
-		.practice__fade {
-			display: none;
-		}
-
-		.practice__backdrop {
-			--dither-fade: none;
-		}
-	}
-
-	.practice__lede {
-		font-size: var(--t-lg);
-		color: var(--mark-dim);
-		max-width: var(--measure);
-	}
-
-	.practice {
-		display: grid;
-		gap: var(--s-6);
-		list-style: none;
-		padding: 0;
-		margin-block-start: var(--s-8);
-		counter-reset: none;
-	}
-
-	/* Solid plates, hard edges: the photograph shows around the cards, never */
-	/* through them, so the text is always ink on paper. */
-	.practice__item {
-		display: grid;
-		grid-template-rows: auto auto 1fr auto;
-		gap: var(--s-3);
-		padding: var(--s-6);
-		border: 1px solid var(--mark);
-		background: var(--field);
-		transition: translate var(--speed) var(--ease);
-	}
-
-	.practice__item:hover,
-	.practice__item:focus-within {
-		translate: 0 -4px;
-	}
-
-	.practice__index {
-		font-family: var(--font-mono);
-		font-size: var(--t-lg);
-		font-weight: 700;
-		color: var(--accent);
-		line-height: 1;
-	}
-
-	.practice__title {
-		font-size: var(--t-xl);
-		letter-spacing: var(--tracking-display);
-	}
-
-	.practice__body {
-		color: var(--mark-dim);
-	}
-
-	/* The checkable detail. Set apart, because it is the thing that stops the */
-	/* card being a slogan. */
-	.practice__proof {
-		margin-block-start: var(--s-2);
-		padding-block-start: var(--s-3);
-		border-block-start: 1px solid var(--line);
-		font-size: var(--t-sm);
-		color: var(--mark-dim);
-	}
-
-	/* Three stacked cards will always exceed a phone, and that is fine -- the */
-	/* advance script scrolls an overflowing section normally before advancing. */
-	/* Tightened so the overshoot is a short scroll rather than a long one. */
-	@media (max-width: 51.99rem) {
-		.practice {
-			gap: var(--s-3);
-			margin-block-start: var(--s-6);
-		}
-
-		.practice__item {
-			padding: var(--s-4);
-			gap: var(--s-2);
-		}
-
-		.practice__title {
-			font-size: var(--t-lg);
-		}
-
-		.practice__body,
-		.practice__proof {
-			font-size: var(--t-sm);
-		}
-	}
-
-	@media (min-width: 52rem) {
-		.practice {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: var(--s-4);
-		}
-
-		.practice__item {
-			padding: var(--s-4);
-			gap: var(--s-2);
-		}
-
-		.practice__title {
-			font-size: var(--t-lg);
-		}
-
-		.practice__body {
-			font-size: var(--t-sm);
-		}
-
-		.practice__proof {
-			font-size: var(--t-xs);
-		}
-	}
-
-	/* Four columns, cards in the last three: the first is left clear for Rick, */
-	/* so he is presenting his three points rather than hidden behind them. Only */
-	/* from 76rem, because below that the cards get too narrow: 1024x768 */
-	/* overran by 60px and 1152x720 by 19px. Tablets get three full-width columns over the backdrop. */
-	@media (min-width: 76rem) {
-		.practice {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
-		}
-
-		.practice__item:first-child {
-			grid-column: 2;
-		}
-	}
-
-	/* A 720px-tall desktop is the shortest one in common use, and the four-column */
-	/* layout overran it by 21px. Tightened only where the height is actually */
-	/* short, rather than shrinking the type for every screen to pay for it. */
-	@media (min-width: 76rem) and (max-height: 760px) {
-		.practice {
-			margin-block-start: var(--s-4);
-		}
-
-		.practice__item {
-			padding: var(--s-3) var(--s-4);
-		}
-	}
-
-	/* ---- Contact --------------------------------------------------------- */
-
-	.contact {
-		display: grid;
-		gap: var(--s-8);
-		align-items: start;
-	}
-
-	.contact__text {
-		display: grid;
-		gap: var(--s-8);
-		max-width: var(--measure);
-	}
-
-	.contact__photo {
-		position: relative;
-		margin: 0;
-		overflow: clip;
-		border: 1px solid var(--mark);
-		aspect-ratio: 4 / 5;
-		/* On a phone the photo stacks under the text; at full width it pushed the */
-		/* last section 104px past the screen. Supporting, not the headline. */
-		/* A definite width, not a maximum. With only a maximum, the box sized */
-		/* itself from the image, and a lazy image has no size until it loads: */
-		/* the figure sat at 0x0, then grew to 416x520 the moment it scrolled */
-		/* into view -- a layout shift at the bottom of the page, and one that */
-		/* scroll anchoring answered by pulling the page 119px back up. */
-		inline-size: min(16rem, 100%);
-		/* A face some 30 dots across at the print's 2px: finer dots, as for */
-		/* the talk (.practice__backdrop), so it is still Rick. */
-		--dither-dot: 1;
-		--dither-lift: 1;
-		--dither-contrast: 1;
-	}
-
-	/* Oversized, because it holds back inside its frame as the frame comes */
-	/* forward (depth.css): a window rather than a card. */
-	.contact__photo :global(img),
-	.contact__photo :global(canvas) {
-		position: absolute;
-		inset-inline: 0;
-		inset-block-start: -8%;
-		inline-size: 100%;
-		block-size: 116%;
-		object-fit: cover;
-		transition:
-			filter var(--speed-slow) var(--ease-out),
-			opacity var(--speed-slow) var(--ease-out);
-	}
-
-	/* Printed in ink on paper, and back in its own colours under the pointer, */
-	/* like every other photograph on the site. */
-	.contact__photo::after {
-		transition: opacity var(--speed-slow) var(--ease-out);
-	}
-
-	.contact__photo:hover::after {
-		opacity: 0;
-	}
-
-	.contact__photo:hover :global(img) {
-		filter: none;
-	}
-
-	/* The 1-bit print steps aside the same way. */
-	.contact__photo:hover :global(canvas) {
-		opacity: 0;
-	}
-
-	.contact__photo[data-dither='on']:hover :global(img) {
-		opacity: 1;
-	}
-
-	@media (min-width: 52rem) {
-		.contact {
-			grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-		}
-
-		/* The svh term keeps the portrait-shaped photo inside a short laptop */
-		/* screen: at 26rem wide it is 520px tall, and 657px tall is common. */
-		.contact__photo {
-			justify-self: end;
-			inline-size: min(26rem, 100%, (100svh - 13rem) * 0.8);
-		}
-	}
-</style>

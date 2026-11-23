@@ -1,71 +1,31 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import { getPublishedWork } from '@lib/work';
-import { channelStyle, type Channel } from '@lib/channels';
+import Card from '@components/Card.astro';
+import type { TicketCard } from '@lib/deck';
 
-// Plain but genuinely useful. The full "lost signal" treatment is a later
-// phase; what matters now is that this file EXISTS, so Firebase serves a real
-// HTTP 404 instead of the homepage with a 200.
-//
-// The links are built from the collection rather than typed out: a list typed
-// by hand had already drifted to a /work index that no longer exists.
-const work = await getPublishedWork();
-
-// The blue of a television with nothing on the input. The page is on it, and
-// so is its one region: with no footer, the section is what declares it.
-const CHANNEL: Channel = 'ultramarine';
+// The 404 is one ticket that is not turned over. It EXISTS so Firebase serves
+// a real HTTP 404 rather than the homepage with a 200.
+const ticket: TicketCard = {
+	id: 'lost',
+	kind: 'ticket',
+	number: 'RG 404',
+	label: 'Lost: page 404',
+	pigment: 'yellow',
+	title: 'Lost: page 404',
+	links: [{ label: 'Back to the table', href: '/' }],
+};
 ---
 
-<BaseLayout
-	title="Page not found"
-	description="That page does not exist."
-	noindex={true}
-	channel={CHANNEL}
->
-	<section class="four-oh-four" data-channel={CHANNEL} style={channelStyle(CHANNEL)}>
-		<p class="code">404</p>
-		<h1>No signal here</h1>
-		<p class="lede">That page does not exist, but these do.</p>
-		<ul>
-			<li>
-				<a href="/">Home</a>
-			</li>
-			{work.map((e) => (
-				<li>
-					<a href={`/work/${e.id}`}>{e.data.title}</a>
-				</li>
-			))}
-		</ul>
-	</section>
+<BaseLayout title="Page not found" description="That page does not exist." noindex={true}>
+	<div class="table lost">
+		<Card card={ticket} index={0} level={1} flippable={false} />
+	</div>
 </BaseLayout>
 
 <style>
-	.four-oh-four {
-		display: grid;
-		gap: var(--s-4);
-		padding-block: var(--s-24);
-		max-width: var(--measure);
-	}
-	.code {
-		font-family: var(--font-mono);
-		font-size: var(--t-sm);
-		letter-spacing: 0.3em;
-		color: var(--accent);
-	}
-	h1 {
-		font-size: var(--t-3xl);
-		text-transform: uppercase;
-	}
-	.lede {
-		font-size: var(--t-lg);
-		color: var(--mark-dim);
-	}
-	ul {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--s-4) var(--s-6);
-		list-style: none;
-		padding: 0;
-		margin-block-start: var(--s-4);
+	.lost {
+		column-count: 1;
+		max-width: 640px;
+		padding-top: 96px;
 	}
 </style>

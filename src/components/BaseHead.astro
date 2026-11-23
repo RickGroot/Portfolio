@@ -7,7 +7,7 @@ interface Props {
 	/** The social preview image. Without one, a shared link was a bare line of text. */
 	ogImage?: ShareImage | undefined;
 	noindex?: boolean | undefined;
-	/** The page's channel field, so the browser's own chrome matches the page. */
+	/** The table's colour, so the browser's own chrome matches the page. */
 	themeColor: string;
 	/** What the page is about, for search engines: schema.org, as JSON-LD. */
 	jsonLd?: Record<string, unknown> | undefined;
@@ -67,12 +67,6 @@ const structured = jsonLd && JSON.stringify(jsonLd).replace(/</g, '\\u003c');
 	type="font/woff2"
 	crossorigin
 />
-<link
-	rel="preload"
-	href="/fonts/bricolage-grotesque-96-800.woff2"
-	as="font"
-	type="font/woff2"
-	crossorigin
-/>
+<link rel="preload" href="/fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="sitemap" href="/sitemap-index.xml" />
 {structured && <script type="application/ld+json" is:inline set:html={structured}></script>}

@@ -1,0 +1,19 @@
+---
+/** A back's links: real anchors, printed in the card's pigment. Nothing when there are none. */
+interface Props {
+	links: { label: string; href: string }[];
+}
+const { links } = Astro.props;
+---
+
+{links.length > 0 && (
+	<ul class="links">
+		{links.map((l) => (
+			<li>
+				<a class="go" href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}>
+					{l.label}
+				</a>
+			</li>
+		))}
+	</ul>
+)}

@@ -3,7 +3,7 @@ export const site = {
 	url: 'https://rickgroot.nl',
 	tagline: 'Connected TV developer',
 	description:
-		'Rick Groot builds Connected TV apps, Chromecast receivers and video players that run well on constrained hardware.',
+		'Rick Groot, a Connected TV developer, is open to work. TV apps, Chromecast receivers and video players that run well on constrained hardware.',
 	locale: 'en',
 } as const;
 

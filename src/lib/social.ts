@@ -1,10 +1,6 @@
-import type { Channel } from './channels';
-
 export interface SocialLink {
 	label: string;
 	href: string;
-	/** The channel the link lights up in under the pointer: one each. */
-	channel: Channel;
 }
 
 /**
@@ -19,7 +15,7 @@ export interface SocialLink {
  * current here because it supersedes the generated one, but it is unverified.
  */
 export const socialLinks: readonly SocialLink[] = [
-	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/r-groot/', channel: 'ultramarine' },
-	{ label: 'GitHub', href: 'https://github.com/RickGroot', channel: 'ink' },
-	{ label: 'Email', href: 'mailto:RickGroot41@gmail.com', channel: 'yellow' },
+	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/r-groot/' },
+	{ label: 'GitHub', href: 'https://github.com/RickGroot' },
+	{ label: 'Email', href: 'mailto:RickGroot41@gmail.com' },
 ];

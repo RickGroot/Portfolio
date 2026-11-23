@@ -6,9 +6,27 @@ period: '2026'
 status: ongoing
 summary: A local-first, offline PWA for sketching chord progressions and looping backing tracks to practise over. No login, no backend, no accounts.
 tags: ['SvelteKit', 'Tone.js', 'PWA', 'Web Audio']
-channel: navy
-cover: ../../assets/work/vamp.jpg
-coverAlt: VAMP open on a tablet on a music stand on a small jazz stage, with a trumpet on a stool beside it and a drum kit behind.
+format: sleeve
+pigment: yellow
+cover: ../../assets/work/screens/vamp.jpg
+# COPY CHECK (2026-11-23): alt for the new cover.
+coverAlt: 'The VAMP editor: a bold "Jazz ii-V-I in C" title over a yellow transport panel showing the Dm7 chord, tempo 100 BPM, key C major, and a three-bar Dm7, G7, Cmaj7 chord grid.'
+# COPY CHECK (2026-11-23): written from the notes below, first person.
+blurb: 'I play trumpet, and wanted to sketch a chord progression, loop it and play over it. VAMP does that offline, with no account and no backend.'
+# COPY CHECK (2026-11-23): the features, as the secondary list.
+built:
+  - 'A pitch switch for transposing instruments'
+  - 'Trade-solos mode drops the backing out'
+  - 'A drone generator for practising modes'
+  - 'Share URL that holds the progression'
+# COPY CHECK (2026-11-23): four, so the back fits without scrolling (smplr and tonal are in the notes below).
+stack:
+  - { label: Framework, value: SvelteKit }
+  - { label: Audio, value: Tone.js }
+  - { label: Notation, value: VexFlow }
+  - { label: Storage, value: IndexedDB }
+# COPY CHECK (2026-11-23): shortened so the back fits; the CDN caveat stays in the notes below.
+note: Personal project, not production software.
 order: 3
 links:
   - label: Live app

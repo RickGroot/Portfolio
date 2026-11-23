@@ -1,29 +1,25 @@
 /*
- * Three self-hosted faces, Latin subset, WOFF2, each with its SIL OFL licence
- * alongside in public/fonts/. Google's own builds, downloaded once and
- * committed: there is deliberately no font build dependency. Public files are
- * not hashed and /fonts/** is cached immutable, so a changed face gets a new
- * file name -- the weight and optical size are in each name for that reason.
+ * Three self-hosted families, Latin subset, WOFF2, each with its SIL OFL
+ * licence alongside in public/fonts/. There is deliberately no font build
+ * dependency. Public files are not hashed and /fonts/** is cached immutable,
+ * so a changed face gets a new file name -- never overwrite one in place.
  *
- * Chosen by Rick, 2026-09-25, from full-size candidates on the real pages:
- *
- *   - Bricolage Grotesque 800 at its 96pt optical size, for display. It
- *     replaces Martian Mono; a proportional face, so src/lib/decode.ts holds
- *     every letter's width itself instead of relying on a fixed grid.
- *   - Instrument Sans 400 and 600, for reading. It replaces Lato.
- *   - JetBrains Mono 500, for labels, which were a system monospace, and
- *     for the masthead's tracker, with its ligatures off.
+ *   - Archivo, the variable file from the VAMP project: weight 900 at 62%
+ *     width, capitals only, for everything that is printed big. The Latin
+ *     subset's unicode-range is Google's.
+ *   - Instrument Sans 400 and 600, for reading.
+ *   - JetBrains Mono 500, for labels and catalogue numbers.
  *
  * Each file is declared across a weight RANGE, so a rule asking for 700 gets
- * the real 800 or 600 rather than a bold the browser fakes from the regular.
- * The Latin subset's range is Google's.
+ * the real 600 rather than a bold the browser fakes from the regular.
  */
 @font-face {
-	font-family: 'Bricolage Grotesque';
+	font-family: 'Archivo';
 	font-style: normal;
-	font-weight: 700 800;
+	font-weight: 100 900;
+	font-stretch: 62% 125%;
 	font-display: swap;
-	src: url('/fonts/bricolage-grotesque-96-800.woff2') format('woff2');
+	src: url('/fonts/archivo-var-latin.woff2') format('woff2');
 	unicode-range:
 		U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
 		U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
@@ -65,35 +61,24 @@
 
 /*
  * Metric-matched fallbacks, so each swap is dimensionally neutral and nothing
- * shifts when a face arrives.
+ * shifts when a face arrives. Archivo has none: a card's type is sized in cqw
+ * inside a box whose size does not depend on it, so a swap moves nothing else.
  *
  * MEASURED, not copied: canvas measureText at 100px, after each face had
  * loaded from its own bytes (docs/performance.md says how, and why "after"
- * matters). The two proportional faces are matched to Arial across the site's
- * own strings -- its headings for Bricolage, its ledes and card bodies for
- * Instrument Sans -- which matches the average, not every string. JetBrains
+ * matters). Instrument Sans is matched to Arial across the site's own card
+ * copy, which matches the average, not every string. JetBrains
  * Mono and Courier New are both monospaced at 0.6em, so every string matches.
  *
  *                      advance   ascent    descent
- *   Bricolage 800      / Arial Bold    90.94%    102.26%   29.69%
  *   Instrument 400     / Arial        101.36%     95.70%   24.66%
  *   Instrument 600     / Arial Bold    99.50%     97.49%   25.13%
  *   JetBrains Mono 500 / Courier New  100%       102.02%   30.00%
  *
  * ascent- and descent-override are the face's own ascent and descent over its
  * size-adjust, so the line box comes out the face's height at the adjusted
- * size: 1.2em for Bricolage, as the face has.
+ * size.
  */
-@font-face {
-	font-family: 'Display Fallback';
-	src: local('Arial Bold'), local('Arial-BoldMT'), local('Arial');
-	font-weight: 700 800;
-	size-adjust: 90.94%;
-	ascent-override: 102.26%;
-	descent-override: 29.69%;
-	line-gap-override: 0%;
-}
-
 @font-face {
 	font-family: 'Body Fallback';
 	src: local('Arial'), local('ArialMT');
@@ -122,68 +107,4 @@
 	ascent-override: 102.02%;
 	descent-override: 30%;
 	line-gap-override: 0%;
-}
-
-body {
-	font-family: var(--font-sans);
-	font-size: var(--t-base);
-	line-height: var(--lh-body);
-	color: var(--mark);
-	background: var(--field);
-}
-
-h1,
-h2,
-h3 {
-	font-family: var(--font-display);
-	line-height: var(--lh-tight);
-	letter-spacing: var(--tracking-display);
-	font-weight: 800;
-}
-
-/* Tabular figures wherever numbers sit in a column or a meta line. */
-.section__index,
-[class$='__index'],
-[class$='__meta'],
-[class$='__num'] {
-	font-variant-numeric: tabular-nums;
-}
-
-h1 {
-	font-size: var(--t-2xl);
-}
-h2 {
-	font-size: var(--t-xl);
-}
-h3 {
-	font-size: var(--t-lg);
-}
-
-a {
-	color: inherit;
-	text-decoration-thickness: 1px;
-	text-underline-offset: 0.2em;
-}
-
-a:hover {
-	text-decoration-color: var(--accent);
-}
-
-::selection {
-	background: var(--accent);
-	color: var(--field);
-}
-
-/*
- * While src/lib/decode.ts runs, each letter it is scrambling stands in a box
- * of its own measured width, and each word is held together, so a noise
- * glyph -- narrower or wider than its letter in a proportional face -- moves
- * nothing. Global, because it decodes headings in every component.
- */
-.decode-word {
-	white-space: nowrap;
-}
-
-.decode-ch {
-	display: inline-block;
 }

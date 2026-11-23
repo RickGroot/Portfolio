@@ -1,0 +1,136 @@
+/*
+ * The table: every card dealt loose onto one surface, a little crooked.
+ *
+ * CSS columns, not a grid: the cards flow in DOM order, so the reading order
+ * and the tab order are the deck's order, and the number of columns follows
+ * the width with no breakpoint. Below 820px it is one tidy column.
+ *
+ * A card's wobble is custom properties set per card (--rot, --ox, --oy), and
+ * drag adds --dx/--dy. They use the individual `rotate` and `translate`
+ * properties, so the deal's WAAPI `transform` composes with them.
+ */
+.table {
+	max-width: 1240px;
+	margin-inline: auto;
+	padding: 24px 28px 96px;
+	column-width: 340px;
+	column-count: 3;
+	column-gap: 64px;
+}
+
+/* The bar above the table: ways to reach me, and the motion switch. */
+.bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px 24px;
+	max-width: 1240px;
+	margin: 0 auto;
+	padding: 24px 28px 0;
+	color: var(--ink);
+}
+
+.reach {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* One chip, for a link and a button alike: same rule, same hard shadow. */
+.chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 40px;
+	padding: 6px 12px;
+	border: var(--rule) solid var(--ink);
+	background: var(--card);
+	color: var(--ink);
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	text-decoration: none;
+	cursor: pointer;
+	box-shadow: 3px 3px 0 var(--ink);
+}
+
+.chip:active {
+	translate: 3px 3px;
+	box-shadow: none;
+}
+
+.still-toggle[aria-pressed='true'] {
+	background: var(--ink);
+	color: var(--paper);
+}
+
+/* Without the script nothing moves, so the switch has nothing to stop. */
+html:not(.js) .still-toggle {
+	display: none;
+}
+
+.slot {
+	break-inside: avoid;
+	width: var(--w, 100%);
+	margin: 0 0 64px;
+	rotate: var(--rot, 0deg);
+	translate: calc(var(--ox, 0px) + var(--dx, 0px)) calc(var(--oy, 0px) + var(--dy, 0px));
+}
+
+/* A card is hit-tested as printed: it is not a text selection target. */
+.slot {
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+@media (hover: hover) and (pointer: fine) and (min-width: 821px) {
+	.turn {
+		cursor: grab;
+	}
+}
+
+@media (max-width: 820px) {
+	.table {
+		max-width: 440px;
+		column-count: 1;
+		padding-inline: 24px;
+	}
+
+	.bar {
+		max-width: 440px;
+		padding-inline: 24px;
+	}
+
+	/* A thumb target: at least 44px. */
+	.chip {
+		min-height: 44px;
+		padding-inline: 16px;
+	}
+
+	/* Tidy: half the lean, no offsets, and every card the full column. A card */
+	/* dragged on a wider window comes back into the column when it narrows. */
+	.slot {
+		--w: 100%;
+		translate: none;
+		rotate: calc(var(--rot, 0deg) * 0.5);
+		margin-bottom: 48px;
+	}
+
+	/* In one narrow column a back needs more height to hold its text at a readable size. */
+	.slot.tape {
+		aspect-ratio: 4 / 3;
+	}
+
+	.slot.listing {
+		aspect-ratio: 5 / 4;
+	}
+
+	/* The record slides out of the sleeve into the gap beside it. */
+	.sleeve {
+		--w: 92%;
+	}
+}

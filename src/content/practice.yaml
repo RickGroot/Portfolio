@@ -15,7 +15,7 @@
 # tests" were both stale within a week. The numbers it does quote are the ones
 # the checks enforce, and tests/e2e/claims.spec.ts fails when the two part:
 # the load budget and its CPU slowdown (tests/support/budgets.ts), and the
-# contrast floor (AA in src/lib/channels.ts).
+# contrast floor (AA in src/lib/palette.ts).
 #
 # Rick: the themes are yours, the sentences are mine. Rewrite them in your own
 # voice -- that is the one thing I cannot do for you.

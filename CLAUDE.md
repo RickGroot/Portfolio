@@ -7,6 +7,10 @@ Engineering rules for this repository. Short on purpose — if a rule here is wr
 Astro 7 (static output) · strict TypeScript · native CSS with custom properties · vanilla TS.
 **No UI framework runtime.** Deployed to Firebase Hosting at <https://rickgroot.nl>.
 
+The site is one page, "The Collection": loose cards on a paper table, draggable, each flipping to its
+case study. The card system is in `docs/card-system.md`. The earlier TV-channel site is commit
+97ef1ec; its notes are in `docs/retired/`.
+
 ## Pinned versions — and why
 
 | Pin                | Reason it is pinned                                                                                                                                                                     |
@@ -55,113 +59,62 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
    SvelteKit service worker, which cached the old site cache-first. Deleting it re-opens the bug for
    anyone who has not visited since the migration.
 4. **Do not add Astro's `ClientRouter`.** Static output means every navigation is a fresh document,
-   so the one RAF loop, its observers and its listeners are torn down by the browser for free.
+   so the table script's observers and listeners are torn down by the browser for free.
    ClientRouter would keep them alive across navigations and require real per-navigation teardown,
-   for no benefit on a CDN-served static site. Page transitions use CSS `@view-transition` instead,
-   which needs no JavaScript at all.
+   for no benefit on a one-page static site.
 
 ## Structural rules
 
 - **`global.css` is imported exactly once, in `BaseLayout.astro`.** Never `@import` it from a
-  component. The previous site `@import`ed its style barrel inside every component's `<style>`
-  block, which duplicated `@font-face` and two Google Fonts CDN requests into all 8 stylesheets.
+  component (the old site duplicated `@font-face` into every stylesheet that way).
 - **No third-party origins at runtime.** Fonts are self-hosted. A test asserts this.
 - `src/assets` for anything imported (hashed, resized, intrinsic dimensions). `public/` only for
-  files something outside your HTML references — favicons, manifest, robots.txt, the service worker,
+  files something outside your HTML references: favicons, manifest, robots.txt, the service worker,
   CSS-referenced fonts.
-- Content lives in `src/content/`: `work/*.md`, and How I work in `practice.yaml`. **Zero content in
-  `.ts` files.**
-- **Every colour comes from `src/lib/channels.ts`.** Each full-screen section is a _channel_ — one
-  flat field — and declares which one; its text colour is solved against the field at build time and
-  the build fails below 4.5:1. Stylesheets only read `--field`, `--mark`, `--mark-dim`, `--accent`,
-  `--line`, `--line-loud`, `--duo-hi`, `--duo-lo`, and the palette's own names.
-  No hex values in CSS, and no darkening a photograph to make text legible — photos print in their
-  channel's colours (`.duo`, and in one bit by `src/lib/dither/` where it runs), and text that
-  crosses one sits on a plate of the field. A
-  programme's key art is the exception: it is shown as it is, because a logo printed in its channel's
-  colours loses its own. Its title stands on a gradient to the field instead of a plate, and because
-  axe cannot judge text over a photograph, `tests/a11y/stage-contrast.spec.ts` measures it against
-  the brightest pixel behind it. The masthead's copy stands on the plain ink field, beside its
-  screen, not over it.
+- Content lives in `src/content/`: `work/*.md`, `slides/*.md`, `player.yaml`, and How I work in
+  `practice.yaml`. **Zero content in `.ts` files.**
+- **One page, no sub-pages.** A work card's back is its case study. `/work` and `/work/**` are 301s
+  to `/` in `firebase.json`; do not recreate those routes.
+- **Every colour comes from `src/lib/palette.ts`.** A card sets `--field` and `--on-field`, solved
+  at build time; the build fails below 4.5:1. No hex values in CSS (use `color-mix` on the palette
+  properties). Radius 0, one 2px rule, a hard 6px shadow on a separate element that does not flip.
+- **No nested interactive elements.** A card front is covered by one `.turn` button; the back has
+  its own button and links; the face turned away is `inert`. See `docs/card-system.md`.
 - **Public files are not hashed.** `/fonts/**` is cached `immutable` for a year, so a changed font
   gets a new file name. Never overwrite one in place.
 - **After a content schema change, delete `node_modules/.astro/data-store.json`** and restart the dev
-  server. `astro check` writes that cache, and the dev server keeps serving the old shape from it —
-  a new field reads as `undefined` with no error.
-- **Full-bleed bands go on a `bleed` page** (`BaseLayout`'s prop: `<main>` goes full width, and each
-  band draws its own column). Never `calc(50% - 50vw)`: vw counts a classic scrollbar, so on Windows
-  the band is 15px wider than the page and the page scrolls sideways. Playwright hides scrollbars;
-  only `tests/e2e/scrollbars.spec.ts` can see this.
+  server. `astro check` writes that cache, and the dev server keeps serving the old shape from it.
 - **CSS is minified by esbuild, not Lightning CSS** (`astro.config.mjs`). Lightning folds
-  `animation-timeline` into the `animation` shorthand, which is invalid, and the browser drops it:
-  every scroll-driven animation was dead in the production build, and nothing failed.
+  `animation-timeline` into the `animation` shorthand, which is invalid, and the browser drops it.
+- **Fonts are budgeted at 160 KB total** (`scripts/check-assets.mjs`), up from 80 KB: the Archivo
+  variable file is 90 KB unsubset. Subsetting it (needs `pyftsubset`) would win the room back.
 
 ## Budgets
 
-| Budget                      | Limit                                                                          |
-| --------------------------- | ------------------------------------------------------------------------------ |
-| Initial JS, homepage        | ≤ 20 KB gzip                                                                   |
-| Deferred art renderer chunk | ≤ 25 KB gzip — a trip-wire, not an allowance                                   |
-| Total JS, homepage          | ≤ 45 KB gzip                                                                   |
-| LCP / CLS                   | < 2.5 s / < 0.1, plus an 1800 ms LCP trip-wire                                 |
-| Canvas elements             | one per printed picture, inside its frame; **0** elsewhere                     |
-| WebGL contexts              | one WebGL2 per printed picture                                                 |
-| Print frames                | ambient on the loop, ≤ 30fps, only while on screen; **0** under reduced motion |
-| Animation loops             | **exactly 1**, throttled to 60fps, stopped when offscreen                      |
+| Budget               | Limit                                                           |
+| -------------------- | --------------------------------------------------------------- |
+| Initial JS, homepage | <= 20 KB gzip (2.6 KB at the redesign)                          |
+| Total JS, homepage   | <= 45 KB gzip                                                   |
+| LCP / CLS            | < 2.5 s / < 0.1, plus an 1800 ms LCP trip-wire                  |
+| Canvas, WebGL, rAF   | **0**                                                           |
+| Animation            | CSS and WAAPI only; paused offscreen; none under reduced motion |
 
 INP is field-only. Use TBT as the lab proxy; do not claim Lighthouse measures INP.
 
 LCP and CLS are measured by `tests/budgets/vitals.spec.ts` at **4x CPU throttle**, because this is
 a portfolio about software that runs on hardware you do not choose. It is tagged `@vitals` and
-excluded from `pnpm test`: the default run uses 8 workers, and a throttled measurement taken while
-seven other browsers fight for the same cores measured over the 2.5 s budget against 788 ms on an
-uncontended machine. Run it with `pnpm test:vitals`.
+excluded from `pnpm test` (the default run uses parallel workers and contention distorts a throttled
+measurement). Run it with `pnpm test:vitals`.
 
-Phase 1 asserted 0 canvases **and** 0 RAF loops, specifically so that adding a loop had to be a
-deliberate edit. Phase 2 made that edit: the character field ran one loop, and everything that moves
-runs on it still, now the field is retired (`tests/e2e/loop.spec.ts`). The canvas assertions got
-_stronger_ — a canvas appearing now means someone reintroduced a WebGL path that was cut. On
-2026-10-13 one narrow path came back the same deliberate way: the 1-bit print. A canvas anywhere
-but directly inside a `[data-dither]` or `[data-dither-stage]` frame or the guide's screen, or any
-context but WebGL2, is still a cut path returning, and `tests/budgets/payload.spec.ts` fails on it.
+`eslint.config.js` bans `requestAnimationFrame` everywhere in `src`; motion is CSS or WAAPI.
 
-`eslint.config.js` restricts `requestAnimationFrame` everywhere except `src/lib/field/loop.ts`, so
-"one loop" is enforced rather than requested.
+## Tests
 
-## The masthead
-
-Channel 01 is the first programme in the guide (`src/components/Hero.astro`, 2026-10-14): CH 01 and
-ON AIR, the name, the role, the synopsis and the guide's own two buttons, beside a screen with
-Rick's photograph in the 1-bit print and, under it, a tracker pattern of "When the Saints Go
-Marching In" (`src/lib/hero/`). **The tracker is server-rendered at row 0**, so it is complete
-without JavaScript and under reduced motion; the script only steps it, ambient on the one loop.
-The test card and its character field it replaced are retired: their lessons are in
-`docs/retired/character-field.md`. See `docs/art-system.md`, "The masthead".
-
-## The print
-
-Photographs (`.duo` frames marked `data-dither`) are printed in one bit: an 8×8 ordered dither in
-the channel's two colours, raw WebGL2, one context per picture, 6.9 KB gzip behind a dynamic import
-(`src/lib/dither/`). Key art — the guide's screen (`data-dither-guide`) and a case study's stage
-(`data-dither-stage`) — keeps its own colours, with the field's dots laid over it. All of it is
-alive while on screen: a hum bar, shimmering edges, a small lens and a ripple for a flick under
-the pointer, and a dissolve with the scroll. **The CSS is the fallback and must stay correct on its
-own**: no JS, no
-WebGL2, a software GPU, forced colours and a lost context all land on it. The renderer reads
-everything from CSS — colours, `--duo-lift`/`--duo-contrast` or their `--dither-*` overrides,
-`--dither-dot`, `--dither-fade`, the `<img>`'s crop — and the canvas takes the `<img>`'s box and
-depth from the same rules. **Headless Chromium has only SwiftShader, which the print refuses**: a
-test that needs it running sets `window.__ditherSoftware = true` first. See `docs/art-system.md`,
-"The print".
-
-## Content rule
-
-> The programme guide is the complete record: every non-draft entry is a programme on it, and has
-> its own page at `/work/<slug>`.
-
-On the one-pager the guide shows the first three and holds the rest behind Load more — still on
-it, one press away, and in the HTML without JavaScript. Publishing an entry also requires updating
-the guard in `src/pages/work/[id].astro`. That is deliberate friction.
+`pnpm test` covers routes and the `/work` redirect config, smoke, share metadata, scrollbars at four
+widths, axe on `/` and the 404, the keyboard flip (Enter turns a card, focus moves, the hidden face
+is inert), reduced motion, pigment contrast with the manifest and favicon pinned to the palette,
+no third-party origins, the JS budget and the service-worker kill switch. `astro preview` does not
+read `firebase.json`, so redirects are asserted on the config.
 
 ## Publishing hygiene
 

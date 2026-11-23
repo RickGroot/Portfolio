@@ -1,0 +1,687 @@
+---
+import { Image } from 'astro:assets';
+import { pigmentStyle } from '@lib/palette';
+import type { Card } from '@lib/deck';
+import Links from './Links.astro';
+
+/**
+ * One card: the footprint, its shadow, and a front and a back that turn.
+ *
+ * The accessibility pattern is the whole point of the markup:
+ *   - the front is covered by ONE <button class="turn" aria-pressed>, so a
+ *     card is a single control and nothing interactive is nested inside it;
+ *   - the back holds a "Turn back" button and real links;
+ *   - whichever face is turned away is `inert` (src/scripts/table.ts keeps it
+ *     so), so it cannot take focus and is not read.
+ * The back is made inert by the script, not in the markup: without
+ * JavaScript nothing can turn, so CSS (`html:not(.js)` in card.css) lays each
+ * back out under its front and every case study and link stays reachable.
+ */
+interface Props {
+	card: Card;
+	/** Position in the deck: seeds the card's lean on the table. */
+	index: number;
+	/** Heading level of the card's title. The player card's name is the page's h1. */
+	level?: 1 | 2;
+	/** False for the 404's ticket, which has no back and carries its links on its front. */
+	flippable?: boolean;
+	/** The contact ticket: its stub tears off to show the ways to reach me. Never on the 404. */
+	tearable?: boolean;
+	/** Above the fold: loaded eagerly and at high priority. */
+	eager?: boolean;
+}
+
+const { card, index, level = 2, flippable = true, tearable = false, eager = false } = Astro.props;
+const Title: 'h1' | 'h2' = level === 1 ? 'h1' : 'h2';
+
+// A card's lean on the table: deterministic, so a rebuild never reshuffles it.
+const ROT = [-1.6, 1.2, -0.8, 1.8, -1.4, 0.9, 1.5, -1.1, 0.7, -1.9, 1.3];
+const OX = [0, 10, -8, 6, -12, 4, 12, -6, 8, -10, 0];
+const OY = [0, -6, 8, -4, 6, -8, 4, 10, -6, 4, 0];
+const at = (a: number[]): number => a[index % a.length] ?? 0;
+const lean = `--rot:${at(ROT)}deg;--ox:${at(OX)}px;--oy:${at(OY)}px`;
+
+// Type is sized in the card's own unit (cqw) from the length of the title, so
+// a long name shrinks to fit rather than wrapping out of its card.
+const fit = (len: number, max: number, room: number): number =>
+	Math.min(max, room / (Math.max(len, 1) * 0.46));
+const size = (cqw: number): string => `font-size:${cqw.toFixed(1)}cqw`;
+
+const AR = {
+	sleeve: '1 / 1',
+	tape: '3 / 2',
+	listing: '4 / 3',
+	cast: '1 / 1',
+	polaroid: '4 / 5',
+	ticket: '4 / 3',
+	player: '5 / 7',
+	slide: '1 / 1',
+	liner: '5 / 3',
+} as const;
+
+const loading = eager ? 'eager' : 'lazy';
+const priority = eager ? 'high' : 'auto';
+const label = card.label;
+
+// The cast card's title wraps to two lines: size it by its longest word.
+const longest = (s: string): number => Math.max(...s.split(/\s+/).map((w) => w.length), 1);
+
+// The ticket's actions: the email is a link and a copy button; the rest are links.
+const mailto = (href: string): string => href.replace(/^mailto:/, '');
+---
+
+<div
+	class={`slot ${card.kind}`}
+	data-card={card.id}
+	style={`--ar:${card.kind === 'ticket' && !tearable ? '5 / 2' : AR[card.kind]};${pigmentStyle(card.pigment)};${lean}`}
+>
+	<div class="shadow" aria-hidden="true"></div>
+
+	{card.kind === 'sleeve' && (
+		<div class="disc" aria-hidden="true">
+			<b />
+		</div>
+	)}
+
+	<div class="tilt">
+		<div class="flip">
+			<div class="card front">
+				{card.kind === 'sleeve' && (
+					<>
+						<div class="meta">
+							<span class="cat">{card.number}</span>
+							<span>{card.period}</span>
+						</div>
+						<Title class="disp" style={size(fit(card.title.length, 39, 64))}>
+							{card.title}
+						</Title>
+						<p class="sub">{card.role}</p>
+						<div class="bar" aria-hidden="true">
+							<i />
+							<i />
+							<i />
+							<i />
+						</div>
+						{card.cover && (
+							<figure class="art print">
+								<Image
+									src={card.cover}
+									alt={card.coverAlt ?? ''}
+									widths={[300, 520]}
+									sizes="(max-width: 820px) 40vw, 160px"
+									loading={loading}
+									fetchpriority={priority}
+								/>
+							</figure>
+						)}
+						<footer class="meta">
+							<span>{card.tags.slice(0, 2).join(' · ')}</span>
+							<span>Side A</span>
+						</footer>
+					</>
+				)}
+
+				{card.kind === 'tape' && (
+					<>
+						<div class="label">
+							<div>
+								<div class="meta">
+									<span class="cat">{card.number}</span>
+									<span>{card.period}</span>
+								</div>
+								<Title
+									class="disp"
+									style={size(card.title.length <= 7 ? 12 : card.title.length <= 12 ? 9 : 8)}
+								>
+									{card.title}
+								</Title>
+								<div class="lines meta">
+									{card.tags.slice(0, 2).map((t) => (
+										<span>{t}</span>
+									))}
+								</div>
+							</div>
+							{card.cover && (
+								<div class="pic print">
+									<Image
+										src={card.cover}
+										alt={card.coverAlt ?? ''}
+										widths={[300, 600]}
+										sizes="(max-width: 820px) 50vw, 190px"
+										loading={loading}
+										fetchpriority={priority}
+									/>
+								</div>
+							)}
+						</div>
+						<div class="win" aria-hidden="true">
+							<span class="reel" />
+							<span class="reel" />
+						</div>
+						<div class="screws" aria-hidden="true">
+							<i />
+							<i />
+						</div>
+					</>
+				)}
+
+				{card.kind === 'listing' && (
+					<>
+						<div class="meta">
+							<span class="cat">{card.number}</span>
+							<span class={card.ongoing ? 'onair' : undefined}>
+								{card.ongoing ? 'On air' : 'Rerun'}
+							</span>
+						</div>
+						<div class="mid">
+							<div>
+								<Title class="disp" style={size(fit(card.title.length, 26, 42))}>
+									{card.title}
+								</Title>
+								<p class="sub">{card.role}</p>
+							</div>
+							{card.cover ? (
+								<div class="screen print">
+									<Image
+										src={card.cover}
+										alt={card.coverAlt ?? ''}
+										widths={[300, 600]}
+										sizes="(max-width: 820px) 44vw, 170px"
+										loading={loading}
+										fetchpriority={priority}
+									/>
+								</div>
+							) : null}
+						</div>
+						<div class="prog" aria-hidden="true" />
+						<div class="tick meta" aria-hidden="true">
+							<span>{card.tags.join(' · ')}</span>
+						</div>
+					</>
+				)}
+
+				{card.kind === 'cast' && (
+					<>
+						<div class="meta">
+							<span class="cat">{card.number}</span>
+							<span class={card.ongoing ? 'onair' : undefined}>
+								{card.ongoing ? 'On air' : 'Rerun'}
+							</span>
+						</div>
+						<Title class="disp" style={size(Math.min(17, 64 / (longest(card.title) * 0.46)))}>
+							{card.title}
+						</Title>
+						<p class="sub">{card.role}</p>
+						{/* The sender: a phone with the cast mark. Turning the card is the cast. */}
+						<div class="sender" aria-hidden="true">
+							<svg viewBox="0 0 100 52" preserveAspectRatio="xMidYMax meet">
+								<defs>
+									<pattern
+										id={`dots-${card.id}`}
+										width="3.2"
+										height="3.2"
+										patternUnits="userSpaceOnUse"
+									>
+										<circle cx="1.6" cy="1.6" r="0.75" />
+									</pattern>
+								</defs>
+								<rect class="ink" x="8" y="4" width="42" height="60" />
+								<rect class="paper" x="11" y="9" width="36" height="60" />
+								<rect
+									class="shot"
+									x="14"
+									y="13"
+									width="30"
+									height="19"
+									fill={`url(#dots-${card.id})`}
+								/>
+								<path class="play" d="M26 18v9l8-4.5z" />
+								<rect class="rule" x="14" y="36" width="30" height="1.6" />
+								<rect class="rule dim" x="14" y="41" width="20" height="1.6" />
+								<rect class="rule dim" x="14" y="45" width="24" height="1.6" />
+								<g class="mark" transform="translate(31 47)">
+									<rect class="ink" width="13" height="8" />
+									<g class="glyph" transform="translate(2.2 1.4)">
+										<path class="line" d="M0 2.6V0h8.6v5.2H6.4" />
+										<path d="M0 4.6a1.7 1.7 0 0 1 1.7 1.7H0z" />
+									</g>
+								</g>
+								<g class="send" transform="translate(50 22)">
+									<path class="line a1" d="M0 -5a5 5 0 0 1 0 10" />
+									<path class="line a2" d="M0 -10a10 10 0 0 1 0 20" />
+									<path class="line a3" d="M0 -15a15 15 0 0 1 0 30" />
+									<path class="line beam" d="M22 0H50" />
+								</g>
+							</svg>
+						</div>
+					</>
+				)}
+
+				{card.kind === 'polaroid' && (
+					<>
+						<div class="photo">
+							<Image
+								src={card.image}
+								alt={card.alt}
+								widths={[400, 800]}
+								sizes="(max-width: 820px) 70vw, 280px"
+								loading={loading}
+								fetchpriority={priority}
+							/>
+						</div>
+						<p class="cap">{card.caption}</p>
+						<span class="cat meta">{card.number}</span>
+						<span class="strip" aria-hidden="true" />
+					</>
+				)}
+
+				{card.kind === 'player' && (
+					<>
+						<div class="frame">
+							<Image
+								src={card.photo}
+								alt={card.photoAlt}
+								widths={[400, 800]}
+								sizes="(max-width: 820px) 90vw, 340px"
+								loading={loading}
+								fetchpriority={priority}
+							/>
+							<span class="open">{card.facts[0]?.value}</span>
+						</div>
+						<Title class="disp" style={size(fit(card.name.length, 19, 88))}>
+							{card.name}
+						</Title>
+						<dl>
+							{card.facts.slice(1).map((f) => (
+								<>
+									<dt>{f.label}</dt>
+									<dd>{f.value}</dd>
+								</>
+							))}
+						</dl>
+					</>
+				)}
+
+				{card.kind === 'slide' && (
+					<>
+						<div class="meta">
+							<span>Colour slide</span>
+							<span class="cat">{card.number}</span>
+						</div>
+						<div class="winw">
+							<Image
+								src={card.image}
+								alt={card.alt}
+								widths={[400, 800]}
+								sizes="(max-width: 820px) 70vw, 290px"
+								loading={loading}
+								fetchpriority={priority}
+							/>
+						</div>
+						<div class="meta">
+							<span>{card.caption}</span>
+						</div>
+						<span class="dot" aria-hidden="true" />
+					</>
+				)}
+
+				{card.kind === 'liner' && (
+					<>
+						<div class="strip meta">
+							<span>Liner notes</span>
+							<span class="cat">{card.number}</span>
+						</div>
+						<Title class="disp" style={size(11)}>
+							{card.title}
+						</Title>
+						<ol aria-hidden="true">
+							{card.items.map((i) => (
+								<li>
+									{i.number} {i.title}
+								</li>
+							))}
+						</ol>
+					</>
+				)}
+
+				{card.kind === 'ticket' && (
+					<>
+						<div class="main">
+							<div class="meta">
+								<span class="cat">{card.number}</span>
+								<span>{tearable ? 'Good for one conversation' : 'Wrong turn'}</span>
+							</div>
+							<Title class="disp" style={size(fit(card.title.length, 13.5, 62))}>
+								{card.title}
+							</Title>
+							{tearable ? (
+								<>
+									<p class="tease">Tear off the stub and I am one message away.</p>
+									<div class="code" aria-hidden="true" />
+									<div class="after">
+										<span class="stamp" aria-hidden="true">
+											Validated
+										</span>
+										<p class="note">Torn along the dotted line. Write whenever you like.</p>
+									</div>
+									{/* Without a script nothing tears: the links sit here, plainly. */}
+									<ul class="links nojs">
+										{card.links.map((l) => (
+											<li>
+												<a
+													class="go"
+													href={l.href}
+													rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}
+												>
+													{l.label}
+												</a>
+											</li>
+										))}
+									</ul>
+								</>
+							) : (
+								<ul class="links">
+									{card.links.map((l) => (
+										<li>
+											<a class="go" href={l.href}>
+												{l.label}
+											</a>
+										</li>
+									))}
+								</ul>
+							)}
+						</div>
+						{tearable ? (
+							<div class="stubwrap">
+								<div class="stubshadow" aria-hidden="true" />
+								<div class="stubflip">
+									<button
+										class="stub fr tear"
+										type="button"
+										aria-expanded="false"
+										aria-label="Tear off the stub to see how to reach me"
+									>
+										<span class="meta">{card.number}</span>
+										<b>Tear off</b>
+									</button>
+									<div class="stub bk" role="group" aria-label="Ways to reach me">
+										<p class="open">
+											<b>Open to work</b>
+											<br />I am looking for my next role. Say hello.
+										</p>
+										<div class="actions">
+											{[...card.links]
+												.sort(
+													(a, b) =>
+														Number(b.href.startsWith('mailto:')) -
+														Number(a.href.startsWith('mailto:')),
+												)
+												.map((l) =>
+													l.href.startsWith('mailto:') ? (
+														<>
+															<a class="go wide" href={l.href}>
+																{l.label}
+															</a>
+															<button class="go copy wide" type="button" data-copy={mailto(l.href)}>
+																Copy address
+															</button>
+														</>
+													) : (
+														<a class="go" href={l.href} rel="noopener">
+															{l.label}
+														</a>
+													),
+												)}
+											<button class="go put-back wide" type="button">
+												Put it back
+											</button>
+											<span class="copied" role="status" aria-live="polite" />
+										</div>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div class="stub" aria-hidden="true">
+								<span class="meta">{card.number}</span>
+								<b>Tear off</b>
+							</div>
+						)}
+					</>
+				)}
+
+				{flippable && (
+					<button class="turn" type="button" aria-pressed="false">
+						<span class="visually-hidden">Turn over: {label}</span>
+						<span class="corner" aria-hidden="true" />
+					</button>
+				)}
+			</div>
+
+			{flippable && (
+				<div class="card back">
+					<div class="bh meta">
+						<button class="turn-back" type="button">
+							Turn back
+							<span class="visually-hidden">: {label}</span>
+						</button>
+						<span class="cat">{card.number}</span>
+					</div>
+					{card.kind === 'liner' ? (
+						<div
+							class="bb scroll"
+							tabindex="0"
+							role="region"
+							aria-label={`${card.title}: the three principles`}
+						>
+							<h2 class="disp" style={size(11)}>
+								{card.title}
+							</h2>
+							<ol class="principles">
+								{card.items.map((i) => (
+									<li>
+										<h3>
+											{i.number} {i.title}
+										</h3>
+										<p>{i.body}</p>
+										<p>{i.proof}</p>
+									</li>
+								))}
+							</ol>
+						</div>
+					) : card.kind === 'tape' ? (
+						<div class="bb jcard">
+							<div class="top">
+								<h2 class="disp">{card.title}</h2>
+								<p class="meta">{card.back.credit}</p>
+							</div>
+							<div class="body">
+								<div class="spine meta" aria-hidden="true">
+									<span>{card.number}</span>
+								</div>
+								<div class="sides">
+									<section>
+										<h3>Side A · highlights</h3>
+										<ol class="tracks">
+											{card.back.built.map((t) => (
+												<li>{t}</li>
+											))}
+										</ol>
+									</section>
+									<section>
+										{card.back.stack.length > 0 ? (
+											<>
+												<h3>Side B · stack</h3>
+												<dl>
+													{card.back.stack.map((f) => (
+														<div>
+															<dt>{f.label}</dt>
+															<dd>{f.value}</dd>
+														</div>
+													))}
+												</dl>
+											</>
+										) : (
+											<>
+												<h3>Side B · topics</h3>
+												<ul class="topics">
+													{card.tags.map((t) => (
+														<li>{t}</li>
+													))}
+												</ul>
+											</>
+										)}
+									</section>
+								</div>
+							</div>
+							<Links links={card.back.links} />
+						</div>
+					) : card.kind === 'listing' ? (
+						<div class="bb entry">
+							<p class="meta slotline">
+								<span class="ch">{card.number}</span>
+								<span>{card.ongoing ? 'On air' : 'Rerun'}</span>
+								<span>{card.back.credit}</span>
+							</p>
+							<h2 class="disp">{card.title}</h2>
+							<p class="blurb">{card.back.blurb}</p>
+							<h3>Highlights</h3>
+							<ol class="eps">
+								{card.back.built.map((t) => (
+									<li>{t}</li>
+								))}
+							</ol>
+							<Links links={card.back.links} />
+						</div>
+					) : card.kind === 'sleeve' ? (
+						<div class="bb cover">
+							<h2 class="disp">{card.title}</h2>
+							<p class="explain">{card.back.blurb}</p>
+							<h3>Highlights</h3>
+							<ul class="feats">
+								{card.back.built.map((t) => (
+									<li>{t}</li>
+								))}
+							</ul>
+							{card.back.stack.length > 0 && (
+								<dl class="credits">
+									{card.back.stack.map((f) => (
+										<div>
+											<dt>{f.label}</dt>
+											<dd>{f.value}</dd>
+										</div>
+									))}
+								</dl>
+							)}
+							<p class="note">{card.back.note}</p>
+							<Links links={card.back.links} />
+						</div>
+					) : card.kind === 'cast' ? (
+						<div class="bb tv">
+							<div class="set">
+								<div class="display">
+									<div class="np">
+										<p class="meta">
+											<span>Now casting</span>
+											<span>{card.back.credit}</span>
+										</p>
+										<h2 class="disp">{card.title}</h2>
+										<p class="blurb">{card.back.blurb}</p>
+										<h3>Up next</h3>
+										<ol class="queue">
+											{card.back.built.map((t) => (
+												<li>{t}</li>
+											))}
+										</ol>
+										<div class="timeline" aria-hidden="true">
+											<i class="played" />
+										</div>
+									</div>
+									{/* The receiver's splash: shown for a moment each time the card turns. */}
+									<div class="splash" aria-hidden="true">
+										<svg viewBox="0 0 30 24">
+											<g class="send" transform="translate(4 20)">
+												<path class="line a1" d="M0 -6a6 6 0 0 1 6 6" />
+												<path class="line a2" d="M0 -12a12 12 0 0 1 12 12" />
+												<path class="line a3" d="M0 -18a18 18 0 0 1 18 18" />
+												<path d="M0 -2.4a2.4 2.4 0 0 1 2.4 2.4H0z" />
+											</g>
+										</svg>
+										<span class="meta">Casting to this screen</span>
+									</div>
+								</div>
+								<div class="stand" aria-hidden="true" />
+							</div>
+							<Links links={card.back.links} />
+						</div>
+					) : card.kind === 'polaroid' ? (
+						<div class="bb photoback">
+							<h2>{card.title}</h2>
+							<ul class="inscription">
+								{card.back.place && <li>Taken in {card.back.place}.</li>}
+								{card.back.date && <li>{card.back.date}.</li>}
+								{card.back.credit && <li>Photo: {card.back.credit}.</li>}
+								{card.back.note && <li>{card.back.note}</li>}
+							</ul>
+						</div>
+					) : card.kind === 'slide' ? (
+						<div class="bb mount">
+							<div class="plate">
+								<h2 class="disp">{card.title}</h2>
+							</div>
+							<div class="hand">
+								<dl>
+									{card.back.place && (
+										<>
+											<dt>Where</dt>
+											<dd>{card.back.place}</dd>
+										</>
+									)}
+									{card.back.date && (
+										<>
+											<dt>When</dt>
+											<dd>{card.back.date}</dd>
+										</>
+									)}
+									{card.back.credit && (
+										<>
+											<dt>Photo</dt>
+											<dd>{card.back.credit}</dd>
+										</>
+									)}
+									{card.back.note && (
+										<>
+											<dt>Label</dt>
+											<dd>{card.back.note}</dd>
+										</>
+									)}
+								</dl>
+							</div>
+						</div>
+					) : card.kind === 'player' ? (
+						<div class="bb stats">
+							<h2 class="disp">{card.name}</h2>
+							<p class="bio">{card.back.bio}</p>
+							<dl>
+								{card.back.stats.map((f) => (
+									<div>
+										<dt>{f.label}</dt>
+										<dd>{f.value}</dd>
+									</div>
+								))}
+							</dl>
+							<h3>Track record</h3>
+							<ol class="record">
+								{card.back.record.map((r) => (
+									<li>
+										<span>{r.title}</span>
+										<span>{r.years}</span>
+									</li>
+								))}
+							</ol>
+						</div>
+					) : null}
+				</div>
+			)}
+		</div>
+	</div>
+</div>

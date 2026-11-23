@@ -1,94 +1,64 @@
 import { test, expect } from '@playwright/test';
-
-const ROUTES = [
-	'/',
-	'/work/nlziet',
-	'/work/chromecast',
-	'/work/vamp',
-	'/work/kijk',
-	'/work/nos',
-	'/work/streamz-vtm-go',
-];
+import { readFileSync } from 'node:fs';
 
 test.describe('routing', () => {
-	for (const path of ROUTES) {
-		test(`${path} responds 200 with no redirect`, async ({ page }) => {
-			const response = await page.goto(path);
-			expect(response, `no response for ${path}`).not.toBeNull();
-			expect(response!.status()).toBe(200);
+	test('/ responds 200 with no redirect', async ({ page }) => {
+		const response = await page.goto('/');
+		expect(response!.status()).toBe(200);
+		expect(response!.request().redirectedFrom(), '/ was redirected').toBeNull();
+	});
 
-			// A redirect on the happy path is LCP budget handed back for free.
-			// astro build.format:'file' + firebase cleanUrls must agree so that
-			// /work/nlziet is served directly, not 301'd from /work/nlziet.html.
-			expect(response!.request().redirectedFrom(), `${path} was redirected`).toBeNull();
-		});
-	}
-
-	test('an unknown path does not return the homepage with a 200', async ({ page }) => {
-		// The old firebase.json rewrote ** -> /index.html, so every typo returned
-		// the homepage with HTTP 200 and no 404 could ever fire.
+	test('an unknown path is a real 404, not the table with a 200', async ({ page }) => {
 		const response = await page.goto('/definitely-not-a-page');
 		expect(response!.status()).toBe(404);
-		await expect(page.locator('h1')).not.toHaveText('Rick Groot');
+		await expect(page.locator('h1')).toHaveText(/Lost: page 404/i);
+		await expect(page.locator('[data-card]')).toHaveCount(1);
 	});
 
-	test('the 404 page offers real navigation', async ({ page }) => {
+	test('the 404 is a ticket that leads back to the table', async ({ page }) => {
 		await page.goto('/definitely-not-a-page');
-		const links = page.locator('main a');
-		await expect(links.first()).toBeVisible();
-
-		// Real destinations only. The hand-typed list this replaced still pointed
-		// at a /work index page that the one-pager had removed.
-		const hrefs = await links.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+		const hrefs = await page
+			.locator('main a')
+			.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
 		expect(hrefs).toContain('/');
-		expect(hrefs).toContain('/work/nlziet');
-		expect(hrefs, 'links to the removed /work index').not.toContain('/work');
-		for (const href of hrefs) {
-			const res = await page.request.get(href ?? '');
-			expect(res.status(), `404 page links to ${href}, which is not a page`).toBe(200);
-		}
 	});
 
-	/*
-	 * Built pages are files (dist/work/nlziet.html) served at clean URLs, and the
-	 * build reports the FILE as the pathname. Every canonical once ended in
-	 * .html, and the homepage nav linked to itself. The dev server hides both,
-	 * which is why this runs against the build.
-	 */
-	test('canonical URLs are the clean public ones', async ({ page }) => {
-		for (const [path, canonical] of [
-			['/', 'https://rickgroot.nl/'],
-			['/work/nlziet', 'https://rickgroot.nl/work/nlziet'],
-		] as const) {
-			await page.goto(path);
-			await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', canonical);
-			await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', canonical);
-		}
-	});
-
-	// It should feel like an app, and an app has no masthead. A case study
-	// carries its own way back instead.
-	test('no page has a site header, and a case study has a way back', async ({ page }) => {
-		for (const path of ['/', '/work/nlziet', '/definitely-not-a-page']) {
-			await page.goto(path);
-			await expect(page.locator('body > header'), `${path} has a site header`).toHaveCount(0);
-		}
-		await page.goto('/work/nlziet');
-		const back = page.locator('[data-back]');
-		await expect(back).toBeVisible();
-		await expect(back).toHaveAttribute('href', '/#work');
-	});
-
-	test('Escape on a case study goes back to the guide', async ({ page }) => {
-		await page.goto('/work/chromecast');
-		await page.keyboard.press('Escape');
-		await expect(page).toHaveURL(/\/#work$/);
+	test('canonical URL is the clean public one', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+			'href',
+			'https://rickgroot.nl/',
+		);
+		await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+			'content',
+			'https://rickgroot.nl/',
+		);
 	});
 
 	test('every page has exactly one h1', async ({ page }) => {
-		for (const path of ROUTES) {
+		for (const path of ['/', '/definitely-not-a-page']) {
 			await page.goto(path);
 			await expect(page.locator('h1'), `${path} h1 count`).toHaveCount(1);
 		}
+	});
+
+	// The case-study pages are gone: each is the back of a card now. Emulated
+	// here because astro preview does not read firebase.json.
+	test('firebase.json sends /work and /work/** to the table with a 301', () => {
+		const config = JSON.parse(readFileSync('firebase.json', 'utf8')) as {
+			hosting: { redirects?: { source: string; destination: string; type: number }[] };
+		};
+		const redirects = config.hosting.redirects ?? [];
+		for (const source of ['/work', '/work/**']) {
+			const r = redirects.find((x) => x.source === source);
+			expect(r, `no redirect for ${source}`).toBeDefined();
+			expect(r!.destination).toBe('/');
+			expect(r!.type).toBe(301);
+		}
+	});
+
+	test('no page is built for /work', async ({ request }) => {
+		const res = await request.get('/work/nlziet');
+		expect(res.status()).toBe(404);
 	});
 });

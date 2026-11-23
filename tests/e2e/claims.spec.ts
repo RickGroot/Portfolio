@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { AA } from '../../src/lib/channels';
+import { AA } from '../../src/lib/palette';
 import { CPU_THROTTLE, LCP_BUDGET } from '../support/budgets';
 
 /**
@@ -7,12 +7,13 @@ import { CPU_THROTTLE, LCP_BUDGET } from '../support/budgets';
  * fail. This is that check for the section's own claims: each number it quotes
  * is the number the suite enforces, and it quotes no count that grows with the
  * work -- "37 commits" and "105 tests" were stale within a week of being
- * written (src/content/practice.yaml).
+ * written (src/content/practice.yaml). It lives on the liner-notes card, whose back
+ * holds all three principles in full; textContent reads it though it is inert.
  */
 
 /** Text as written, not as styled: innerText would apply text-transform. */
 const practiceText = async (page: Page): Promise<string> =>
-	((await page.locator('#practice').textContent()) ?? '').replace(/\s+/g, ' ');
+	((await page.locator('[data-card="how-i-work"]').textContent()) ?? '').replace(/\s+/g, ' ');
 
 const TIMES: Record<number, string> = {
 	2: 'twice',

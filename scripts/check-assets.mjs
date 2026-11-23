@@ -26,7 +26,10 @@ const LIMITS = {
 	htmlGzip: 25 * 1024,
 	cssGzip: 20 * 1024,
 	jsGzipTotal: 45 * 1024,
-	fontsTotal: 80 * 1024,
+	// Raised from 80 KB with the card redesign: Archivo's variable file is 88 KB
+	// on its own (the full width and weight axes, because the display type uses
+	// 62% width at 900). Four files, ~146 KB, each preloaded or loaded on use.
+	fontsTotal: 160 * 1024,
 };
 
 const IMAGE = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
@@ -161,7 +164,10 @@ for (const f of distFiles.filter((f) => /\.(js|css|html)$/.test(f))) {
 	if (s.includes('sourceMappingURL=')) fail(`${f} references a sourcemap`);
 	if (/[A-Z]:\\\\?[Uu]sers\\/.test(s) || s.includes('/home/runner/'))
 		fail(`${f} leaks an absolute build path`);
-	if (username && username.length > 3 && s.includes(username))
+	// Public URLs legitimately carry the handle (rickgroot.nl, rickgroot.github.io);
+	// strip them so a developer whose login is the site's name can still build.
+	const bare = s.replace(/https?:\/\/[^\s"'<>)]*/g, '');
+	if (username && username.length > 3 && bare.includes(username))
 		fail(`${f} leaks the build machine's username`);
 }
 
@@ -281,6 +287,12 @@ if (existsSync(fontDir)) {
 	for (const m of blob.matchAll(/@property\s+(--[a-zA-Z][\w-]*)/g)) defined.add(m[1]);
 	// `setProperty('--x', ...)` from the interaction scripts.
 	for (const m of blob.matchAll(/setProperty\(\s*['"`](--[a-zA-Z][\w-]*)/g)) defined.add(m[1]);
+
+	// The palette is emitted as custom properties by src/lib/palette.ts.
+	for (const m of readFileSync('src/lib/palette.ts', 'utf8')
+		.match(/PALETTE = \{[\s\S]*?\} as const/)[0]
+		.matchAll(/^\s*(\w+):/gm))
+		defined.add(`--${m[1]}`);
 
 	const missing = new Map();
 	for (const f of sources) {

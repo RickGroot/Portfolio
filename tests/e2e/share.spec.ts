@@ -7,15 +7,7 @@ import sharp from 'sharp';
  * line of text, and there was no structured data at all (2026-09-29).
  */
 
-const ROUTES = [
-	'/',
-	'/work/nlziet',
-	'/work/chromecast',
-	'/work/vamp',
-	'/work/kijk',
-	'/work/nos',
-	'/work/streamz-vtm-go',
-];
+const ROUTES = ['/'];
 
 const meta = (page: Page, key: string): Promise<string | null> =>
 	page.locator(`meta[property="${key}"], meta[name="${key}"]`).getAttribute('content');
@@ -59,15 +51,4 @@ test('the home page says who the site is about', async ({ page }) => {
 	expect(data.name).toBe('Rick Groot');
 	expect(data.jobTitle).toBe('Connected TV developer');
 	expect(data.sameAs).toEqual(expect.arrayContaining([expect.stringMatching(/github\.com\//)]));
-});
-
-test('a case study says what it is and who wrote it up', async ({ page }) => {
-	await page.goto('/work/vamp');
-	await expect(page).toHaveTitle('VAMP | Rick Groot');
-	const data = await jsonLd(page);
-	expect(data['@type']).toBe('CreativeWork');
-	expect(data.name).toBe('VAMP');
-	expect(data.url).toBe('https://rickgroot.nl/work/vamp');
-	expect(data.image).toBe(await meta(page, 'og:image'));
-	expect((data.author as { name?: string } | undefined)?.name).toBe('Rick Groot');
 });

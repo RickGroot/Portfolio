@@ -1,0 +1,778 @@
+/*
+ * The card frame, shared by every format.
+ *
+ *   .slot    the footprint: sets the aspect ratio, perspective and the unit
+ *            (cqw) every card is drawn in, so one rule scales all seven.
+ *   .shadow  a separate element, never part of the flip: the card lifts by
+ *            sliding off it, and it does not turn over with the card.
+ *   .tilt    follows the pointer (JS sets --rx/--ry/--lx/--ly).
+ *   .flip    turns 180 degrees about Y.
+ *   .card    one face. `.front` and `.back` share the same box.
+ *
+ * A face that is turned away is `inert`, so nothing on it can take focus or
+ * be read; the script sets and clears it with the flip.
+ */
+.slot {
+	position: relative;
+	z-index: 1;
+	aspect-ratio: var(--ar);
+	perspective: 1100px;
+	container-type: inline-size;
+	color: var(--ink);
+}
+
+.shadow {
+	position: absolute;
+	inset: 0;
+	background: var(--ink);
+	transform: translate(var(--drop), var(--drop));
+}
+
+.tilt,
+.flip {
+	position: absolute;
+	inset: 0;
+	transform-style: preserve-3d;
+}
+
+.tilt {
+	transition: transform 0.18s var(--ease);
+	transform: translate3d(var(--lx, 0), var(--ly, 0), 0) rotateX(var(--rx, 0deg))
+		rotateY(var(--ry, 0deg));
+}
+
+.flip {
+	transition: transform 0.62s var(--ease);
+}
+
+.slot.is-flipped .flip {
+	transform: rotateY(180deg);
+}
+
+.card {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: var(--rule) solid var(--ink);
+	background: var(--card);
+	color: var(--ink);
+	backface-visibility: hidden;
+	-webkit-backface-visibility: hidden;
+}
+
+/* The print gloss: a soft highlight that follows the pointer. */
+.card::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.2s;
+	mix-blend-mode: soft-light;
+	background: radial-gradient(
+		circle at var(--mx, 50%) var(--my, 0%),
+		color-mix(in srgb, var(--card) 55%, transparent),
+		transparent 55%
+	);
+}
+
+.card img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.meta {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	font: 500 clamp(9px, 2.6cqw, 11px) / 1.2 var(--mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+/* A catalogue number never breaks; the label beside it wraps instead. */
+.meta .cat {
+	flex-shrink: 0;
+	white-space: nowrap;
+}
+
+.meta .cat + * {
+	text-align: right;
+}
+
+/* The front's one button: it covers the whole face, so the face is the target. */
+.turn {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	width: 100%;
+	border: 0;
+	padding: 0;
+	background: none;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.turn:focus-visible {
+	outline: none;
+}
+
+/* A quiet corner mark: the page is turnable. It carries no words. */
+.turn .corner {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 6cqw;
+	aspect-ratio: 1;
+	background: linear-gradient(
+		135deg,
+		transparent 50%,
+		color-mix(in srgb, var(--ink) 55%, transparent) 50%
+	);
+	pointer-events: none;
+}
+
+/* The ring goes round the whole card, outside it, on the table. */
+.slot:has(.turn:focus-visible) {
+	outline: 3px solid var(--blue);
+	outline-offset: 8px;
+}
+
+/* ---- the back: the short case study -------------------------------------- */
+
+.back {
+	transform: rotateY(180deg);
+}
+
+.back .bh {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	padding: 2.4cqw 4cqw;
+	background: var(--ink);
+	color: var(--card);
+}
+
+.turn-back {
+	border: 1px solid currentColor;
+	background: none;
+	padding: 1.2cqw 2.4cqw;
+	cursor: pointer;
+	font: 500 clamp(9px, 2.6cqw, 11px) / 1 var(--mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+/* A thumb target: at least 44px on touch and on narrow screens. The button */
+/* stays its printed size; an invisible margin round it takes the touch, so */
+/* a back does not spend its height on button padding. */
+@media (pointer: coarse), (max-width: 600px) {
+	/* Backs only: the ticket's links are 44px already, and a pseudo-element */
+	/* on its 3D-turned stub widens the page. */
+	.turn-back,
+	.back .go {
+		position: relative;
+	}
+
+	.turn-back::after,
+	.back .go::after {
+		content: '';
+		position: absolute;
+		inset: calc(50% - 22px) 0;
+	}
+}
+
+.turn-back:focus-visible {
+	/* On ink: the ring must be card paper, as blue would be 3.5:1 there. */
+	outline-color: var(--card);
+	outline-offset: 2px;
+}
+
+.back .bb {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2cqw;
+	padding: 3.6cqw 4cqw 4cqw;
+	font-size: clamp(11px, 3.3cqw, 14px);
+	line-height: 1.35;
+	overflow: auto;
+}
+
+.back h2 {
+	font-size: clamp(22px, 9cqw, 34px);
+}
+
+.back .bb p {
+	max-width: 46ch;
+}
+
+.back dl {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.6cqw 3cqw;
+	font: 500 clamp(9px, 2.6cqw, 11px) / 1.4 var(--mono);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+.back dd {
+	margin: 0;
+}
+
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.6cqw 2cqw;
+	margin-top: auto;
+	list-style: none;
+	padding: 0;
+}
+
+/* A link on a back or a front: printed in the card's pigment. */
+.go {
+	display: inline-block;
+	background: var(--field);
+	color: var(--on-field);
+	border: var(--rule) solid var(--ink);
+	padding: 1.6cqw 3cqw;
+	font: 500 clamp(9px, 2.6cqw, 11px) / 1 var(--mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-decoration: none;
+}
+
+.go:hover {
+	background: var(--ink);
+	color: var(--card);
+}
+
+.go:focus-visible {
+	outline-offset: 4px;
+}
+
+/* The liner notes' back is a long read in a small card: it scrolls, and */
+/* because it scrolls it is a tab stop, so a keyboard can scroll it too. */
+.back .scroll {
+	gap: 3cqw;
+}
+
+.back .scroll:focus-visible {
+	outline-offset: -6px;
+}
+
+.back .principles {
+	list-style: none;
+	padding: 0;
+	display: grid;
+	gap: 3cqw;
+}
+
+.back .principles h3 {
+	font: 600 1.05em/1.25 var(--sans);
+	text-transform: none;
+}
+
+.back .principles p + p {
+	margin-top: 0.6em;
+	padding-left: 2cqw;
+	border-left: var(--rule) solid var(--field);
+}
+
+/* ---- the backs: the other side of each object ----------------------------- */
+/*
+ * Every back is the reverse of its thing, in the same flat print: a cassette's
+ * J-card, a programme guide's entry, a record's back cover, a slide mount, a
+ * trading card. They share the frame above (.bh button + .bb body); the rules
+ * below only lay out the body. The liner keeps its scrolling principles.
+ */
+
+.back h3 {
+	font: 500 clamp(9px, 2.6cqw, 11px) / 1.2 var(--mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.back .tracks,
+.back .eps,
+.back .record {
+	list-style: none;
+	padding: 0;
+	counter-reset: t;
+}
+
+.back .tracks li,
+.back .eps li {
+	counter-increment: t;
+	display: grid;
+	grid-template-columns: 5.6cqw 1fr;
+	gap: 0 1cqw;
+	padding: 0.7cqw 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+	font-size: max(10.5px, 3cqw);
+	line-height: 1.2;
+}
+
+.back .tracks li::before,
+.back .eps li::before {
+	content: counter(t, decimal-leading-zero);
+	font: 500 0.85em / 1.4 var(--mono);
+	opacity: 0.7;
+}
+
+.back .eps li::before {
+	content: 'E' counter(t);
+}
+
+/* tape: a J-card insert. A field-coloured header, the spine down the fold, Side A and Side B. */
+.back .jcard {
+	gap: 0;
+	padding: 0;
+}
+
+.jcard .top {
+	display: grid;
+	gap: 0.6cqw;
+	padding: 2.2cqw 4cqw 2.4cqw;
+	background: var(--field);
+	color: var(--on-field);
+	border-bottom: var(--rule) solid var(--ink);
+}
+
+.back .jcard h2 {
+	font-size: 7cqw;
+	line-height: 1.1;
+	white-space: nowrap;
+}
+
+.jcard .top .meta {
+	font-size: max(9px, 2.5cqw);
+	line-height: 1.2;
+}
+
+.jcard .body {
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	grid-template-columns: 8cqw 1fr;
+}
+
+/* The spine: the strip down the fold of a J-card, the catalogue number running along it. */
+.jcard .spine {
+	display: grid;
+	place-items: center;
+	background: color-mix(in srgb, var(--field) 30%, var(--card));
+	border-right: var(--rule) solid var(--ink);
+	overflow: hidden;
+}
+
+.jcard .spine span {
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+	font-size: max(9px, 2.6cqw);
+	white-space: nowrap;
+}
+
+.jcard .sides {
+	min-height: 0;
+	display: grid;
+	grid-template-columns: 1.25fr 1fr;
+	/* A fold line under the panels, where the insert would bend. */
+	border-bottom: 1px dashed color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+.jcard .sides section {
+	padding: 2.4cqw 3.2cqw;
+	display: flex;
+	flex-direction: column;
+	gap: 1.2cqw;
+	min-width: 0;
+}
+
+.jcard .sides section + section {
+	border-left: var(--rule) solid var(--ink);
+}
+
+.back .jcard .tracks li {
+	font-size: max(10.5px, 3cqw);
+	padding: 0.6cqw 0;
+}
+
+.back .jcard dl {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1.2cqw;
+	font: 500 max(10.5px, 3cqw) / 1.2 var(--sans);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.jcard .topics {
+	list-style: none;
+	padding: 0;
+	display: grid;
+	gap: 1.2cqw;
+	font: 500 max(10.5px, 3cqw) / 1.2 var(--sans);
+}
+
+.jcard .topics li {
+	padding: 0.9cqw 0;
+	border-bottom: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.back dl div {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 1.6cqw;
+	align-items: baseline;
+}
+
+.back dl dt {
+	font: 500 max(9px, 2.5cqw) / 1.2 var(--mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	opacity: 0.7;
+}
+
+.back .jcard .links {
+	margin: 0;
+	padding: 2.4cqw 4cqw 3cqw;
+}
+
+/* listing: the programme guide's entry. The first line is the channel and its slot. */
+.back .entry {
+	gap: 1cqw;
+	padding-top: 0;
+}
+
+.back .bb.entry > .slotline {
+	display: flex;
+	justify-content: space-between;
+	gap: 2cqw;
+	margin: 0 -4cqw;
+	padding: 1.8cqw 4cqw;
+	background: var(--field);
+	color: var(--on-field);
+	border-bottom: var(--rule) solid var(--ink);
+	font-size: max(9px, 2.6cqw);
+	max-width: none;
+	white-space: nowrap;
+}
+
+.entry .slotline .ch {
+	font-weight: 700;
+}
+
+.back .entry h2 {
+	font-size: 7.4cqw;
+	margin-top: 0.6cqw;
+}
+
+.entry .blurb {
+	font-size: max(10.5px, 3.3cqw);
+}
+
+.entry h3 {
+	padding-top: 1.2cqw;
+	border-top: var(--rule) solid var(--ink);
+}
+
+.back .entry .eps li {
+	grid-template-columns: 8cqw 1fr;
+	align-items: center;
+	padding: 0.45cqw 0;
+	font-size: max(10.5px, 3.1cqw);
+}
+
+/* The time slot: each episode sits in a guide's little cell. */
+.back .entry .eps li::before {
+	display: block;
+	padding: 0.5cqw 0;
+	margin-right: 1.6cqw;
+	text-align: center;
+	background: color-mix(in srgb, var(--field) 35%, var(--card));
+	border: 1px solid var(--ink);
+	opacity: 1;
+	font-size: max(9px, 2.4cqw);
+}
+
+.entry .links {
+	margin-top: auto;
+}
+
+/* sleeve: the record's back cover. */
+.back .cover {
+	gap: 1cqw;
+	padding-top: 2.2cqw;
+}
+
+.back .cover h2 {
+	font-size: 7cqw;
+}
+
+.back .cover dl {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.4cqw 3cqw;
+	font: 500 max(10.5px, 2.9cqw) / 1.2 var(--sans);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.back .cover .tracks li {
+	padding: 0.3cqw 0;
+	font-size: max(10.5px, 3cqw);
+}
+
+.back .cover dl dt {
+	font-size: max(9px, 2.4cqw);
+}
+
+.back .cover .explain {
+	max-width: none;
+	font-size: max(12px, 3.4cqw);
+	line-height: 1.35;
+	margin-bottom: 0.6cqw;
+}
+
+.back .cover .feats {
+	list-style: none;
+	padding: 0;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.4cqw 3cqw;
+	font-size: max(10.5px, 2.9cqw);
+	line-height: 1.2;
+}
+
+.back .cover .feats li::before {
+	content: '+ ';
+	opacity: 0.6;
+}
+
+.back .cover .credits div {
+	display: flex;
+	gap: 1.2cqw;
+}
+
+.cover .note {
+	border-left: var(--rule) solid var(--field);
+	padding-left: 2cqw;
+	font-size: max(10.5px, 2.8cqw);
+	line-height: 1.25;
+}
+
+.cover .links {
+	margin-top: auto;
+}
+
+/* The sleeve back is the fullest: its links print small, like a credit line. */
+.cover .go {
+	padding: 1cqw 2.2cqw;
+}
+
+/* slide: the cardboard mount's back, a pigment plate and a hand-written label. */
+.mount {
+	gap: 3.6cqw;
+	align-items: stretch;
+}
+
+.mount .plate {
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	place-items: center;
+	padding: 3cqw;
+	border: var(--rule) solid var(--ink);
+	background: var(--field);
+	color: var(--on-field);
+}
+
+.back .mount .plate h2 {
+	font-size: 14cqw;
+	line-height: 1;
+	text-align: center;
+}
+
+.mount .hand {
+	padding: 2.4cqw 3cqw 3cqw;
+	background: var(--card);
+	border: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+	transform: rotate(-1.4deg);
+	font-family: var(--sans);
+	color: color-mix(in srgb, var(--ink) 88%, var(--field));
+}
+
+.mount .hand dl {
+	grid-template-columns: 14cqw 1fr;
+	gap: 0.6cqw 2cqw;
+	font: 500 max(10.5px, 3.6cqw) / 1.35 var(--sans);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.mount .hand dt {
+	font: 500 max(9px, 2.4cqw) / 2 var(--mono);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.7;
+}
+
+.mount .hand dd {
+	border-bottom: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+/* player: a trading card's back. */
+.stats {
+	gap: 2.4cqw;
+}
+
+.stats h2 {
+	font-size: 11cqw;
+}
+
+.stats .bio {
+	font-size: max(10.5px, 3.4cqw);
+}
+
+.stats dl {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1.6cqw;
+}
+
+.back .stats dl div {
+	display: block;
+	border: var(--rule) solid var(--ink);
+	padding: 1.6cqw 2.4cqw;
+	background: color-mix(in srgb, var(--field) 18%, var(--card));
+}
+
+.stats dt {
+	display: block;
+	font-size: max(9px, 2.5cqw);
+}
+
+.stats dd {
+	font: 600 max(10.5px, 3.6cqw) / 1.2 var(--sans);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+.stats .record {
+	display: grid;
+	font-size: max(10.5px, 3.4cqw);
+}
+
+.stats .record li {
+	display: flex;
+	justify-content: space-between;
+	gap: 3cqw;
+	padding: 0.9cqw 0;
+	border-bottom: 1px dotted var(--ink);
+}
+
+.stats .record li span:last-child {
+	font: 500 max(9px, 2.8cqw) / 1.5 var(--mono);
+	white-space: nowrap;
+}
+
+/* ---- motion and hover: only where there is a hand to hover with ---------- */
+
+.slot.is-off *,
+.slot.is-off *::before,
+.slot.is-off *::after,
+.still .slot *,
+.still .slot *::before,
+.still .slot *::after {
+	/* !important: a format's `animation` shorthand resets the play state, */
+	/* and its selector is often the more specific one. */
+	animation-play-state: paused !important;
+}
+
+/* ---- without JavaScript: nothing turns, so each back lies under its front -- */
+
+html:not(.js) .slot {
+	aspect-ratio: auto;
+	perspective: none;
+}
+
+html:not(.js) .shadow,
+html:not(.js) .turn,
+html:not(.js) .turn-back {
+	display: none;
+}
+
+html:not(.js) .tilt,
+html:not(.js) .flip {
+	position: static;
+	transform: none;
+}
+
+html:not(.js) .card {
+	position: relative;
+	inset: auto;
+	box-shadow: var(--drop) var(--drop) 0 var(--ink);
+}
+
+html:not(.js) .front {
+	aspect-ratio: var(--ar);
+}
+
+html:not(.js) .back {
+	margin-top: 16px;
+	transform: none;
+	backface-visibility: visible;
+	-webkit-backface-visibility: visible;
+}
+
+html:not(.js) .back .bb {
+	overflow: visible;
+}
+
+/* Fixed-height panels size to their content when the card is no longer a fixed box. */
+html:not(.js) .back .plate {
+	flex: none;
+	min-height: 28cqw;
+}
+
+/* The slot is now front plus back, so the record sizes to the square front. */
+html:not(.js) .disc {
+	top: 5cqw;
+	height: 90cqw;
+}
+
+@media (hover: hover) {
+	.slot:hover {
+		z-index: 3;
+	}
+
+	.slot:hover .tilt {
+		--lx: -4px;
+		--ly: -4px;
+	}
+
+	.slot:hover .card::after {
+		opacity: 1;
+	}
+}
+
+.slot.is-flipped,
+.slot.is-dragging {
+	z-index: 4;
+}
+
+.slot.is-dragging .tilt {
+	--lx: -8px;
+	--ly: -8px;
+}
+
+.slot.is-dragging .turn {
+	cursor: grabbing;
+}

@@ -144,7 +144,7 @@ async function median(browser: Browser, path: string, samples = 3): Promise<Vita
 	return { lcp, cls: Math.max(cls, worstCls), lcpElement: runs[0]!.lcpElement };
 }
 
-const ROUTES = ['/', '/work/chromecast'];
+const ROUTES = ['/'];
 
 /*
  * A trip-wire well under the allowance, so the budget has teeth rather than

@@ -6,7 +6,8 @@ period: '2021'
 status: completed
 summary: Front-end development for the NH Nieuws and AT5 regional news platforms, built in React and TypeScript for a Dutch regional news provider.
 tags: ['React', 'TypeScript', 'News provider']
-channel: ultramarine
+format: listing
+pigment: blue
 # No cover: the one first supplied had no known source and left the repository
 #   (2026-09-25). Add a cover Rick owns + `coverAlt`, then drop `draft: true`.
 order: 7

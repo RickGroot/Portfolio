@@ -1,19 +1,19 @@
 # Performance
 
+> The card table (2026-11-23) has no canvas, no WebGL and no animation loop, so the print-chunk,
+> canvas and loop rows below belong to the retired channel site; later sections that discuss the
+> renderer are kept as history. See `docs/card-system.md` for what runs now.
+
 ## Budgets
 
-| Budget               | Limit               | How it is measured                                             |
-| -------------------- | ------------------- | -------------------------------------------------------------- |
-| Initial JS, homepage | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`                                |
-| Total JS, homepage   | ≤ 45 KB gzip        | measured 17.9 KB: 11.0 initial, 6.9 the print (2026-10-14)     |
-| LCP                  | < 2.5 s             | `tests/budgets/vitals.spec.ts`, 4× CPU, read before any scroll |
-| CLS                  | < 0.1               | `tests/budgets/vitals.spec.ts`, 4× CPU, the whole page walked  |
-| INP                  | < 200 ms            | **Field only** — see below                                     |
-| 1-bit print chunk    | ≤ 8 KB gzip         | trip-wire; measured 6.9 KB (2026-10-14); the deferred chunk    |
-| Canvas elements      | 1 per picture       | `tests/budgets/payload.spec.ts`: inside its frame, none else   |
-| WebGL contexts       | 1 per picture       | `tests/budgets/payload.spec.ts`: WebGL2 only                   |
-| Print frames         | ≤ 30fps on screen   | ambient on the loop; 0 off screen and under reduced motion     |
-| Animation loops      | 1, paused when idle | `tests/e2e/loop.spec.ts`                                       |
+| Budget               | Limit         | How it is measured                                             |
+| -------------------- | ------------- | -------------------------------------------------------------- |
+| Initial JS, homepage | <= 20 KB gzip | `tests/budgets/payload.spec.ts`; measured 2.6 KB (2026-11-23)  |
+| Total JS, homepage   | <= 45 KB gzip | `scripts/check-assets.mjs`                                     |
+| LCP                  | < 2.5 s       | `tests/budgets/vitals.spec.ts`, 4x CPU, read before any scroll |
+| CLS                  | < 0.1         | `tests/budgets/vitals.spec.ts`, 4x CPU, the whole page walked  |
+| INP                  | < 200 ms      | **Field only** - see below                                     |
+| Canvas / WebGL / rAF | 0             | `tests/budgets/payload.spec.ts`                                |
 
 ### Two honesty notes
 
@@ -76,20 +76,20 @@ which is the behaviour we want. Phase 2 makes this a CI gate.
 Three faces, self-hosted as WOFF2 in `public/fonts/`, Latin subset, `font-display: swap`, each with
 its SIL OFL licence alongside (`OFL-<Family>.txt` — redistribution requires it):
 
-| Role    | Face                          | File                               | Size    | Preloaded |
-| ------- | ----------------------------- | ---------------------------------- | ------- | --------- |
-| Display | Bricolage Grotesque 800, 96pt | `bricolage-grotesque-96-800.woff2` | 21.7 KB | yes       |
-| Reading | Instrument Sans 400           | `instrument-sans-400.woff2`        | 16.9 KB | yes       |
-| Reading | Instrument Sans 600           | `instrument-sans-600.woff2`        | 17.4 KB | no        |
-| Labels  | JetBrains Mono 500            | `jetbrains-mono-500.woff2`         | 21.8 KB | no        |
+| Role    | Face                        | File                        | Size    | Preloaded |
+| ------- | --------------------------- | --------------------------- | ------- | --------- |
+| Display | Archivo variable (900, 62%) | `archivo-var-latin.woff2`   | 90.1 KB | yes       |
+| Reading | Instrument Sans 400         | `instrument-sans-400.woff2` | 16.9 KB | yes       |
+| Reading | Instrument Sans 600         | `instrument-sans-600.woff2` | 17.4 KB | no        |
+| Labels  | JetBrains Mono 500          | `jetbrains-mono-500.woff2`  | 21.8 KB | no        |
 
-Chosen by Rick on 2026-09-25 from full-size candidates on the real pages. They replace Martian Mono
-(display) and Lato (reading); labels were a system monospace. The masthead's tracker is set in the
-labels' face too, with its ligatures off: self-hosted, its columns are the width the tracker counts
-on, where the character field's system monospace could resolve to a proportional face. The `check-assets` budget is 80 KB of WOFF2 — what a
-visitor downloads; the licence texts are not counted — and the set is 76 KB of it.
+Archivo replaced Bricolage Grotesque with the card redesign (2026-11-23): it is VAMP's sleeve face,
+set at weight 900 and 62% width. The file is the full variable font, Latin, unsubset, which is why
+the `check-assets` budget went from 80 KB to 160 KB of WOFF2 (what a visitor downloads; the licence
+texts are not counted). The set is 146 KB. Subsetting Archivo to the two axes and the glyphs in use
+(`pyftsubset`) would win most of that back.
 
-These are Google's own WOFF2 builds, downloaded once and committed. **There is deliberately no font
+The reading and label faces are Google's own WOFF2 builds, downloaded once and committed. **There is deliberately no font
 build dependency.** To refresh one, or add a weight:
 
 ```bash

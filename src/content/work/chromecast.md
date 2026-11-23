@@ -1,14 +1,23 @@
 ---
 title: Chromecast receivers
-role: Connected TV developer
+# COPY CHECK (2026-11-23): role says what I did; ended with Hypersolid, end year 2026 assumed.
+role: Receivers and a TypeScript boilerplate
 company: Hypersolid
-period: '2023'
-status: ongoing
+period: '2023–2026'
+status: completed
 summary: Custom Chromecast receivers for multiple projects, plus a TypeScript boilerplate covering media playback, error handling and Cast SDK integration.
 tags: ['JavaScript', 'Chromecast', 'Shaka player']
-channel: ultramarine
-cover: ../../assets/work/chromecast.jpg
-coverAlt: A Google Chromecast dongle and its remote on a white surface.
+format: cast
+pigment: green
+# COPY CHECK (2026-11-23): rewritten for the TV receiver back, first person.
+blurb: I built custom Chromecast receivers for several projects, and a TypeScript boilerplate that keeps them quick to build and consistent.
+# COPY CHECK (2026-11-23): rewritten from the notes below, first person.
+built:
+  - 'Custom receivers for several projects'
+  - 'A shared TypeScript boilerplate'
+  - 'Media playback and Cast SDK integration'
+  - 'Error handling built in'
+  - 'Faster development, less repetitive code'
 order: 2
 ---
 

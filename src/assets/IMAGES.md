@@ -1,8 +1,9 @@
 # Images: provenance
 
 No image here is stock. The photographs are Rick's own, and three of them were retouched with an
-image model; the programme covers are illustrations built around his real screenshots. Which is
-which, and how, is recorded below, because a portfolio should be able to say.
+image model; the work covers are crops of his own app screenshots, halftoned in CSS, and Chromecast
+draws its art as inline SVG. Which is which, and how, is recorded below, because a portfolio should be able
+to say.
 
 ## How they were prepared
 
@@ -12,19 +13,18 @@ originals carried GPS coordinates. Nothing in this directory does, and `check-as
 build on EXIF in `src/assets` and in `dist`, so a future image cannot slip one through. The original
 file names are not kept either: phone file names are capture timestamps.
 
-| File                      | What it is                                                    | Used in                  |
-| ------------------------- | ------------------------------------------------------------- | ------------------------ |
-| `gallery.jpg`             | Rick in a white-walled gallery in Prague: his own photo       | The masthead's screen    |
-| `talk.jpg`                | Rick presenting, in front of a blank screen: retouched        | Backdrop of _How I work_ |
-| `prague.jpg`              | Rick over the rooftops of Prague: his own photo, 2026-10      | Contact                  |
-| `art/lighthouse.jpg`      | A lighthouse silhouetted at sunset                            | Interlude / Signal       |
-| `art/tower.jpg`           | A stone clock tower against the sky                           | Interlude / Field        |
-| `work/nlziet.jpg`         | Illustration: the NLZIET app on a TV, a real screenshot       | NLZIET key art           |
-| `work/kijk.jpg`           | Illustration: the KIJK app on a TV, a real screenshot         | KIJK key art             |
-| `work/vamp.jpg`           | Illustration: VAMP on a tablet, a real screenshot             | VAMP key art             |
-| `work/nos.jpg`            | Illustration: the NOS app on a TV, a real screenshot          | NOS key art              |
-| `work/streamz-vtm-go.jpg` | Illustration: VTM GO and Streamz on two TVs, real screenshots | Streamz & VTM GO key art |
-| `work/chromecast.jpg`     | A Chromecast and its remote on a white surface                | Chromecast key art       |
+| File                              | What it is                                                              | Used in                |
+| --------------------------------- | ----------------------------------------------------------------------- | ---------------------- |
+| `gallery.jpg`                     | Rick in a white-walled gallery in Prague: his own photo                 | The player card (Rick) |
+| `prague.jpg`                      | Rick over the rooftops of Prague: his own photo, 2026-10                | The Prague slide       |
+| `art/lighthouse.jpg`              | A lighthouse silhouetted at sunset; place and photographer not recorded | The lighthouse slide   |
+| `work/screens/nlziet.jpg`         | Crop: the NLZIET app's screen, Rick's own screenshot                    | NLZIET cover           |
+| `work/screens/kijk.jpg`           | Crop: the KIJK app's screen, Rick's own screenshot                      | KIJK cover             |
+| `work/screens/vamp.jpg`           | Crop: VAMP's chord editor, Rick's own screenshot                        | VAMP cover             |
+| `work/screens/nos.jpg`            | Crop: the NOS app's screen, Rick's own screenshot                       | NOS cover              |
+| `work/screens/streamz-vtm-go.jpg` | Crop: the VTM GO app's screen, Rick's own screenshot                    | Streamz & VTM GO cover |
+
+Chromecast has no image: its card draws a phone casting to a TV that runs the receiver, as inline SVG.
 
 ## The retouched photographs
 
@@ -32,13 +32,13 @@ On 2026-09-25 Rick edited four of his own photographs with an image model, from 
 for the lighting, the background and the crop to change and for his face to stay exactly as it is:
 edits of real photos, never a generated face.
 
-Two of them were on the site, `talk.jpg` and a portrait on a canal bridge that Contact showed until
+Two of them were on the site, `talk.jpg` (deleted 2026-11-23 with the old site) and a portrait on a canal bridge that Contact showed until
 2026-10-14, when Rick's own photograph over Prague (`prague.jpg`) replaced it. The masthead showed a third,
 a portrait on black, as the character field's face and faintly under it, from 2026-09-25 until
 2026-10-14, when Rick asked for it to leave the codebase ("I don't want an AI generated image to be
 the main subject"); it was deleted with the field.
 
-## The masthead's photograph
+## The player card's photograph
 
 `gallery.jpg` is Rick's own, taken in a gallery in Prague in 2026, cropped square around him. The
 work on the wall behind him and the sculpture at his side are an artist's, not his: the crop leaves
@@ -47,22 +47,26 @@ over a photograph without them (2026-10-14).
 
 ## The share card
 
-`share/home.png` is the masthead itself, rendered at 1200×630 from the page with the rail and the
-readout hidden, the tracker at its first row. Re-render it when the masthead changes.
+`share/home.png` is the card table, a 1920x1008 screenshot of the built page scaled to 1200x630.
+Re-render it when the cards change (a Playwright screenshot after the deal, then sharp).
 
-## The covers are illustrations
+## The covers are the apps' own screens
 
-A programme's key art is a generated scene, a TV or a tablet in a room lit in its channel's
-colours, with Rick's own screenshot of the app composited into the screen locally, pixel for pixel:
-the scene was generated with a flat green screen, and the screenshot was keyed into it rather than
-redrawn by the model, so the interface is the real one and no client screen went to the model. The
-programme art inside those screenshots belongs to the broadcasters.
+A cover is the app's screen and nothing else, cropped (2026-11-23) from the earlier covers, which were
+generated rooms with Rick's own screenshot keyed into a TV or tablet screen locally, pixel for pixel
+(no client screen went to the model). The room, the TV and the bezel are gone; what is left is a
+rectangle of the screenshot. The four dark screens were also lightened a little in sharp (VAMP's pale
+one was darkened) so they survive being printed in one ink (the NOS crop, the darkest, was lifted further on 2026-11-23 with a gamma curve in sharp, so its pigment shows through). The site prints them in the card's
+pigment with a halftone (see `.print` in `formats.css`); the files themselves stay in full tone. The
+programme art inside the screenshots belongs to the broadcasters.
 
-`work/chromecast.jpg` is the older cover and stays until a receiver screenshot replaces it.
+Crop rectangles on the old 1672x941 composites (x, y, width, height): NLZIET 664,164,564,284; KIJK
+535,147,603,315; VTM GO 592,166,450,256; NOS 552,141,612,346; VAMP 515,195,330,330 (the chord
+blocks, squared for the sleeve). Where a screen was angled, the largest clean rectangle inside it.
 
 ## How the photographs were chosen
 
-Twelve photographs were supplied. Each was put through a 1-bit Bayer dither at image resolution,
+(Retired with the 1-bit print.) Twelve photographs were supplied. Each was put through a 1-bit Bayer dither at image resolution,
 the treatment they will actually get, rather than judged as a photograph. Seven did not survive
 it: in most the subject is small in frame and the rest is mid-tone landscape with no dominant
 shape, which dithers to noise. Good photographs, poor dither sources.

@@ -1,8 +1,7 @@
 ---
 import BaseHead from '@components/BaseHead.astro';
-import ScrollProgress from '@components/ScrollProgress.astro';
 import { site, type ShareImage } from '@lib/site';
-import { channel as channelColours, channelStyle, paletteStyle, type Channel } from '@lib/channels';
+import { PALETTE, paletteStyle } from '@lib/palette';
 
 // The ONE place global.css is imported. See CLAUDE.md.
 import '@styles/global.css';
@@ -14,37 +13,13 @@ interface Props {
 	/** schema.org structured data for the page (BaseHead). */
 	jsonLd?: Record<string, unknown> | undefined;
 	noindex?: boolean | undefined;
-	/**
-	 * The page's own channel. Everything outside a section -- the rail, the
-	 * cursor, the progress bar -- is drawn in it, and it is what the browser's
-	 * own chrome shows. The one-pager's sections each carry their own
-	 * channel, and src/scripts/channel.ts re-points <html> at whichever is in
-	 * view; a page that is about one thing sets it once, here.
-	 */
-	channel?: Channel | undefined;
-	/**
-	 * The page is made of full-width bands that each carry their own column:
-	 * the one-pager's sections, a case study. Otherwise <main> is the column.
-	 * A band used to escape a column-wide <main> with `calc(50% - 50vw)`, but
-	 * vw counts a classic scrollbar: on Windows every band was 15px wider than
-	 * the page, and the page scrolled sideways.
-	 */
-	bleed?: boolean | undefined;
 }
 
-const {
-	title,
-	description = site.description,
-	ogImage,
-	jsonLd,
-	noindex,
-	channel = 'ink',
-	bleed = false,
-} = Astro.props;
+const { title, description = site.description, ogImage, jsonLd, noindex } = Astro.props;
 ---
 
 <!doctype html>
-<html lang={site.locale} style={`${paletteStyle()};${channelStyle(channel)}`}>
+<html lang={site.locale} style={paletteStyle()}>
 	<head>
 		<BaseHead
 			title={title}
@@ -52,35 +27,40 @@ const {
 			ogImage={ogImage}
 			jsonLd={jsonLd}
 			noindex={noindex}
-			themeColor={channelColours(channel).field}
+			themeColor={PALETTE.paper}
 		/>
+		{/* `js`: the cards can turn (without it, CSS lays each back out under its */}
+		{/* front). `still`: the visitor paused the motion on an earlier visit. */}
+		{/* The deal: hide the cards until the script has laid them out, unless */}
+		{/* motion is off. Three seconds later it lets go whatever happened, so a */}
+		{/* script that fails cannot leave a blank page. */}
+		<script is:inline>
+			var root = document.documentElement;
+			root.classList.add('js');
+			try {
+				if (localStorage.getItem('still') === '1') root.classList.add('still');
+			} catch (e) {}
+			if (
+				!root.classList.contains('still') &&
+				!matchMedia('(prefers-reduced-motion: reduce)').matches
+			) {
+				document.documentElement.classList.add('will-deal');
+				setTimeout(function () {
+					document.documentElement.classList.remove('will-deal');
+				}, 3000);
+			}
+		</script>
 	</head>
 	<body>
 		<a class="skip-link" href="#main">
 			Skip to content
 		</a>
-		<ScrollProgress />
-		{/* No site header and no footer. This is meant to feel like an app, and */}
-		{/* an app has neither: the one-pager opens on the hero and ends on the */}
-		{/* contact channel, a case study carries its own way back to the guide, */}
-		{/* and the 404 its own links. The footer only repeated the contact */}
-		{/* channel's links (Rick, 2026-09-25). */}
-		<main id="main" class:list={[{ wrap: !bleed }]} tabindex="-1">
+		<main id="main" tabindex="-1">
 			<slot />
 		</main>
-		{/* The static of a page change: empty, and shown only while a view */}
-		{/* transition runs. See the end of src/styles/zap.css. */}
-		<div class="vt-static" aria-hidden="true"></div>
 
 		<script>
-			import { boot as bootCursor } from '../scripts/cursor';
-			import { boot as bootChannel } from '../scripts/channel';
-			import { boot as bootIdent } from '../scripts/ident';
-			import { boot as bootDither } from '../lib/dither/boot';
-			bootChannel();
-			bootCursor();
-			bootIdent();
-			bootDither();
+			import '../scripts/table';
 		</script>
 	</body>
 </html>
