@@ -57,7 +57,8 @@ docs/                  Roadmap, art system, content guide, performance, easter e
 - [`CLAUDE.md`](CLAUDE.md) — engineering rules, pinned versions and why, hard prohibitions
 - [`docs/roadmap.md`](docs/roadmap.md) — phases, gates, deferred dependencies, open items
 - [`docs/content-guide.md`](docs/content-guide.md) — how to add work, field rules, image rights
-- [`docs/art-system.md`](docs/art-system.md) — the character field: why text, the measurements, the invariants
+- [`docs/art-system.md`](docs/art-system.md) — the masthead, the photographs and the 1-bit print
+- [`docs/retired/character-field.md`](docs/retired/character-field.md) — the text art the masthead was, and what it learned
 - [`docs/performance.md`](docs/performance.md) — budgets, measurement, renderer rules
 - [`docs/easter-eggs.md`](docs/easter-eggs.md) — what exists, and how to turn it off
 

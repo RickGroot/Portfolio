@@ -1,79 +1,75 @@
 ---
 import BaseLayout from '@layouts/BaseLayout.astro';
-import CharacterField from '@components/CharacterField.astro';
+import Hero from '@components/Hero.astro';
 import Section from '@components/Section.astro';
 import Guide from '@components/Guide.astro';
 import ArtSection from '@components/ArtSection.astro';
-import { practice } from '@lib/practice';
+import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
 import artSignal from '@assets/art/lighthouse.jpg';
 import artField from '@assets/art/tower.jpg';
 import talkPhoto from '@assets/talk.jpg';
-import aboutPhoto from '@assets/about.jpg';
+import praguePhoto from '@assets/prague.jpg';
 import SocialLinks from '@components/SocialLinks.astro';
+import shareCard from '@assets/share/home.png';
+import { socialLinks } from '@lib/social';
 import { getPublishedWork } from '@lib/work';
 import { site } from '@lib/site';
-import { channelStyle } from '@lib/channels';
 
 // Every published entry: the guide is the complete record.
 const published = await getPublishedWork();
+const practice = (await getCollection('practice')).sort((a, b) => a.data.order - b.data.order);
+
+// The link preview is the masthead itself: rendered once at 1200x630 from the
+// built page, with the rail and the readout hidden, and committed. The page a
+// visitor gets, not a mock of it.
+const share = {
+	src: shareCard.src,
+	width: shareCard.width,
+	height: shareCard.height,
+	alt: 'The site’s masthead: Rick Groot, Connected TV developer and trumpet player, beside a 1-bit print of his photograph and a tracker playing When the Saints Go Marching In.',
+};
+
+// Who the site is about, for search engines. Links to no origin but his own
+// profiles (check-assets allows no others).
+const person = {
+	'@context': 'https://schema.org',
+	'@type': 'Person',
+	name: site.name,
+	jobTitle: site.tagline,
+	url: `${site.url}/`,
+	worksFor: { '@type': 'Organization', name: 'Hypersolid' },
+	homeLocation: { '@type': 'Country', name: 'Netherlands' },
+	sameAs: socialLinks.filter((l) => !l.href.startsWith('mailto:')).map((l) => l.href),
+};
 
 /*
  * The rail mirrors the document order exactly. It is built from one list so the
  * two cannot drift -- a rail dot pointing at an id that moved is a dead link
- * that nothing would catch.
+ * that nothing would catch. The interludes are named apart: two links both
+ * called "Interlude" are one link twice to anyone listing them.
  */
 const rail = [
 	{ id: 'top', label: 'Top' },
 	{ id: 'work', label: 'Work' },
-	{ id: 'interlude-signal', label: 'Interlude' },
+	{ id: 'interlude-signal', label: 'Interlude: Signal' },
 	{ id: 'practice', label: 'How I work' },
-	{ id: 'interlude-field', label: 'Interlude' },
+	{ id: 'interlude-field', label: 'Interlude: Field' },
 	{ id: 'contact', label: 'Contact' },
 ];
 ---
 
-<BaseLayout title={site.name} description={site.description} bleed>
+<BaseLayout title={site.name} description={site.description} ogImage={share} jsonLd={person} bleed>
 	<nav class="rail" data-rail aria-label="Sections">
 		{rail.map((s) => (
 			<a href={`#${s.id}`}>
-				<span class="visually-hidden">{s.label}</span>
+				<span class="rail__label">{s.label}</span>
 			</a>
 		))}
 	</nav>
 
-	{/* ---- Masthead: the test card ---- */}
-	<section
-		id="top"
-		class="section hero"
-		aria-labelledby="top-heading"
-		data-section
-		data-channel="ink"
-		data-osd="Rick Groot"
-		style={channelStyle('ink')}
-	>
-		<CharacterField />
-		<span class="hero__castle hero__castle--start" aria-hidden="true"></span>
-		<span class="hero__castle hero__castle--end" aria-hidden="true"></span>
-		{/* Real state: the visitor's own time, as the guide's clock is. Filled */}
-		{/* and shown by src/scripts/testcard.ts, so without JavaScript there is */}
-		{/* no clock rather than a stopped one. */}
-		<p class="hero__clock" data-hero-clock aria-hidden="true" hidden></p>
-		<div class="hero__card">
-			<div class="hero__id">
-				<h1 id="top-heading" data-decode>
-					Rick Groot
-				</h1>
-				<p class="hero__role">Connected TV developer</p>
-			</div>
-			<span class="hero__bars" aria-hidden="true"></span>
-			<p class="hero__lede">
-				I build Connected TV apps at Hypersolid, from NLZIET on Smart TVs to Chromecast receivers
-				and the video players underneath them. Most of it is performance work: the devices they run
-				on are older and slower than the machine I write on.
-			</p>
-		</div>
-	</section>
+	{/* ---- Masthead: channel 01, the first programme ---- */}
+	<Hero />
 
 	{/* ---- Work: the programme guide ---- */}
 	<Guide entries={published} />
@@ -95,7 +91,7 @@ const rail = [
 		{/* Rick presenting, standing at the left; his three points sit to his */}
 		{/* right on wide screens, so the cards never cover his face. The slide */}
 		{/* and both audience members are blurred in the source file itself. */}
-		<div class="practice__backdrop duo" style="--duo-lift:1.2;--duo-contrast:1.15">
+		<div class="practice__backdrop duo" data-dither style="--duo-lift:1.2;--duo-contrast:1.15">
 			<Image
 				src={talkPhoto}
 				alt="Rick giving a talk, in front of a bright, blank projection screen."
@@ -104,7 +100,7 @@ const rail = [
 				loading="lazy"
 				decoding="async"
 			/>
-			<span class="practice__fade" aria-hidden="true"></span>
+			<span class="practice__fade" data-fade aria-hidden="true"></span>
 		</div>
 		<p class="practice__lede">
 			I work AI-first. Three principles keep it honest, each with its proof from building this site.
@@ -113,11 +109,11 @@ const rail = [
 			{practice.map((item) => (
 				<li class="practice__item">
 					<p class="practice__index" aria-hidden="true">
-						{item.index}
+						{String(item.data.order).padStart(2, '0')}
 					</p>
-					<h3 class="practice__title">{item.title}</h3>
-					<p class="practice__body">{item.body}</p>
-					<p class="practice__proof">{item.proof}</p>
+					<h3 class="practice__title">{item.data.title}</h3>
+					<p class="practice__body">{item.data.body}</p>
+					<p class="practice__proof">{item.data.proof}</p>
 				</li>
 			))}
 		</ol>
@@ -145,12 +141,13 @@ const rail = [
 				</p>
 				<SocialLinks />
 			</div>
-			<figure class="contact__photo duo">
-				{/* Quality 72: the retouched photo is all fine detail, sky and water, and at */}
-				{/* the default it came out over the 150 KB mark for one picture at 30vw. */}
+			<figure class="contact__photo duo" data-dither>
+				{/* Rick's own photograph, over Prague (2026-10-14). Quality 72: */}
+				{/* the rooftops are all fine detail, and one picture at 30vw should not */}
+				{/* weigh what a page does. */}
 				<Image
-					src={aboutPhoto}
-					alt="Rick Groot, smiling, on a bridge by a canal."
+					src={praguePhoto}
+					alt="Rick Groot in a cap, looking out over the rooftops of Prague."
 					widths={[500, 800, 1000]}
 					sizes="(min-width: 52rem) 30vw, 90vw"
 					quality={72}
@@ -164,12 +161,10 @@ const rail = [
 	<script>
 		import { boot } from '../scripts/sections';
 		import { boot as bootZap } from '../scripts/zap';
-		import { boot as bootTestcard } from '../scripts/testcard';
 		import { decode } from '../lib/decode';
 		boot();
 		bootZap();
-		bootTestcard();
-		// The name tunes in with the portrait on first sight -- once the display
+		// The name tunes in on first sight -- once the display
 		// face is in, so each letter is measured in it rather than in the fallback.
 		// Not on a deep link that lands further down the page.
 		void document.fonts.ready.then(() => {
@@ -179,191 +174,6 @@ const rail = [
 </BaseLayout>
 
 <style>
-	/* ---- Masthead: the test card ------------------------------------------ */
-
-	/*
-	 * Channel 01 is the card a television shows before the programmes start
-	 * (Rick, 2026-09-28, of three candidates: this, a transmission of rings, and
-	 * a yellow poster). The grid runs edge to edge, drawn in characters by the
-	 * field; the circle stands in the middle with the face in it; the name, the
-	 * colour bars and the synopsis are the card's boxes, one plate under the
-	 * chin; the clock is in the box on the top of the circle.
-	 *
-	 * The geometry is here and only here. The field reads it through a probe
-	 * (src/lib/field/field.ts), and the boxes are laid out from it before any
-	 * script runs, so the handover to the live card cannot move one.
-	 *   --ring-cy  the circle's centre, down from the top of the hero
-	 *   --ring-r   its radius
-	 *   --face-cy  the face's centre: above the circle's on a wide screen, so
-	 *              the name's box crosses the chin rather than the smile
-	 *   --grid     the grid's step
-	 *   --card-at  where the name's box starts, in radii below the centre
-	 */
-	.hero {
-		--ring-cy: 47svh;
-		--ring-r: min(43svh, 38vw);
-		--face-cy: calc(var(--ring-cy) - var(--ring-r) * 0.14);
-		--grid: calc(100svh / 8.4);
-		--card-at: 0.36;
-		position: relative;
-		display: grid;
-		justify-items: center;
-		align-content: start;
-		min-block-size: 100svh;
-		/* The card is in the flow, so a screen too short for it grows the */
-		/* section rather than clipping the synopsis. */
-		padding-block: calc(var(--ring-cy) + var(--ring-r) * var(--card-at)) var(--s-6);
-		overflow: clip;
-	}
-
-	/* A phone: the circle across the width, high up, with the face centred in */
-	/* it, and the card lower, under the chin. */
-	@media (max-aspect-ratio: 1 / 1) {
-		.hero {
-			--ring-cy: 35svh;
-			--ring-r: 45vw;
-			--face-cy: var(--ring-cy);
-			--grid: 20vw;
-			--card-at: 0.62;
-		}
-	}
-
-	/* The castellations down each side: squares of the grid, alternately */
-	/* filled, as on the Philips card every Dutch set showed before the */
-	/* programmes. Narrow, so the rail stands clear of them. */
-	.hero__castle {
-		position: absolute;
-		z-index: 1;
-		inset-block: 0;
-		inline-size: clamp(10px, 1.2vw, 18px);
-		background: repeating-linear-gradient(
-			to bottom,
-			var(--castle) 0 var(--grid),
-			transparent var(--grid) calc(var(--grid) * 2)
-		);
-		background-position-y: var(--ring-cy);
-	}
-
-	.hero__castle--start {
-		inset-inline-start: 0;
-	}
-
-	.hero__castle--end {
-		inset-inline-end: 0;
-		background-position-y: calc(var(--ring-cy) + var(--grid));
-	}
-
-	@media (max-width: 47.99rem) {
-		.hero__castle {
-			display: none;
-		}
-	}
-
-	/* The clock, in its box on the top of the circle, the way a card carries */
-	/* the time. */
-	.hero__clock {
-		position: absolute;
-		z-index: 2;
-		inset-inline-start: 50%;
-		inset-block-start: calc(var(--ring-cy) - var(--ring-r));
-		translate: -50% -50%;
-		padding: var(--s-1) var(--s-4);
-		background: var(--field);
-		border: 2px solid var(--mark);
-		font-family: var(--font-mono);
-		font-size: var(--t-lg);
-		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.06em;
-		line-height: 1.3;
-	}
-
-	/* One column, centred under the face: the name in its box, then the bars */
-	/* and the synopsis at the same width, so the three read as one plate. */
-	/* Solid, so neither the grid nor the face ever runs behind the text. */
-	.hero__card {
-		position: relative;
-		z-index: 2;
-		display: grid;
-		inline-size: min(max(34rem, var(--ring-r) * 1.1), 100% - var(--gutter) * 2);
-	}
-
-	.hero__id {
-		display: grid;
-		justify-items: center;
-		gap: var(--s-2);
-		padding: var(--s-3) var(--s-4) var(--s-4);
-		background: var(--field);
-		border: 2px solid var(--mark);
-		border-block-end: 0;
-	}
-
-	/* One line (Rick, 2026-09-25). The svh term keeps a short laptop screen's */
-	/* name from outgrowing its share of the circle. */
-	.hero__id h1 {
-		font-size: clamp(2.25rem, min(1rem + 4.2vw, 8.6svh), 5rem);
-		line-height: 0.9;
-		text-transform: uppercase;
-		white-space: nowrap;
-	}
-
-	.hero__role {
-		font-family: var(--font-mono);
-		font-size: var(--t-xs);
-		letter-spacing: var(--tracking-meta);
-		text-transform: uppercase;
-		color: var(--accent);
-	}
-
-	/* The colour bars: the broadcast palette, brightest to darkest, the way */
-	/* the bars on a real card run. --bars is in tokens.css, with the art's */
-	/* other colours. */
-	.hero__bars {
-		display: block;
-		block-size: clamp(1rem, 3svh, 1.75rem);
-		border-inline: 2px solid var(--mark);
-		background: var(--bars);
-	}
-
-	.hero__lede {
-		padding: var(--s-3) var(--s-4);
-		background: var(--field);
-		border: 2px solid var(--mark);
-		border-block-start: 0;
-		font-size: var(--t-sm);
-		color: var(--mark-dim);
-	}
-
-	@media (min-width: 110rem) {
-		.hero__lede {
-			font-size: var(--t-base);
-		}
-	}
-
-	/* A short screen: 1280x720 leaves 630px under the browser's own chrome, */
-	/* and every section fits one screen from there; a 360x640 phone ran 13px */
-	/* over at the full size. */
-	@media (max-height: 760px) and (min-aspect-ratio: 1 / 1), (max-height: 700px) {
-		.hero {
-			--card-at: 0.3;
-		}
-
-		.hero__id {
-			gap: var(--s-1);
-			padding-block: var(--s-2) var(--s-3);
-		}
-
-		.hero__lede {
-			padding-block: var(--s-2);
-			font-size: var(--t-xs);
-		}
-	}
-
-	@media (max-aspect-ratio: 1 / 1) and (max-height: 700px) {
-		.hero {
-			--card-at: 0.55;
-		}
-	}
-
 	.lede {
 		font-size: var(--t-lg);
 		color: var(--mark-dim);
@@ -380,11 +190,21 @@ const rail = [
 		inset: 0;
 		z-index: -1;
 		overflow: clip;
+		/* The fade below, dithered by the 1-bit print: all field to 16%, the */
+		/* picture from 44%. */
+		--dither-fade: 0.44 0.16;
+		/* A face, so finer dots than the interludes' 2px, and none of the */
+		/* duotone's lift: at 2px Rick's face was some 55 dots across and read */
+		/* as a stencil, and the lift sent his skin to blank paper. */
+		--dither-dot: 1;
+		--dither-lift: 1;
+		--dither-contrast: 1;
 	}
 
 	/* Oversized top and bottom: it sits back in the depth map (depth.css), and */
 	/* the travel must never show an edge. */
-	.practice__backdrop :global(img) {
+	.practice__backdrop :global(img),
+	.practice__backdrop :global(canvas) {
 		position: absolute;
 		inset-inline: 0;
 		inset-block-start: -9%;
@@ -404,6 +224,28 @@ const rail = [
 		inset: 0;
 		z-index: 2;
 		background: linear-gradient(to bottom, var(--field) 0 16%, transparent 44%);
+	}
+
+	/* On a phone the three cards stack down the whole section, and the talk */
+	/* behind them only showed as slivers in the gaps, which read as a fault. */
+	/* There it is a picture of its own under the heading, framed like the */
+	/* cards, cropped to Rick at the lectern. */
+	@media (max-width: 51.99rem) {
+		.practice__backdrop {
+			position: relative;
+			inset: auto;
+			z-index: auto;
+			aspect-ratio: 4 / 3;
+			border: 1px solid var(--mark);
+		}
+
+		.practice__fade {
+			display: none;
+		}
+
+		.practice__backdrop {
+			--dither-fade: none;
+		}
 	}
 
 	.practice__lede {
@@ -568,18 +410,26 @@ const rail = [
 		/* into view -- a layout shift at the bottom of the page, and one that */
 		/* scroll anchoring answered by pulling the page 119px back up. */
 		inline-size: min(16rem, 100%);
+		/* A face some 30 dots across at the print's 2px: finer dots, as for */
+		/* the talk (.practice__backdrop), so it is still Rick. */
+		--dither-dot: 1;
+		--dither-lift: 1;
+		--dither-contrast: 1;
 	}
 
 	/* Oversized, because it holds back inside its frame as the frame comes */
 	/* forward (depth.css): a window rather than a card. */
-	.contact__photo :global(img) {
+	.contact__photo :global(img),
+	.contact__photo :global(canvas) {
 		position: absolute;
 		inset-inline: 0;
 		inset-block-start: -8%;
 		inline-size: 100%;
 		block-size: 116%;
 		object-fit: cover;
-		transition: filter var(--speed-slow) var(--ease-out);
+		transition:
+			filter var(--speed-slow) var(--ease-out),
+			opacity var(--speed-slow) var(--ease-out);
 	}
 
 	/* Printed in ink on paper, and back in its own colours under the pointer, */
@@ -594,6 +444,15 @@ const rail = [
 
 	.contact__photo:hover :global(img) {
 		filter: none;
+	}
+
+	/* The 1-bit print steps aside the same way. */
+	.contact__photo:hover :global(canvas) {
+		opacity: 0;
+	}
+
+	.contact__photo[data-dither='on']:hover :global(img) {
+		opacity: 1;
 	}
 
 	@media (min-width: 52rem) {

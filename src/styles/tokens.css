@@ -26,31 +26,6 @@
  * section to the root's colours.
  */
 :root {
-	/* ---- Art --------------------------------------------------------------
-	 * The hero field's two layers, one blue at two strengths: the field in the
-	 * palette's signal blue, and the lit portrait in a tint of it halfway to
-	 * paper, so the face reads as the field brightening (Rick, 2026-09-24:
-	 * "let the blue background seep into the art of my picture"). */
-	/* The face a step lighter and the field a step darker than the signal blue,
-	   so the face is the brightest thing on it (2026-09-25). */
-	--art-noise: color-mix(in oklab, var(--signal-blue) 58%, var(--ink));
-	--art-signal: color-mix(in oklab, var(--signal-blue) 22%, var(--paper));
-	/* The hero's test card (2026-09-28): its castellations a step under the
-	   grid's blue, and its colour bars the broadcast palette, brightest to
-	   darkest, as the bars on a real card run. */
-	--castle: color-mix(in oklab, var(--signal-blue) 46%, var(--ink));
-	--bars: linear-gradient(
-		to right,
-		var(--paper) 0 16.667%,
-		var(--signal-yellow) 0 33.333%,
-		var(--brass) 0 50%,
-		var(--signal-red) 0 66.667%,
-		var(--signal-blue) 0 83.333%,
-		var(--navy) 0
-	);
-
-	--art-cell: clamp(10px, 1.25vw, 17px);
-
 	/* ---- Type ----------------------------------------------------------- */
 	/* Bricolage Grotesque for display, Instrument Sans for reading, JetBrains
 	   Mono for labels (Rick, 2026-09-25: "like the instrument due to trumpet
@@ -58,11 +33,6 @@
 	--font-sans: 'Instrument Sans', 'Body Fallback', ui-sans-serif, system-ui, sans-serif;
 	--font-display: 'Bricolage Grotesque', 'Display Fallback', ui-sans-serif, system-ui, sans-serif;
 	--font-mono: 'JetBrains Mono', 'Label Fallback', ui-monospace, monospace;
-	/* The character field is not a label and keeps a system face. It REQUIRES
-	   a uniform advance width, and a stack is a risk here: `ui-monospace`
-	   resolved to a proportional face in testing, which shears the grid.
-	   tests/e2e/field.spec.ts asserts uniformity. */
-	--font-field: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
 
 	--t-xs: 0.8125rem;
 	--t-sm: 0.9375rem;
@@ -96,7 +66,6 @@
 	--radius-lg: 0;
 	--gutter: clamp(1rem, 5vw, 3rem);
 	--wrap: 72rem;
-	--hero-min: min(86svh, 780px);
 
 	--z-nav: 40;
 	--z-progress: 45;
@@ -110,18 +79,9 @@
 	--speed-fast: 120ms;
 	--speed: 200ms;
 	--speed-slow: 420ms;
-	--speed-trail: 600ms;
 
 	--ease: cubic-bezier(0.2, 0, 0, 1);
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-	/* Ported verbatim from the old branch: paired with `transition: none` on
-	   the active state it gives instant-on / slow-off, which is what makes a
-	   trail read as a trail. */
-	--ease-trail: cubic-bezier(0, 1, 0.5, 1);
-
-	/* Pointer speed, 0..1. Written by cursor.ts, read by the art and the
-	   cursor ring. Registered in cursor.css so it can be interpolated. */
-	--pointer-v: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -129,6 +89,5 @@
 		--speed-fast: 1ms;
 		--speed: 1ms;
 		--speed-slow: 1ms;
-		--speed-trail: 1ms;
 	}
 }

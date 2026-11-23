@@ -1,7 +1,7 @@
 ---
 import BaseHead from '@components/BaseHead.astro';
 import ScrollProgress from '@components/ScrollProgress.astro';
-import { site } from '@lib/site';
+import { site, type ShareImage } from '@lib/site';
 import { channel as channelColours, channelStyle, paletteStyle, type Channel } from '@lib/channels';
 
 // The ONE place global.css is imported. See CLAUDE.md.
@@ -10,7 +10,9 @@ import '@styles/global.css';
 interface Props {
 	title: string;
 	description?: string | undefined;
-	ogImage?: string | undefined;
+	ogImage?: ShareImage | undefined;
+	/** schema.org structured data for the page (BaseHead). */
+	jsonLd?: Record<string, unknown> | undefined;
 	noindex?: boolean | undefined;
 	/**
 	 * The page's own channel. Everything outside a section -- the rail, the
@@ -34,6 +36,7 @@ const {
 	title,
 	description = site.description,
 	ogImage,
+	jsonLd,
 	noindex,
 	channel = 'ink',
 	bleed = false,
@@ -47,6 +50,7 @@ const {
 			title={title}
 			description={description}
 			ogImage={ogImage}
+			jsonLd={jsonLd}
 			noindex={noindex}
 			themeColor={channelColours(channel).field}
 		/>
@@ -72,9 +76,11 @@ const {
 			import { boot as bootCursor } from '../scripts/cursor';
 			import { boot as bootChannel } from '../scripts/channel';
 			import { boot as bootIdent } from '../scripts/ident';
+			import { boot as bootDither } from '../lib/dither/boot';
 			bootChannel();
 			bootCursor();
 			bootIdent();
+			bootDither();
 		</script>
 	</body>
 </html>

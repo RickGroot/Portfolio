@@ -40,7 +40,8 @@
  * and pink came out as a single pink block (Rick, 2026-09-25).
  *
  * This is the no-WebGL image treatment. Put `.duo` on the positioned element
- * that directly holds the <img>.
+ * that directly holds the <img>. Add `data-dither` and, where WebGL2 runs on a
+ * real GPU, the same print is drawn in one bit instead (below).
  *
  * Two levers, set per photograph where it needs them:
  *   --duo-lift      brightness before the print. Above 1 pushes mid-tones
@@ -76,15 +77,60 @@
 	mix-blend-mode: screen;
 }
 
+/* ---- The 1-bit print ------------------------------------------------------ */
+
+/*
+ * The same print as one bit a pixel: an ordered dither in the channel's two
+ * colours, drawn by src/lib/dither/ into a <canvas> it puts beside the <img>.
+ * Each frame's own rules give the canvas the <img>'s box, and depth.css its
+ * parallax, so it lies exactly where the photograph did.
+ *
+ * Hidden until it has drawn; then it takes over, and the duotone layers and
+ * any gradient fade step aside -- the fade into the field is dithered too, at
+ * the positions in --dither-fade. Until then, and wherever it never runs,
+ * this is .duo exactly as above.
+ *
+ * Nearest-neighbour, so a dot moved a fraction of a pixel by the parallax
+ * stays one colour, not a blend of two.
+ */
+[data-dither] > canvas {
+	image-rendering: pixelated;
+	visibility: hidden;
+	pointer-events: none;
+}
+
+[data-dither='on'] > canvas {
+	visibility: visible;
+}
+
+[data-dither='on'] > img {
+	opacity: 0;
+}
+
+[data-dither='on']::before,
+[data-dither='on']::after,
+[data-dither='on'] > [data-fade] {
+	display: none;
+}
+
 /* Forced colours swaps the field for a system colour, and a system colour
    multiplied over a photograph is a dark rectangle. Show the photograph. */
 @media (forced-colors: active) {
-	.duo img {
+	.duo img,
+	[data-dither='on'] > img {
 		filter: none;
+		opacity: 1;
 	}
 
 	.duo::before,
-	.duo::after {
+	.duo::after,
+	[data-dither] > canvas,
+	[data-dither-guide] .guide__screen > canvas,
+	[data-dither-stage] > canvas {
 		display: none;
+	}
+
+	[data-dither-stage] > img {
+		visibility: visible;
 	}
 }

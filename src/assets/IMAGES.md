@@ -14,9 +14,9 @@ file names are not kept either: phone file names are capture timestamps.
 
 | File                      | What it is                                                    | Used in                  |
 | ------------------------- | ------------------------------------------------------------- | ------------------------ |
-| `portrait.jpg`            | Rick on black, retouched: interim, a real selfie replaces it  | The hero, under the text |
+| `gallery.jpg`             | Rick in a white-walled gallery in Prague: his own photo       | The masthead's screen    |
 | `talk.jpg`                | Rick presenting, in front of a blank screen: retouched        | Backdrop of _How I work_ |
-| `about.jpg`               | Rick on a bridge by a canal: retouched                        | Contact                  |
+| `prague.jpg`              | Rick over the rooftops of Prague: his own photo, 2026-10      | Contact                  |
 | `art/lighthouse.jpg`      | A lighthouse silhouetted at sunset                            | Interlude / Signal       |
 | `art/tower.jpg`           | A stone clock tower against the sky                           | Interlude / Field        |
 | `work/nlziet.jpg`         | Illustration: the NLZIET app on a TV, a real screenshot       | NLZIET key art           |
@@ -32,14 +32,23 @@ On 2026-09-25 Rick edited four of his own photographs with an image model, from 
 for the lighting, the background and the crop to change and for his face to stay exactly as it is:
 edits of real photos, never a generated face.
 
-Three of them are on the site. `talk.jpg` and `about.jpg` are two. The first portrait on flat black
-was tried in the hero and not kept: lit hard from one side, half the face fell into the black at
-the field's resolution. The second, lit from the front, is `portrait.jpg`, cropped square and tight
-to the head. It replaced a matted crop from the talk photo, and it shows twice: as the characters,
-and faintly under them as the photograph itself.
+Two of them were on the site, `talk.jpg` and a portrait on a canal bridge that Contact showed until
+2026-10-14, when Rick's own photograph over Prague (`prague.jpg`) replaced it. The masthead showed a third,
+a portrait on black, as the character field's face and faintly under it, from 2026-09-25 until
+2026-10-14, when Rick asked for it to leave the codebase ("I don't want an AI generated image to be
+the main subject"); it was deleted with the field.
 
-That makes it the main subject of the home page, so it is interim. Rick is replacing it with a
-real selfie (2026-09-25: "I don't want an AI generated image to be the main subject").
+## The masthead's photograph
+
+`gallery.jpg` is Rick's own, taken in a gallery in Prague in 2026, cropped square around him. The
+work on the wall behind him and the sculpture at his side are an artist's, not his: the crop leaves
+out the wall labels and the artist's name, and the site credits neither as its own. Rick chose it
+over a photograph without them (2026-10-14).
+
+## The share card
+
+`share/home.png` is the masthead itself, rendered at 1200×630 from the page with the rail and the
+readout hidden, the tracker at its first row. Re-render it when the masthead changes.
 
 ## The covers are illustrations
 

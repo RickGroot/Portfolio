@@ -7,6 +7,15 @@ export const site = {
 	locale: 'en',
 } as const;
 
+/** A link preview's picture: 1200x630, the shape every card crops to. */
+export interface ShareImage {
+	/** Absolute or root-relative URL. */
+	src: string;
+	width: number;
+	height: number;
+	alt: string;
+}
+
 /**
  * A page's public path, as a visitor sees it.
  *

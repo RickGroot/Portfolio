@@ -32,7 +32,11 @@
 	color: var(--field);
 }
 
-.tvbtn:hover,
+/* Under the pointer, a change of colour and nothing else: it grew by 5% and
+   took a 3px ring as well, on top of the ring beside the pointer (Rick,
+   2026-10-14: "a bit too much"). The ring and the scale are for the
+   keyboard, as on a television: there they are the only sign of where focus
+   is. A press gives a little. */
 .tvbtn:focus-visible {
 	scale: 1.05;
 	outline: 3px solid var(--accent);
@@ -43,6 +47,17 @@
 .tvbtn:not(.tvbtn--solid):focus-visible {
 	background: var(--mark);
 	color: var(--field);
+}
+
+/* The solid one flips the other way. Not to the accent: on the channels
+   without one (channels.ts) the accent is the mark, and nothing would change. */
+.tvbtn--solid:hover {
+	background: transparent;
+	color: var(--mark);
+}
+
+.tvbtn:active {
+	scale: 0.97;
 }
 
 /* A remote-control key, as a hint next to the action it triggers. Only where

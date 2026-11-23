@@ -85,12 +85,40 @@
 	background: var(--field);
 }
 
-/* A 20px target around an 8px mark: small to look at, not small to hit. */
+/* A 24px target around an 8px mark: small to look at, not small to hit. It was
+   20, under the 24px floor of WCAG 2.5.8, with six stacked edge to edge. */
 .rail a {
+	position: relative;
 	display: grid;
 	place-items: center;
-	inline-size: 20px;
-	block-size: 20px;
+	inline-size: 24px;
+	block-size: 24px;
+}
+
+/* Each dot's name, beside it under the pointer and on focus: six identical
+   squares otherwise leave you to count. Clipped rather than removed the rest
+   of the time, so it is still the link's name. On a plate of the field, like
+   the rail. */
+.rail__label {
+	position: absolute;
+	inset-inline-end: calc(100% + var(--s-2));
+	inset-block-start: 50%;
+	translate: 0 -50%;
+	padding: var(--s-1) var(--s-2);
+	background: var(--field);
+	color: var(--mark);
+	font-family: var(--font-mono);
+	font-size: var(--t-xs);
+	letter-spacing: var(--tracking-meta);
+	line-height: 1.2;
+	white-space: nowrap;
+	pointer-events: none;
+	clip-path: inset(50%);
+}
+
+.rail a:hover .rail__label,
+.rail a:focus-visible .rail__label {
+	clip-path: none;
 }
 
 .rail a::before {
@@ -110,6 +138,14 @@
 
 .rail a[aria-current='true']::before {
 	background: var(--mark);
+}
+
+/* Forced colours drop the fill, which left the current dot like the rest.
+   Its border fills it instead: 4px a side of an 8px square. */
+@media (forced-colors: active) {
+	.rail a[aria-current='true']::before {
+		border-width: 4px;
+	}
 }
 
 @media (max-width: 48rem) {

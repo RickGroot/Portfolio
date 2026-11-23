@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { restOn } from '../support/guide';
 
 const ROUTES = [
 	'/',
@@ -47,7 +48,8 @@ test('the names actually pair up between the one-pager and each detail page', as
 		// Past the first three, a programme waits behind Load more.
 		if (!(await block.isVisible()))
 			await page.locator('#work summary', { hasText: 'Load more' }).click();
-		await block.hover();
+		// Focus follows a pointer that comes to rest (guide.ts).
+		await restOn(page, id);
 		const onHome = await names();
 		// A morph only happens if BOTH documents carry the same name. Naming one
 		// side only is the other silent failure mode.

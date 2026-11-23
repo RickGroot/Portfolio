@@ -20,9 +20,11 @@
  *     that does not answer is advanced past exactly as before.
  *   - Focus moves with the view, so a screen reader and a sighted user stay in
  *     the same place.
- *   - It uses the browser's own smooth scrolling. No animation loop — the one
- *     loop on this site belongs to the character field.
+ *   - It uses the browser's own smooth scrolling. No animation loop of its
+ *     own — the site's one loop holds its ambient work still while a move
+ *     settles, so the scroll and the static have the frames.
  */
+import { hold } from '../lib/field/loop';
 
 /** How long to ignore further intent while a move is settling. */
 const SETTLE_MS = 620;
@@ -38,9 +40,11 @@ const QUIET_MS = 160;
  * Wheel movement has to add up to this before it counts as intent. Added up,
  * not judged event by event: a slow trackpad scroll is a stream of 1-5px
  * deltas, and when each was let through as drift, the page crept past the edge
- * of a channel.
+ * of a channel. It was 12, and a 15px nudge on a trackpad -- someone settling
+ * their hand -- changed channel (2026-09-29). A mouse notch is 100px or a
+ * line, far over either.
  */
-const WHEEL_THRESHOLD = 12;
+const WHEEL_THRESHOLD = 32;
 /** A pause this long between wheel events starts a new gesture. */
 const WHEEL_GAP_MS = 240;
 /** A wheel "line" in px, for a mouse that reports lines (Firefox). */
@@ -52,7 +56,7 @@ const CONTROLS =
 	'button, summary, audio, video, [role="button"], [role="checkbox"], [role="switch"], [role="tab"], [role="option"], [role="menuitem"]';
 
 /**
- * The number keys are a remote: 1 is the test card and each channel after it
+ * The number keys are a remote: 1 is the masthead and each channel after it
  * the next number, as the readout in the corner counts them. Returns the
  * channel's index, or -1.
  *
@@ -183,6 +187,7 @@ export function boot(): void {
 		if (!target) return;
 
 		lock(SETTLE_MS);
+		hold(SETTLE_MS);
 
 		// A stepped section starts from the end you came in at: from above at
 		// its first step, from below at its last.
@@ -195,9 +200,33 @@ export function boot(): void {
 			);
 		}
 
+		// Into a section taller than the screen from below, at its foot: the part
+		// next to where you came from. At its top, going back up from Field on a
+		// phone put the whole of How I work's lower half out of sight.
+		const fromBelow = i < index;
 		setCurrent(next);
-		target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		target.scrollIntoView({
+			behavior: 'smooth',
+			block: fromBelow && 'overflows' in target.dataset ? 'end' : 'start',
+		});
 		focusIn(target);
+	}
+
+	/**
+	 * Back to where the current channel rests, after a gesture that was not a
+	 * change of channel: its top, or anywhere within it if it is taller than
+	 * the screen, clamped to its edges. A 40px drag used to leave the page there
+	 * for good, a strip of the next channel showing under this one.
+	 */
+	function settleBack(): void {
+		const section = sections[index];
+		if (!section) return;
+		const rect = section.getBoundingClientRect();
+		const top = rect.top + window.scrollY;
+		const foot = 'overflows' in section.dataset ? top + rect.height - window.innerHeight : top;
+		const y = window.scrollY;
+		const rest = Math.min(foot, Math.max(top, y));
+		if (Math.abs(rest - y) > 1) window.scrollTo({ top: rest, behavior: 'smooth' });
 	}
 
 	/**
@@ -321,26 +350,65 @@ export function boot(): void {
 		advance(dir);
 	}
 
+	/*
+	 * A finger scrolls the page natively, and what it meant is decided when it
+	 * lifts, from where it started: the channel it went down on, and how far and
+	 * which way it moved. Measured on a phone (2026-09-29), trusting the page
+	 * instead failed three ways. The observer below moved `index` on to the next
+	 * channel while the finger was still dragging, so the swipe then advanced
+	 * from there: a slow drag off the foot of the guide skipped the Signal
+	 * interlude, five in five, and one up from Field skipped How I work. A drag
+	 * under the threshold left the page wherever the finger let go. And a
+	 * sideways swipe with a little vertical in it changed channel.
+	 */
+	let touchX = 0;
 	let touchY = 0;
+	let touching = false;
+	let touchFrom = 0;
 	function onTouchStart(ev: TouchEvent): void {
-		touchY = ev.touches[0]?.clientY ?? 0;
+		const t = ev.touches[0];
+		// A second finger is a pinch: the browser's, as Ctrl + wheel is.
+		if (!t || ev.touches.length > 1) {
+			touching = false;
+			return;
+		}
+		touchX = t.clientX;
+		touchY = t.clientY;
+		touching = true;
+		touchFrom = index;
 	}
 	function onTouchEnd(ev: TouchEvent): void {
-		const endY = ev.changedTouches[0]?.clientY ?? touchY;
-		const delta = touchY - endY;
-		if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-		const dir = delta > 0 ? 1 : -1;
-		if (canScrollWithin(dir) || pastTheEnd(dir) || locked) return;
+		if (!touching) return;
+		touching = false;
+		const t = ev.changedTouches[0];
+		const dx = touchX - (t?.clientX ?? touchX);
+		const dy = touchY - (t?.clientY ?? touchY);
+		setCurrent(touchFrom);
+		if (locked) return;
+		const dir = dy > 0 ? 1 : -1;
+		if (Math.abs(dy) < SWIPE_THRESHOLD || Math.abs(dx) > Math.abs(dy)) {
+			settleBack();
+			return;
+		}
+		if (canScrollWithin(dir) || pastTheEnd(dir)) return;
 		advance(dir);
 	}
+	function onTouchCancel(): void {
+		touching = false;
+	}
 
-	/** Keep `index` honest when something else moves the page (deep link, rail). */
+	/**
+	 * Keep `index` honest when something else moves the page (deep link, Tab).
+	 * The ratio, not isIntersecting: a channel on its way OUT crosses the
+	 * threshold too, still intersecting, and used to become the current one.
+	 * Not while a finger is down: see the touch handlers.
+	 */
 	const observer = new IntersectionObserver(
 		(entries) => {
 			for (const entry of entries) {
-				if (!entry.isIntersecting) continue;
+				if (entry.intersectionRatio < 0.55) continue;
 				const i = sections.indexOf(entry.target as HTMLElement);
-				if (i >= 0 && !locked) setCurrent(i);
+				if (i >= 0 && !locked && !touching) setCurrent(i);
 			}
 		},
 		{ threshold: 0.55 },
@@ -373,4 +441,21 @@ export function boot(): void {
 	window.addEventListener('keydown', onKey);
 	window.addEventListener('touchstart', onTouchStart, { passive: true });
 	window.addEventListener('touchend', onTouchEnd, { passive: true });
+	window.addEventListener('touchcancel', onTouchCancel, { passive: true });
+
+	// A dot on the rail is a change of channel like any other: the static, the
+	// readout, focus moved into the channel. As a plain link it scrolled there
+	// with none of them and left focus behind, on the rail. The fragment still
+	// goes into the address, replaced rather than pushed, as the section
+	// advance never pushes one either.
+	for (const dot of dots) {
+		const i = sections.findIndex((s) => `#${s.id}` === dot.hash);
+		if (i < 0) continue;
+		dot.addEventListener('click', (ev) => {
+			if (ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+			ev.preventDefault();
+			history.replaceState(null, '', dot.hash);
+			go(i);
+		});
+	}
 }

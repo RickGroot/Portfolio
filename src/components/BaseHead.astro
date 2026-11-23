@@ -1,22 +1,29 @@
 ---
-import { publicPath, site } from '@lib/site';
+import { publicPath, site, type ShareImage } from '@lib/site';
 
 interface Props {
 	title: string;
 	description: string;
-	/** Absolute or root-relative URL of the social preview image. */
-	ogImage?: string | undefined;
+	/** The social preview image. Without one, a shared link was a bare line of text. */
+	ogImage?: ShareImage | undefined;
 	noindex?: boolean | undefined;
 	/** The page's channel field, so the browser's own chrome matches the page. */
 	themeColor: string;
+	/** What the page is about, for search engines: schema.org, as JSON-LD. */
+	jsonLd?: Record<string, unknown> | undefined;
 }
 
-const { title, description, ogImage, noindex = false, themeColor } = Astro.props;
+const { title, description, ogImage, noindex = false, themeColor, jsonLd } = Astro.props;
 
-const canonical = new URL(publicPath(Astro.url.pathname), Astro.site ?? site.url).href;
-// "Page | Rick Groot" -- a bar, not a dash (Rick, 2026-09-25).
-const fullTitle = title === site.name ? site.name : `${title} | ${site.name}`;
-const image = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : undefined;
+const base = Astro.site ?? site.url;
+const canonical = new URL(publicPath(Astro.url.pathname), base).href;
+// "Page | Rick Groot" -- a bar, not a dash (Rick, 2026-09-25). The home page
+// adds what he does: "Rick Groot" alone told a search result nothing.
+const fullTitle =
+	title === site.name ? `${site.name} | ${site.tagline}` : `${title} | ${site.name}`;
+const image = ogImage && { ...ogImage, src: new URL(ogImage.src, base).href };
+// JSON inside a script element: a "</" in any string would end it early.
+const structured = jsonLd && JSON.stringify(jsonLd).replace(/</g, '\\u003c');
 ---
 
 <meta charset="utf-8" />
@@ -31,12 +38,20 @@ const image = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : undefine
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
 <meta property="og:site_name" content={site.name} />
-{image && <meta property="og:image" content={image} />}
+{image && (
+	<>
+		<meta property="og:image" content={image.src} />
+		<meta property="og:image:width" content={String(image.width)} />
+		<meta property="og:image:height" content={String(image.height)} />
+		<meta property="og:image:alt" content={image.alt} />
+	</>
+)}
 
 <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
 <meta name="twitter:title" content={fullTitle} />
 <meta name="twitter:description" content={description} />
-{image && <meta name="twitter:image" content={image} />}
+{image && <meta name="twitter:image" content={image.src} />}
+{image && <meta name="twitter:image:alt" content={image.alt} />}
 
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -60,3 +75,4 @@ const image = ogImage ? new URL(ogImage, Astro.site ?? site.url).href : undefine
 	crossorigin
 />
 <link rel="sitemap" href="/sitemap-index.xml" />
+{structured && <script type="application/ld+json" is:inline set:html={structured}></script>}

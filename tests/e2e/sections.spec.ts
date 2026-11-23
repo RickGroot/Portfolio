@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { restOn } from '../support/guide';
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
@@ -456,12 +457,15 @@ test.describe('programme guide', () => {
 		await page.goto('/#work');
 		expect(await active(page)).toEqual({ preview: 'nlziet', channel: 'crimson', focus: 'nlziet' });
 
-		await page.locator('#work [data-block="chromecast"]').hover();
-		expect(await active(page)).toEqual({
-			preview: 'chromecast',
-			channel: 'ultramarine',
-			focus: 'chromecast',
-		});
+		// A pointer picks a programme once it comes to rest on it (guide.ts).
+		await restOn(page, 'chromecast');
+		await expect
+			.poll(() => active(page))
+			.toEqual({
+				preview: 'chromecast',
+				channel: 'ultramarine',
+				focus: 'chromecast',
+			});
 
 		// Keyboard parity: focus does exactly what hover does.
 		await page.mouse.move(0, 0);

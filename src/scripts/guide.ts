@@ -2,8 +2,9 @@
  * The programme guide's behaviour. Everything here is an enhancement: without
  * it every block is a link and the first programme is previewed.
  *
- *   - Focus follows the pointer and the keyboard. Hovering or tabbing to a
- *     programme previews it, and the whole screen retunes to its channel.
+ *   - Focus follows the pointer and the keyboard. Resting the pointer on a
+ *     programme (REST_MS) or tabbing to it previews it, and the whole screen
+ *     retunes to its channel; a pointer passing over a row only lights it.
  *   - ArrowUp / ArrowDown move between programmes, the way a remote moves
  *     through a guide. At the first and last row the key is left alone, so the
  *     one-pager's section advance picks it up and you leave the guide.
@@ -48,6 +49,14 @@ function yearFraction(d: Date): number {
 	const end = Date.UTC(year + 1, 0, 1);
 	return year + (d.getTime() - start) / (end - start);
 }
+
+/**
+ * How long a pointer rests on a programme before it is the one in focus. 150
+ * was quicker than a hand travelling at an ordinary pace takes to cross a row,
+ * so the screen retuned under a pointer that was only on its way somewhere
+ * (Rick, 2026-10-14: "a little over sensitive").
+ */
+const REST_MS = 260;
 
 const CLOCK = new Intl.DateTimeFormat('en-GB', {
 	weekday: 'short',
@@ -162,10 +171,25 @@ function mount(guide: HTMLElement): void {
 
 		const previous = previews.get(active);
 		const dir = Math.sign(order.indexOf(id) - order.indexOf(active)) || 1;
+		// Focus on one of the outgoing preview's buttons goes to the same button
+		// on the incoming one. Left where it was, it sat on a preview that had
+		// just hidden, and the browser dropped it to <body>: the keyboard lost
+		// its place, and the number keys, which need focus in the page's
+		// content, stopped working.
+		const actions = (p: HTMLElement | undefined): HTMLAnchorElement[] => [
+			...(p?.querySelectorAll<HTMLAnchorElement>('.guide__actions a') ?? []),
+		];
+		const held = previous?.contains(document.activeElement)
+			? actions(previous).indexOf(document.activeElement as HTMLAnchorElement)
+			: null;
 		previous?.removeAttribute('data-active');
 		preview.setAttribute('data-active', '');
 		for (const b of blocks) b.toggleAttribute('data-focus', b.dataset.block === id);
 		active = id;
+		if (held !== null) {
+			const next = actions(preview);
+			(next[held] ?? next[0])?.focus({ preventScroll: true });
+		}
 
 		// Retune the whole screen to the programme's channel. The preview
 		// carries that channel's colours inline, so they are copied rather than
@@ -179,34 +203,37 @@ function mount(guide: HTMLElement): void {
 		if (preview.dataset.tone) guide.dataset.channel = preview.dataset.tone;
 		retuneGround(preview.style.getPropertyValue('--field'), dir);
 
+		// The 1-bit print carries its canvas to the new screen, through snow
+		// (src/lib/dither/). Before the reduced-motion return: the picture must
+		// follow the programme either way, only the snow stays away.
+		guide.dispatchEvent(new CustomEvent('guide:tune', { detail: { dir } }));
+
 		if (reduced.matches) return;
 
-		// The whole screen gets a lighter burst of the section advance's static.
-		// zap.ts rations it, so a pointer sweeping the guide cannot strobe.
-		guide.dispatchEvent(new CustomEvent('channel:zap', { bubbles: true, detail: { dir } }));
-
-		// The listing: out the way you are going, in from where you are going.
+		// No static over the whole page: the screen's own change is enough
+		// (zap.ts). The listing: out the way you are going, in from where you
+		// are going, a short way.
 		// Added onto the depth layer's own transform rather than replacing it.
 		previous
 			?.querySelector('.guide__info')
-			?.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-dir * 18}px)` }], {
+			?.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-dir * 8}px)` }], {
 				duration: 200,
 				easing: 'ease-in',
 				composite: 'add',
 			});
 		preview
 			.querySelector('.guide__info')
-			?.animate([{ transform: `translateY(${dir * 28}px)` }, { transform: 'translateY(0)' }], {
-				duration: 380,
+			?.animate([{ transform: `translateY(${dir * 12}px)` }, { transform: 'translateY(0)' }], {
+				duration: 320,
 				easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
 				composite: 'add',
 			});
 
-		// The picture: a burst of static, and a roll like a set losing
-		// vertical hold before it locks.
+		// The picture, where the print is not drawing it: a little static, and
+		// a short roll like a set losing vertical hold before it locks.
 		preview
 			.querySelector('[data-guide-static]')
-			?.animate([{ opacity: 0.95 }, { opacity: 0.55 }, { opacity: 0.8 }, { opacity: 0 }], {
+			?.animate([{ opacity: 0.5 }, { opacity: 0.25 }, { opacity: 0.4 }, { opacity: 0 }], {
 				duration: 260,
 				easing: 'steps(4, end)',
 			});
@@ -214,8 +241,8 @@ function mount(guide: HTMLElement): void {
 			.querySelector('.guide__screen img')
 			?.animate(
 				[
-					{ transform: `translateY(${dir * 10}%)` },
-					{ transform: `translateY(${-dir * 3}%)`, offset: 0.55 },
+					{ transform: `translateY(${dir * 4}%)` },
+					{ transform: `translateY(${-dir * 1}%)`, offset: 0.55 },
 					{ transform: 'translateY(0)' },
 				],
 				{ duration: 300, easing: 'steps(5, end)', composite: 'add' },
@@ -229,6 +256,15 @@ function mount(guide: HTMLElement): void {
 	// programme: every section advance past the guide swept its rows under the
 	// cursor and retuned the screen on the way through. The position is
 	// compared rather than movementX/Y, which some synthetic input leaves at 0.
+	//
+	// And only a pointer that comes to rest on one. Committing on every move,
+	// the way from a programme to its buttons crossed the rows between -- a
+	// long block like NLZIET's lies across that path -- and the button under
+	// the pointer then belonged to the programme it had passed through: the
+	// way from VAMP to its Live app opened NLZIET, six runs in six
+	// (2026-09-29). A passing pointer only lights the block (its :hover);
+	// the preview, the colours and the static follow once it stops. Focus
+	// still commits at once: a keyboard never passes through.
 	let lastX = Number.NaN;
 	let lastY = Number.NaN;
 	let moved = false;
@@ -242,11 +278,23 @@ function mount(guide: HTMLElement): void {
 		{ capture: true, passive: true },
 	);
 
+	let resting = 0;
+	const settle = (): void => window.clearTimeout(resting);
 	for (const block of blocks) {
-		block.addEventListener('pointermove', () => {
-			if (moved) activate(block.dataset.block);
+		block.addEventListener(
+			'pointermove',
+			() => {
+				if (!moved) return;
+				settle();
+				resting = window.setTimeout(() => activate(block.dataset.block), REST_MS);
+			},
+			{ passive: true },
+		);
+		block.addEventListener('pointerleave', settle);
+		block.addEventListener('focus', () => {
+			settle();
+			activate(block.dataset.block);
 		});
-		block.addEventListener('focus', () => activate(block.dataset.block));
 	}
 
 	// The listings draw in the first time the guide is properly on screen.

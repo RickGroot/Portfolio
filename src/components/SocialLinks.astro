@@ -38,6 +38,8 @@ import { channelStyle } from '@lib/channels';
 	/* The old footer rendered these as bare icons with no accessible name --
 	   four unlabelled links to a screen reader. Text labels instead. */
 	a {
+		/* The page's mark, caught before the plate redefines --mark as its own. */
+		--page-mark: var(--mark);
 		color: var(--mark-dim);
 	}
 
@@ -61,5 +63,18 @@ import { channelStyle } from '@lib/channels';
 	a:focus-visible .social__plate {
 		background: var(--field);
 		color: var(--mark);
+	}
+
+	/* The focus ring goes round the plate, not the text. Round the text, its */
+	/* sides fell on the lit plate, in the page's mark on the plate's field: */
+	/* 1:1 on GitHub's and 1.07:1 on LinkedIn's (2026-09-29). Round the */
+	/* plate, it is the page's mark on the page. */
+	a:focus-visible {
+		outline: none;
+	}
+
+	a:focus-visible .social__plate {
+		outline: 2px solid var(--page-mark);
+		outline-offset: 3px;
 	}
 </style>

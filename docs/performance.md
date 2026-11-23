@@ -2,18 +2,18 @@
 
 ## Budgets
 
-| Budget                | Limit               | How it is measured                                             |
-| --------------------- | ------------------- | -------------------------------------------------------------- |
-| Initial JS, homepage  | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`                                |
-| Character field chunk | ≤ 8 KB gzip         | trip-wire; measured 4.3 KB (2026-09-28)                        |
-| Total JS, homepage    | ≤ 45 KB gzip        | measured 13.4 KB, 1.2 KB of it inline (2026-09-28)             |
-| LCP                   | < 2.5 s             | `tests/budgets/vitals.spec.ts`, 4× CPU, read before any scroll |
-| CLS                   | < 0.1               | `tests/budgets/vitals.spec.ts`, 4× CPU, the whole page walked  |
-| INP                   | < 200 ms            | **Field only** — see below                                     |
-| Canvas elements       | **0**               | `tests/budgets/payload.spec.ts`                                |
-| WebGL contexts        | **0**               | `tests/budgets/payload.spec.ts`                                |
-| Animation loops       | 1, paused when idle | `tests/budgets/payload.spec.ts`                                |
-| Character grid        | ≤ 6000 cells        | at 1440×900; scaled with screen area, 2.2× at most             |
+| Budget               | Limit               | How it is measured                                             |
+| -------------------- | ------------------- | -------------------------------------------------------------- |
+| Initial JS, homepage | ≤ 20 KB gzip        | `tests/budgets/payload.spec.ts`                                |
+| Total JS, homepage   | ≤ 45 KB gzip        | measured 17.9 KB: 11.0 initial, 6.9 the print (2026-10-14)     |
+| LCP                  | < 2.5 s             | `tests/budgets/vitals.spec.ts`, 4× CPU, read before any scroll |
+| CLS                  | < 0.1               | `tests/budgets/vitals.spec.ts`, 4× CPU, the whole page walked  |
+| INP                  | < 200 ms            | **Field only** — see below                                     |
+| 1-bit print chunk    | ≤ 8 KB gzip         | trip-wire; measured 6.9 KB (2026-10-14); the deferred chunk    |
+| Canvas elements      | 1 per picture       | `tests/budgets/payload.spec.ts`: inside its frame, none else   |
+| WebGL contexts       | 1 per picture       | `tests/budgets/payload.spec.ts`: WebGL2 only                   |
+| Print frames         | ≤ 30fps on screen   | ambient on the loop; 0 off screen and under reduced motion     |
+| Animation loops      | 1, paused when idle | `tests/e2e/loop.spec.ts`                                       |
 
 ### Two honesty notes
 
@@ -22,7 +22,8 @@ Total Blocking Time; use TBT as the lab proxy and say so. Do not report a Lighth
 
 **Count renders, not `requestAnimationFrame` calls.** The loop must schedule a frame every display
 refresh in order to sample time; it throttles the _work_, not the scheduling. Counting rAF would
-measure the visitor's monitor rather than us — `tests/e2e/field.spec.ts` counts DOM mutations.
+measure the visitor's monitor rather than us — `tests/e2e/loop.spec.ts` counts the print's draws,
+as the character field's DOM mutations were counted until it was retired.
 
 ### Why there is no "deferred renderer" exemption any more
 
@@ -38,6 +39,11 @@ For calibration on what was avoided: the realistic tree-shaken OGL subset for a 
 quad measures 25.5 KB gzip unminified, roughly 12–16 KB minified — plus a quality governor,
 context-loss handling and build-time poster generation. All of it existed to serve an effect that a
 string assignment produces.
+
+The photographs are the one GPU path, since 2026-10-13, and they show what that estimate was made
+of: a full-screen dither is one fragment shader over one triangle, so the whole renderer is
+**3.2 KB gzip** of raw WebGL2 with context-loss handling included, no library, and nothing drawn at
+rest. See `docs/art-system.md`, "The print".
 
 ## Baseline vs now
 
@@ -78,9 +84,9 @@ its SIL OFL licence alongside (`OFL-<Family>.txt` — redistribution requires it
 | Labels  | JetBrains Mono 500            | `jetbrains-mono-500.woff2`         | 21.8 KB | no        |
 
 Chosen by Rick on 2026-09-25 from full-size candidates on the real pages. They replace Martian Mono
-(display) and Lato (reading); labels were a system monospace. The character field is not a label
-and keeps its system face, `--font-field`: it needs a uniform advance, and a web font would also
-make the LCP element wait on a download. The `check-assets` budget is 80 KB of WOFF2 — what a
+(display) and Lato (reading); labels were a system monospace. The masthead's tracker is set in the
+labels' face too, with its ligatures off: self-hosted, its columns are the width the tracker counts
+on, where the character field's system monospace could resolve to a proportional face. The `check-assets` budget is 80 KB of WOFF2 — what a
 visitor downloads; the licence texts are not counted — and the set is 76 KB of it.
 
 These are Google's own WOFF2 builds, downloaded once and committed. **There is deliberately no font
@@ -143,35 +149,26 @@ file name; never overwrite one.
 
 ## Renderer rules
 
-The art renders as text. `src/lib/field/` owns it; see `docs/art-system.md`.
+What moves: the 1-bit print (`src/lib/dither/`, see `docs/art-system.md`, "The print") and the
+masthead's tracker (`src/lib/hero/`). The character field these rules were first written for is
+retired; its own rules are in `docs/retired/character-field.md`.
 
-- **One `requestAnimationFrame` loop on the site**, in `src/lib/field/loop.ts`. Everything else
-  subscribes. `eslint.config.js` restricts `requestAnimationFrame` everywhere else, so this is
-  enforced rather than requested.
-- **Throttled to 60fps.** It was 30, on the reasoning that character art has no sub-cell motion — a
-  glyph either changes or it does not — so the gap to 60 would be small. On screen the field's roll
-  and the face's shimmer stepped, and Rick asked for smooth (2026-09-24). The cap still matters on a
-  120Hz display, which would otherwise double the work; `tests/e2e/field.spec.ts` drives
-  `requestAnimationFrame` at 120Hz to hold it.
+- **One `requestAnimationFrame` loop on the site**, in `src/lib/field/loop.ts` (named for the field
+  it was written for). Everything else subscribes. `eslint.config.js` restricts
+  `requestAnimationFrame` everywhere else, so this is enforced rather than requested.
+- **Throttled to 60fps**, and ambient work steps down from there when its frames run long: to 30,
+  then 20. The print's ambient life caps itself at 30. A 120Hz display must not double the work;
+  `tests/e2e/loop.spec.ts` drives `requestAnimationFrame` at 120Hz to hold it.
 - **Never read layout inside the tick.** `textContent = s` alone is ~0.0 ms; adding a forced read
-  like `offsetHeight` makes it 0.3–0.9 ms. Resolve progress comes from `IntersectionObserver`
-  thresholds, never `getBoundingClientRect`.
-- **Grid capped at 6000 cells** at 1440×900, scaled with the screen's area up to 2.2× (13,200)
-  on a larger one, sized from the _measured_ advance width, never an assumed one.
-  Cell aspect varies by font (0.55 Consolas, 0.60 Courier New) and a user's minimum-font-size
-  setting can inflate it further. If the measured font is not actually monospace, the renderer
-  bails to the static frame rather than shipping a sheared grid.
+  like `offsetHeight` makes it 0.3–0.9 ms. Positions are read in a `ResizeObserver`, how much of a
+  section is on screen from `IntersectionObserver` thresholds.
 - **Stops when offscreen or hidden.** `IntersectionObserver` unsubscribes, which cancels the RAF —
   it does not idle. There is no permanent background loop on this site.
-- **Dispose everything**: unsubscribe, `io.disconnect()`, `ro.disconnect()`, remove listeners,
-  release the typed arrays. A generation counter guards the dynamic `import()`, which can resolve
-  after teardown if someone scrolls past fast.
-- **Two `<pre>` layers is the colour budget.** Measured 3× single-layer cost, not 2× — overlapping
-  repaint is superlinear. A third layer colour is not affordable on mobile.
-- **ASCII-only ramp, ligatures explicitly disabled.** A glyph missing from the user's font falls
-  back per-glyph with an unconstrained advance and shears the line; `reset.css` sets
-  `text-rendering: optimizeLegibility` on `body`, which _enables_ ligature processing, so the
-  field must override it.
-- The DOM owns content and accessibility. The field is decoration, `aria-hidden`, `contain: strict`,
-  and not selectable. **If the renderer never starts, the hero still shows the portrait** — it is
-  server-rendered into the markup at build time.
+- **Dispose everything**: unsubscribe, `io.disconnect()`, `ro.disconnect()`, remove listeners, lose
+  the WebGL context.
+- **Text that relies on columns turns ligatures off**, both ways a font can make them (`liga`,
+  `calt`): `reset.css` sets `text-rendering: optimizeLegibility` on `body`, which _enables_
+  ligature processing, and JetBrains Mono would fuse the tracker's `---`.
+- The DOM owns content and accessibility. Art is decoration, `aria-hidden`, and complete without its
+  script: the masthead's tracker is server-rendered at its first row, and a photograph is `.duo`
+  until the print takes it over.

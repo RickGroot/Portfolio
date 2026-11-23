@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import sharp from 'sharp';
+import { pointAt, restOn } from '../support/guide';
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
@@ -48,20 +49,21 @@ test.describe('parallax', () => {
 
 	test('the layers of a section move at different depths as it scrolls', async ({ page }) => {
 		await page.goto('/');
-		expect(Math.abs(await offsetOf(page, '.hero__card'))).toBeLessThan(1.5);
+		expect(Math.abs(await offsetOf(page, '.hero__copy'))).toBeLessThan(1.5);
 
 		await jumpTo(page, 320);
-		const clock = await offsetOf(page, '.hero__clock');
-		const card = await offsetOf(page, '.hero__card');
-		const field = await offsetOf(page, '.hero .field');
+		const copy = await offsetOf(page, '.hero__copy');
+		const track = await offsetOf(page, '.hero__track');
+		const screen = await offsetOf(page, '.hero__screen');
 
 		// Scrolling down, a forward layer moves up faster than the page (a
-		// negative offset) and a back layer lags behind it (positive). The test
-		// card's boxes come off it in two planes: the name's plate is nearer
-		// than the clock on the circle.
-		expect(clock, 'the clock should come forward').toBeLessThan(-4);
-		expect(card, 'the name plate should come further forward than the clock').toBeLessThan(clock);
-		expect(field, 'the card behind them should sit back').toBeGreaterThan(4);
+		// negative offset) and a back layer lags behind it (positive). The
+		// masthead's copy comes off it furthest, its soundtrack less, and the
+		// picture on its screen sits back.
+		expect(copy, 'the copy should come forward').toBeLessThan(-4);
+		expect(track, 'the soundtrack should come forward, less than the copy').toBeGreaterThan(copy);
+		expect(track, 'the soundtrack should come forward').toBeLessThan(0);
+		expect(screen, 'the screen should sit back').toBeGreaterThan(4);
 	});
 
 	// The key art is the stage the case study stands on (Rick: "the image can
@@ -186,8 +188,16 @@ test.describe('parallax', () => {
 			await page.goto('about:blank');
 			await page.setViewportSize(size);
 			await page.goto('/work/chromecast');
+			// On a narrow screen it steps aside while the page goes down, so it
+			// never sits on the line being read (WorkLayout.astro), and it is
+			// back the moment the page goes up: read it there, a nudge back up.
+			const narrow = size.width < 1024;
 			for (const y of [0, 150, 300, 450, 600, 900]) {
 				await jumpTo(page, y);
+				if (narrow && y > 0) {
+					await jumpTo(page, y - 40);
+					await page.waitForTimeout(300);
+				}
 				const hits = await page.evaluate(() => {
 					const b = document.querySelector('.info__back')?.getBoundingClientRect();
 					if (!b) return [];
@@ -202,6 +212,13 @@ test.describe('parallax', () => {
 					true,
 				]);
 			}
+			if (narrow) {
+				await jumpTo(page, 900);
+				await expect(
+					page.locator('.info__back'),
+					'it stayed over the story going down',
+				).toHaveAttribute('data-away', '');
+			}
 		}
 	});
 
@@ -210,7 +227,7 @@ test.describe('parallax', () => {
 		const page = await context.newPage();
 		await page.goto('/');
 		await jumpTo(page, 320);
-		for (const layer of ['.hero__card', '.hero .field', '.guide--screen .guide__grid']) {
+		for (const layer of ['.hero__copy', '.hero__screen', '.guide--screen .guide__grid']) {
 			expect(await offsetOf(page, layer), `${layer} moved under reduced motion`).toBe(0);
 		}
 		await context.close();
@@ -346,55 +363,56 @@ test.describe('changing channel', () => {
 		}
 	});
 
-	test('in the guide, a change of programme brings static, never more than one burst at a time', async ({
+	// Until 2026-10-14 every change of programme also asked for a light burst
+	// of static over the whole page, rationed to one every 520ms. With the
+	// guide's own snow, wipe and decode on top of it, a pointer crossing the
+	// rows set the page pulsing (Rick: "a bit too much and pulse too much").
+	// The guide's screen carries the change; the page's static is for changing
+	// channel, and the number keys still bring it -- which also shows this
+	// counts something.
+	test('in the guide, a change of programme brings no static over the whole page', async ({
 		page,
 	}) => {
 		await page.goto('/#work');
 		// Let the arrival's own burst run out first.
 		await page.waitForTimeout(800);
-		// Every burst starts with one opacity animation on the static layer, and
-		// every change of programme asks for one with channel:zap.
-		type Log = { asked: number; starts: number[] };
 		await page.evaluate(() => {
-			const log: Log = { asked: 0, starts: [] };
-			(window as unknown as { __zap: Log }).__zap = log;
-			document.addEventListener('channel:zap', () => log.asked++);
+			const w = window as unknown as { __bursts: number };
+			w.__bursts = 0;
 			const zap = document.querySelector('.zap') as HTMLElement;
 			const animate = zap.animate.bind(zap);
 			zap.animate = (keyframes, options) => {
-				log.starts.push(performance.now());
+				w.__bursts += 1;
 				return animate(keyframes, options);
 			};
 		});
+		const bursts = (): Promise<number> =>
+			page.evaluate(() => (window as unknown as { __bursts: number }).__bursts);
 
-		// A sweep through the guide, as fast as a pointer goes.
-		for (const id of ['chromecast', 'vamp', 'chromecast', 'nlziet', 'vamp', 'nlziet']) {
-			await page.locator(`#work [data-block="${id}"]`).hover();
-		}
-		await page.waitForTimeout(700);
+		for (const id of ['chromecast', 'vamp', 'nlziet']) await restOn(page, id);
+		await page.waitForTimeout(400);
+		expect(await bursts(), 'static over the page on a change of programme').toBe(0);
 
-		const { asked, starts } = await page.evaluate(
-			() => (window as unknown as { __zap: Log }).__zap,
-		);
-		expect(starts.length, 'a change of programme brought no static').toBeGreaterThan(0);
-		// Otherwise the sweep was too slow to test the rationing at all.
-		expect(asked, 'the sweep never asked faster than the static can play').toBeGreaterThan(
-			starts.length,
-		);
-		for (let i = 1; i < starts.length; i++) {
-			expect(starts[i]! - starts[i - 1]!, 'the static strobed').toBeGreaterThanOrEqual(500);
-		}
+		await page.evaluate(() => document.getElementById('main')?.focus({ preventScroll: true }));
+		await page.keyboard.press('1');
+		await expect
+			.poll(bursts, { message: 'a change of channel brought no static' })
+			.toBeGreaterThan(0);
 	});
 
 	test('in the guide, the new ground wipes in and the chrome follows it', async ({ page }) => {
 		await page.goto('/#work');
-		await page.locator('#work [data-block="chromecast"]').hover();
-		expect(
-			await page.evaluate(
-				() => document.querySelector('[data-guide-wipe]')?.getAnimations().length ?? 0,
-			),
-			'the ground did not wipe',
-		).toBeGreaterThan(0);
+		await pointAt(page, 'chromecast');
+		// Polled: the programme changes once the pointer has come to rest.
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() => document.querySelector('[data-guide-wipe]')?.getAnimations().length ?? 0,
+					),
+				{ message: 'the ground did not wipe', intervals: [20, 40, 60] },
+			)
+			.toBeGreaterThan(0);
 		await expect
 			.poll(() =>
 				page.evaluate(

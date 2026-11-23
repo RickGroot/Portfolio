@@ -1,7 +1,11 @@
 # The shared renderer — plan
 
-**Status: approved 2026-09-22, not started.** No renderer code has been written and no existing rule
-has been relaxed yet.
+**Status: approved 2026-09-22. Built for photographs on 2026-10-13** as the 1-bit print
+(`src/lib/dither/`, docs/art-system.md "The print"): raw WebGL2, one context per photograph rather
+than one shared canvas, because a print draws only on resize and a tune-in, and a shared canvas
+would have to redraw on every scroll to follow its photographs. Option C below, per-character
+colour in the hero, was not built, and the hero it was for — the character field — was retired on
+2026-10-14.
 
 **Priority shift, same day.** Rick: _"It has to be visually stunning this portfolio, so maybe I'll
 start to put less focus on performance."_ Performance is now explicitly subordinate to visual

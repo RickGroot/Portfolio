@@ -1,4 +1,5 @@
 import { test, expect, type Browser, type Page } from '@playwright/test';
+import { CLS_BUDGET, CPU_THROTTLE, LCP_BUDGET } from '../support/budgets';
 
 /**
  * LCP and CLS on built output.
@@ -89,7 +90,8 @@ async function measure(page: Page, path: string, cpuThrottle: number): Promise<V
 	// an interlude photograph painted halfway down the page -- `img` on a route
 	// whose first screen has no image -- and the number measured the walk.
 	// Read once the first screen has stopped producing candidates, not after a
-	// fixed wait: the live field's first paint came as late as 1680ms.
+	// fixed wait: the retired character field's first live paint came as late as
+	// 1680ms, and no fixed wait can know what the next masthead will be.
 	const lcp = await page.evaluate(async () => {
 		const w = window as unknown as { __lcp: number; __lcpEl: string };
 		const start = performance.now();
@@ -131,7 +133,7 @@ async function median(browser: Browser, path: string, samples = 3): Promise<Vita
 	for (let i = 0; i < samples; i++) {
 		const context = await browser.newContext();
 		const page = await context.newPage();
-		runs.push(await measure(page, path, 4));
+		runs.push(await measure(page, path, CPU_THROTTLE));
 		await context.close();
 	}
 	const mid = Math.floor(samples / 2);
@@ -144,30 +146,23 @@ async function median(browser: Browser, path: string, samples = 3): Promise<Vita
 
 const ROUTES = ['/', '/work/chromecast'];
 
-// CLAUDE.md budget. Held against the throttled run, which is the harder one.
-const LCP_BUDGET = 2500;
-const CLS_BUDGET = 0.1;
-
 /*
  * A trip-wire well under the allowance, so the budget has teeth rather than
- * being decoration -- the same reasoning as the 8 KB field-chunk gate.
+ * being decoration -- the same reasoning as the 8 KB print-chunk gate.
  *
- * LCP on the homepage is BIMODAL under 4x throttle, and this was first
- * calibrated against only one of the modes. The LCP element is the character
- * field, and which of its two layers counts is a race: sometimes the
- * server-rendered frame (layer a) is the largest paint, sometimes the live
- * field's first render (layer b) is -- and that one waits for JavaScript.
+ * 1800 was set for the character field, whose LCP was BIMODAL under 4x
+ * throttle: a race between its server-rendered frame (~840-1030ms) and its
+ * first live render after the JS boot (~1240-1470ms). A first trip-wire of
+ * 1500 sat 28ms above a slow-mode reading, and a gate that close to its own
+ * noise fails at random and then gets ignored.
  *
- * Measured 2026-09-23, identical bytes, median-of-3 per run:
- *   fast mode   ~840-1030ms   (layer a, or an early layer b)
- *   slow mode  ~1240-1470ms   (layer b after the JS boot)
- * Swapping the portrait back to the previous one reproduced both modes, and
- * removing each newly added section did not remove the slow one, so neither is
- * the cause. The first trip-wire of 1500 sat 28ms above a slow-mode reading --
- * a gate that close to its own noise fails at random and then gets ignored.
- *
- * 1800 sits above the slow mode with margin and still fails well before the
- * 2500ms budget. The race itself is worth fixing: see docs/roadmap.md.
+ * The field is retired (2026-10-14) and the race with it. The masthead's LCP
+ * element is its photograph, an eager `<img>` in the server's HTML, which the
+ * print draws over without replacing as a candidate: 476ms on the homepage at
+ * 4x, median of 3, and 1272ms the same afternoon with the machine at 69% CPU
+ * before the test began (/work/chromecast went 336 -> 692ms alongside it).
+ * 1800 is generous on a quiet machine and not on a busy one. Tighten it once
+ * a few runs on other machines agree, not on one reading.
  */
 const LCP_TRIPWIRE = 1800;
 
@@ -186,10 +181,12 @@ test.describe('core web vitals on built output @vitals', () => {
 	test.setTimeout(120_000);
 
 	for (const path of ROUTES) {
-		test(`${path} — 4x CPU throttle, median of 3`, async ({ browser }) => {
+		test(`${path} — ${CPU_THROTTLE}x CPU throttle, median of 3`, async ({ browser }) => {
 			const v = await median(browser, path);
 			// Printed, not only asserted: the number is the point of the test.
-			console.log(`  ${path} @4x  LCP ${v.lcp}ms  CLS ${v.cls}  (LCP element: ${v.lcpElement})`);
+			console.log(
+				`  ${path} @${CPU_THROTTLE}x  LCP ${v.lcp}ms  CLS ${v.cls}  (LCP element: ${v.lcpElement})`,
+			);
 
 			expect(v.lcp, `${path}: LCP ${v.lcp}ms exceeds the ${LCP_BUDGET}ms budget`).toBeLessThan(
 				LCP_BUDGET,

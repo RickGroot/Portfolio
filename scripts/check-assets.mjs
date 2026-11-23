@@ -102,15 +102,16 @@ const cssTotal = distFiles
 if (cssTotal > LIMITS.cssGzip) fail(`CSS is ${kb(cssTotal)} gzip (limit ${kb(LIMITS.cssGzip)})`);
 
 // External JS plus anything inlined into the HTML -- an inline script is still
-// JavaScript the visitor pays for.
+// JavaScript the visitor pays for. A JSON-LD block is not: it is data, and
+// never runs.
+const INLINE_SCRIPT =
+	/<script(?![^>]*\b(?:src=|type="application\/ld\+json"))[^>]*>([\s\S]*?)<\/script>/g;
 let jsTotal = distFiles
 	.filter((f) => f.endsWith('.js') && !f.includes('service-worker'))
 	.reduce((s, f) => s + gzipSync(readFileSync(f), { level: 9 }).length, 0);
 for (const route of routes) {
 	const html = readFileSync(route, 'utf8');
-	const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)]
-		.map((m) => m[1])
-		.join('');
+	const inline = [...html.matchAll(INLINE_SCRIPT)].map((m) => m[1]).join('');
 	if (inline.trim()) jsTotal += gzipSync(Buffer.from(inline), { level: 9 }).length;
 }
 if (jsTotal > LIMITS.jsGzipTotal)

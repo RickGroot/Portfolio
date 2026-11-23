@@ -5,8 +5,8 @@
  *
  * The colours are read off <html>, which carries the palette and the page's
  * channel as custom properties (src/lib/channels.ts), so there is no second
- * copy of them here. The bars run as the hero's do (--bars in tokens.css):
- * brightest to darkest.
+ * copy of them here. The bars run as they did on the test card that was
+ * channel 01 until 2026-10-14: brightest to darkest.
  */
 const BARS = ['--paper', '--signal-yellow', '--brass', '--signal-red', '--signal-blue', '--navy'];
 

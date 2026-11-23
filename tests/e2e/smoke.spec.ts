@@ -14,7 +14,9 @@ test('the one-pager is the complete record, including KIJK', async ({ page }) =>
 	// exactly what happened when the /work index was removed. It is the fourth
 	// programme, so it waits behind Load more: one press away, never gone.
 	await page.locator('#work summary', { hasText: 'Load more' }).click();
-	const kijk = page.getByRole('link', { name: /KIJK/ });
+	// Its programme on the guide; its preview's Case study button carries its
+	// name too now.
+	const kijk = page.locator('#work [data-block="kijk"]');
 	await expect(kijk).toBeVisible();
 	await expect(kijk).toHaveAttribute('href', '/work/kijk');
 });

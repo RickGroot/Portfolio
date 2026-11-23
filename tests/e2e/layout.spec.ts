@@ -6,9 +6,9 @@ test.use({ viewport: { width: 1440, height: 900 } });
  * Every section's content column is the page's. The hero bleeds the full
  * viewport width so the character field can fill it, and once made its copy
  * re-centre in the viewport, leaving the h1 221px right of every heading below
- * it -- obvious on screen, invisible to every other test we had. The hero is a
- * test card now, and its card is centred on the circle on purpose; the next
- * test holds that.
+ * it -- obvious on screen, invisible to every other test we had. The masthead
+ * is left out on purpose: since 2026-10-14 it is two columns either side of the
+ * page's centre line, copy and screen, not a column of its own.
  */
 test('the sections align to the same column as the rest of the page', async ({ page }) => {
 	await page.goto('/');
@@ -44,48 +44,20 @@ test('the sections align to the same column as the rest of the page', async ({ p
 });
 
 /**
- * The test card is symmetrical, and the boxes on it read as one plate only if
- * they share one centre with the circle and the clock: a card nudged off it is
- * a mistake anyone can see and nothing else would catch. And one plate: the
- * name's box, the bars and the synopsis the same width.
- */
-test('the test card is centred on its circle, one plate wide', async ({ page }) => {
-	for (const size of [
-		{ width: 1440, height: 900 },
-		{ width: 390, height: 844 },
-	]) {
-		await page.setViewportSize(size);
-		await page.goto('/');
-		await expect(page.locator('[data-hero-clock]')).toBeVisible();
-		const m = await page.evaluate(() => {
-			const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
-			const mid = (r: DOMRect) => r.left + r.width / 2;
-			const hero = box('.hero');
-			return {
-				hero: mid(hero),
-				card: mid(box('.hero__card')),
-				clock: mid(box('.hero__clock')),
-				widths: ['.hero__id', '.hero__bars', '.hero__lede'].map((s) => Math.round(box(s).width)),
-			};
-		});
-		expect(Math.abs(m.card - m.hero), `${size.width}px: the card is off centre`).toBeLessThan(1);
-		expect(Math.abs(m.clock - m.hero), `${size.width}px: the clock is off centre`).toBeLessThan(1);
-		expect(new Set(m.widths).size, `${size.width}px: the plate's boxes differ in width`).toBe(1);
-	}
-});
-
-/**
  * The name is one line (Rick, 2026-09-25: "Please make my name over 1 line"),
- * in its box on the test card. `nowrap` holds it there, so a size that makes
- * it too big for its box does not wrap it: it runs out of the box, which is
- * what this looks for, from a small phone to a large screen.
+ * now as the masthead's title. Its size is what holds it there, not `nowrap`,
+ * which cut it off at 200% text: a size too big for its column wraps it, and
+ * this looks for that, from a small phone to a large screen.
  */
-test('the name sits on one line inside its box, from a small phone to a large screen', async ({
+test('the name sits on one line in its column, from a small phone to a large screen', async ({
 	page,
 }) => {
 	for (const size of [
 		{ width: 360, height: 640 },
 		{ width: 390, height: 844 },
+		// Two columns at their tightest: a tablet, upright and on its side.
+		{ width: 800, height: 1280 },
+		{ width: 1024, height: 768 },
 		{ width: 1280, height: 720 },
 		{ width: 1440, height: 900 },
 		{ width: 2560, height: 1440 },
@@ -93,20 +65,101 @@ test('the name sits on one line inside its box, from a small phone to a large sc
 		await page.setViewportSize(size);
 		await page.goto('/');
 		await page.evaluate(() => document.fonts.ready);
+		// The landing decode holds each letter in a box its own width, and a
+		// wider noise glyph spills out of it for a frame: 52px at 2560 wide.
+		// Measure the name, not the noise; see the next test for the timing.
+		await page.waitForTimeout(900);
+		await expect(page.locator('#top h1 .decode-ch')).toHaveCount(0);
 		const m = await page.evaluate(() => {
-			const h1 = document.querySelector('.hero__id h1')!;
+			const h1 = document.querySelector('#top h1')!;
 			const range = document.createRange();
 			range.selectNodeContents(h1);
 			const rects = [...range.getClientRects()].filter((r) => r.width > 1);
 			const text = range.getBoundingClientRect();
-			const box = document.querySelector('.hero__id')!.getBoundingClientRect();
+			const box = document.querySelector('.hero__copy')!.getBoundingClientRect();
 			return {
 				lines: new Set(rects.map((r) => Math.round(r.top))).size,
-				inside: text.left >= box.left && text.right <= box.right,
+				inside: text.left >= box.left - 0.5 && text.right <= box.right + 0.5,
 			};
 		});
 		expect(m.lines, `${size.width}x${size.height}: the name wrapped`).toBe(1);
-		expect(m.inside, `${size.width}x${size.height}: the name runs out of its box`).toBe(true);
+		expect(m.inside, `${size.width}x${size.height}: the name runs out of its column`).toBe(true);
+	}
+});
+
+/**
+ * The section rail is fixed at the right edge, over everything. The other
+ * sections keep their content in the page column, well inside it; the
+ * masthead's screen runs to the gutter, and there the rail sat on its border
+ * (1440x900, 2026-10-14), which no test could see.
+ */
+test('the section rail stands clear of the masthead', async ({ page }) => {
+	for (const size of [
+		{ width: 800, height: 600 },
+		{ width: 1024, height: 768 },
+		{ width: 1440, height: 900 },
+		{ width: 2560, height: 1440 },
+	]) {
+		await page.setViewportSize(size);
+		await page.goto('/');
+		await expect(page.locator('.rail')).toBeVisible();
+		const gap = await page.evaluate(() => {
+			const rail = document.querySelector('.rail')!.getBoundingClientRect().left;
+			const right = Math.max(
+				...['.hero__screen', '.hero__track'].map(
+					(s) => document.querySelector(s)!.getBoundingClientRect().right,
+				),
+			);
+			return Math.round(rail - right);
+		});
+		expect(gap, `${size.width}x${size.height}: the rail is ${gap}px clear`).toBeGreaterThanOrEqual(
+			8,
+		);
+	}
+});
+
+/**
+ * WCAG 1.4.4: text resized to 200% loses nothing. The browser's text size
+ * doubles the root font size, and so does this. The name may take a second
+ * line there; what it may not do is run off the screen, as it did under
+ * `nowrap` on a phone.
+ *
+ * Not under reduced motion: there every property change is a 0.01ms
+ * transition, and headless Chromium sometimes draws no frame until the
+ * pointer moves, so the new size never arrived and this passed on the bug.
+ * The decode is let finish instead, since it holds each letter in a box
+ * measured at the old size.
+ */
+test('at 200% text the whole name stays on the screen', async ({ page }) => {
+	for (const size of [
+		{ width: 360, height: 640 },
+		{ width: 390, height: 844 },
+		{ width: 1280, height: 720 },
+		{ width: 1440, height: 900 },
+	]) {
+		await page.setViewportSize(size);
+		await page.goto('/');
+		await page.evaluate(() => document.fonts.ready);
+		// The landing decode starts 160ms after the channel comes up and runs
+		// 560ms; one that started after a check for it would still be running.
+		await page.waitForTimeout(900);
+		await expect(page.locator('#top h1 .decode-ch')).toHaveCount(0);
+		await page.evaluate(() => {
+			document.documentElement.style.fontSize = '200%';
+		});
+		await expect
+			.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).fontSize))
+			.toBe('32px');
+		const onScreen = await page.evaluate(() => {
+			const h1 = document.querySelector('#top h1')!;
+			const range = document.createRange();
+			range.selectNodeContents(h1);
+			const text = range.getBoundingClientRect();
+			return text.left >= 0 && text.right <= document.documentElement.clientWidth + 0.5;
+		});
+		expect(onScreen, `${size.width}x${size.height} at 200%: the name runs off the screen`).toBe(
+			true,
+		);
 	}
 });
 
@@ -151,15 +204,18 @@ test.describe('skip link', () => {
 	test('real controls still show a focus ring', async ({ page }) => {
 		await page.goto('/');
 		// Suppressing the ring on the skip destination must not leak to anything
-		// a user can actually operate.
+		// a user can actually operate. The ring is the control's own or drawn
+		// inside it: a social link rings its plate (SocialLinks.astro).
 		for (const selector of ['#work [data-block]', '#contact a']) {
 			const style = await page
 				.locator(selector)
 				.first()
 				.evaluate((el) => {
 					(el as HTMLElement).focus();
-					const cs = getComputedStyle(el);
-					return { style: cs.outlineStyle, width: cs.outlineWidth };
+					const cs = [el, ...el.querySelectorAll('*')]
+						.map((n) => getComputedStyle(n))
+						.find((s) => s.outlineStyle !== 'none');
+					return { style: cs?.outlineStyle ?? 'none', width: cs?.outlineWidth ?? '0px' };
 				});
 			expect(style.style, `${selector} lost its focus ring`).not.toBe('none');
 			expect(parseFloat(style.width), `${selector} focus ring has no width`).toBeGreaterThan(0);

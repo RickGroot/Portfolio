@@ -26,7 +26,7 @@ on the same machine rather than in absolute terms.
 
 ### The console line
 
-`src/scripts/ident.ts` — one `console.log` on every page: the test card's colour bars, then
+`src/scripts/ident.ts` — one `console.log` on every page: the broadcast palette's colour bars, then
 "Signal acquired." on a plate of the page's channel. The colours are read off `<html>`, so it has no
 copy of the palette. `tests/e2e/smoke.spec.ts` asserts exactly one log line on the homepage, a case
 study and the 404, so a second one is either debugging left in or this stopping being restrained.

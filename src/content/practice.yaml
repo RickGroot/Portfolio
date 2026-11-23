@@ -1,0 +1,56 @@
+# How I work: the three principles on the one-pager, in `order`.
+#
+# Rewritten 2026-09-25 around Rick's three themes: an AI-first approach,
+# keeping responsibility, and aligning competences through smart tooling.
+#
+# The brief still holds -- "Show the real workflow: decisions, constraints,
+# iterations, code or terminal fragments, before/after measurements, and
+# shipped results. Do not invent fake technical artifacts." -- so each theme
+# carries a proof that is true of this repository and can be checked in it:
+# the git log, the test suite, the rules file. Parallel imperatives read as
+# generated (the 2026-09-22 note on the first version), so the titles say
+# what happens rather than what to do.
+#
+# A proof quotes no count that grows with the work: "37 commits" and "105
+# tests" were both stale within a week. The numbers it does quote are the ones
+# the checks enforce, and tests/e2e/claims.spec.ts fails when the two part:
+# the load budget and its CPU slowdown (tests/support/budgets.ts), and the
+# contrast floor (AA in src/lib/channels.ts).
+#
+# Rick: the themes are yours, the sentences are mine. Rewrite them in your own
+# voice -- that is the one thing I cannot do for you.
+
+- id: first-draft
+  order: 1
+  title: An agent writes the first draft
+  # "I work AI-first." opens the section's lede, so it does not open this too.
+  body: >-
+    Every change starts as an agent’s draft: the code, the tests, and often the
+    question I had not thought to ask. My time goes to what needs a person:
+    choosing between options, and deciding what not to build.
+  proof: >-
+    Every commit in this site’s rebuild is co-authored by Claude, and says so.
+    Every new look on it was one of three full-size candidates I chose between.
+
+- id: what-ships
+  order: 2
+  title: I answer for what ships
+  body: >-
+    An agent can write the code; it cannot be responsible for it. So nothing
+    goes in that I have not read, and every claim the site makes has a check
+    behind it that can fail: a test, a budget, a build that refuses.
+  proof: >-
+    A test suite that runs on every push, a 2.5-second load budget measured on
+    a CPU slowed four times, and a colour check that fails the build below
+    4.5:1 contrast.
+
+- id: in-the-tools
+  order: 3
+  title: Expertise, built into the tools
+  body: >-
+    Expertise should not depend on who is in the room. I write it into what
+    colleagues and agents both run, rules, prompts and checks, so accessibility
+    and performance are the default, not a comment in review.
+  proof: >-
+    One rules file here is read by every change, human or agent. A scrollbar
+    bug no test could see became a rule and a test the same day.

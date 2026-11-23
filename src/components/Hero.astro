@@ -1,0 +1,335 @@
+---
+/**
+ * Channel 01: the masthead, as the first programme in the guide.
+ *
+ * Picked by Rick on 2026-10-14 from three photo layouts (score, on air,
+ * programme), after a round of music-only ones: "I still want an image there,
+ * but better UI/UX". It speaks the guide's grammar -- channel number and ON
+ * AIR, the title, the meta line, a synopsis, two buttons -- so the page opens
+ * on what it is about and the two ways on from it.
+ *
+ * The screen is Rick's photograph in the site's 1-bit print (src/lib/dither/,
+ * `.duo` without it), paper on the ink field at one-pixel dots, like the other
+ * photographs of him. Under it, the soundtrack: a tracker pattern of "When the
+ * Saints Go Marching In" -- Rick plays the trumpet -- server-rendered at its
+ * first row and stepped in tempo by src/lib/hero/tracker.ts.
+ */
+import { Image } from 'astro:assets';
+import gallery from '@assets/gallery.jpg';
+import { channelStyle } from '@lib/channels';
+import { CHANNELS, BPM } from '@lib/hero/tune';
+import { rowsAround } from '@lib/hero/tracker';
+
+const [farAbove, above, now, below, farBelow] = rowsAround(0);
+---
+
+<section
+	id="top"
+	class="section hero"
+	aria-labelledby="top-heading"
+	data-section
+	data-channel="ink"
+	data-osd="Rick Groot"
+	style={channelStyle('ink')}
+>
+	<div class="hero__copy">
+		<p class="hero__status">
+			<span class="hero__ch">CH 01</span>
+			<span class="onair onair--live">On air</span>
+		</p>
+		<h1 id="top-heading" data-decode>
+			Rick Groot
+		</h1>
+		<p class="hero__role">Connected TV developer · Trumpet</p>
+		<p class="hero__lede">
+			I build Connected TV apps at Hypersolid, from NLZIET on Smart TVs to Chromecast receivers and
+			the video players underneath them. Most of it is performance work: the devices they run on are
+			older and slower than the machine I write on.
+		</p>
+		<p class="hero__actions">
+			<a class="tvbtn tvbtn--solid" href="#work">
+				<span aria-hidden="true">▶</span> See the work
+			</a>
+			<a class="tvbtn" href="#contact">
+				Get in touch
+			</a>
+		</p>
+	</div>
+
+	<figure class="hero__screen duo" data-dither>
+		<Image
+			src={gallery}
+			alt="Rick Groot in a cap and glasses, smiling, in a white-walled gallery."
+			widths={[480, 570]}
+			sizes="(min-width: 52rem) 44vw, 92vw"
+			loading="eager"
+			fetchpriority="high"
+		/>
+	</figure>
+
+	<div class="hero__track" data-tracker aria-hidden="true">
+		<p class="hero__tune">When the Saints Go Marching In · trad. · {BPM} bpm</p>
+		<div class="hero__head">
+			<span>Pos</span>
+			{CHANNELS.map((c, i) => (
+				<span class="hero__chan">
+					<b>{String(i + 1).padStart(2, '0')}</b> {c}
+					<i class="hero__meter" data-meter />
+				</span>
+			))}
+		</div>
+		<div class="hero__rows">
+			<pre class="hero__far" data-rows>{farAbove}</pre>
+			<pre data-rows>{above}</pre>
+			<pre class="hero__now" data-rows>{now}</pre>
+			<pre data-rows>{below}</pre>
+			<pre class="hero__far" data-rows>{farBelow}</pre>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { boot } from '../lib/hero/tracker';
+	boot();
+</script>
+
+<style>
+	/* Two columns: the programme's copy, and its screen over its soundtrack. */
+	.hero {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-rows: auto auto;
+		column-gap: var(--s-12);
+		align-content: center;
+		padding: var(--s-12) var(--gutter);
+		/* The width of the screen and of its soundtrack under it. Clear of the */
+		/* section rail (sections.css: fixed 1.5rem from the edge, 2rem wide) */
+		/* by a step: at the gutter alone the rail sat on the screen's border. */
+		/* Only this column gives way, so the name keeps its own. */
+		--screen-w: min(100% - max(0px, 4.5rem - var(--gutter)), 44rem, (100svh - 20rem) * 4 / 3);
+	}
+
+	.hero__copy {
+		grid-column: 1;
+		grid-row: 1 / span 2;
+		align-self: center;
+		display: grid;
+		justify-items: start;
+		gap: var(--s-4);
+		max-inline-size: 40rem;
+		justify-self: end;
+	}
+
+	.hero__status {
+		display: flex;
+		align-items: center;
+		gap: var(--s-3);
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		font-weight: 700;
+		letter-spacing: var(--tracking-meta);
+	}
+
+	.hero h1 {
+		font-size: clamp(3rem, 1rem + 5.6vw, 7.5rem);
+		line-height: 0.86;
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-display);
+	}
+
+	.hero__role {
+		font-family: var(--font-mono);
+		font-size: var(--t-sm);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+		color: var(--accent);
+	}
+
+	.hero__lede {
+		max-inline-size: 34rem;
+		font-size: var(--t-lg);
+		color: var(--mark-dim);
+	}
+
+	.hero__actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--s-3);
+		margin-block-start: var(--s-2);
+	}
+
+	/* The screen: the programme's picture, framed in the channel's signal */
+	/* colour like the guide's. Rick in paper on the ink field at one-pixel */
+	/* dots, as for every photograph of a face (docs/art-system.md). Lifted a */
+	/* little: his face is in the shade of his cap against a white wall, and */
+	/* at 1.0 it printed as a dark blob; at 1.2 the wall clears to paper. */
+	.hero__screen {
+		--duo-hi: var(--paper);
+		--duo-lo: var(--field);
+		--dither-dot: 1;
+		--dither-lift: 1.2;
+		--dither-contrast: 0.95;
+		grid-column: 2;
+		grid-row: 1;
+		position: relative;
+		margin: 0;
+		overflow: clip;
+		inline-size: var(--screen-w);
+		aspect-ratio: 4 / 3;
+		border: 2px solid var(--accent);
+	}
+
+	.hero__screen :global(img),
+	.hero__screen :global(canvas) {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		object-fit: cover;
+		/* The source is square, centred on Rick: the 4:3 screen crops it top */
+		/* and bottom, a phone's 4:5 crops it either side. */
+		object-position: 52% 30%;
+	}
+
+	/* The soundtrack, hung under the screen at its width. */
+	.hero__track {
+		grid-column: 2;
+		grid-row: 2;
+		display: grid;
+		gap: var(--s-2);
+		inline-size: var(--screen-w);
+		padding: var(--s-3) var(--s-4) 0;
+		border: 2px solid var(--mark);
+		border-block-start: 0;
+		overflow: clip;
+		/* The labels' monospace, self-hosted, so every column is the width the */
+		/* tracker counts on. JetBrains Mono would fuse "---" into a ligature: */
+		/* off, both ways it can (docs/retired/character-field.md, "Ligatures"). */
+		font-family: var(--font-mono);
+		font-size: clamp(10px, 0.82vw, 13px);
+		line-height: 1.35;
+		font-variant-ligatures: none;
+		font-feature-settings:
+			'liga' 0,
+			'calt' 0;
+		color: var(--mark-dim);
+	}
+
+	.hero__tune {
+		font-family: var(--font-mono);
+		font-size: var(--t-xs);
+		letter-spacing: var(--tracking-meta);
+		text-transform: uppercase;
+	}
+
+	.hero__head {
+		display: grid;
+		grid-template-columns: 3ch repeat(4, 11ch);
+		gap: 0 1ch;
+		padding-block-end: var(--s-2);
+		border-block-end: 2px solid var(--mark);
+		color: var(--mark);
+		text-transform: uppercase;
+		white-space: pre;
+	}
+
+	.hero__chan {
+		display: grid;
+		gap: 0.35em;
+	}
+
+	.hero__chan b {
+		color: var(--accent);
+	}
+
+	/* A level meter in sixteen segments: one bit, never a gradient. The */
+	/* level is --level, 0..1, a whole segment at a time (tracker.ts). */
+	.hero__meter {
+		--seg: repeating-linear-gradient(to right, currentColor 0 0.45em, transparent 0.45em 0.6em);
+		--level: 0;
+		display: block;
+		block-size: 0.6em;
+		color: color-mix(in oklab, var(--mark) 22%, var(--field));
+		background: var(--seg);
+		position: relative;
+	}
+
+	.hero__meter::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		inline-size: calc(var(--level) * 100%);
+		background: repeating-linear-gradient(
+			to right,
+			var(--accent) 0 0.45em,
+			transparent 0.45em 0.6em
+		);
+	}
+
+	.hero__rows {
+		display: grid;
+		max-block-size: 22svh;
+		overflow: clip;
+		align-content: center;
+		mask-image: linear-gradient(transparent, black 25%, black 75%, transparent);
+	}
+
+	.hero__rows pre {
+		margin: 0;
+		font: inherit;
+	}
+
+	/* Further from the row that plays, dimmer. */
+	.hero__far {
+		color: var(--line-loud);
+	}
+
+	/* The row that plays: the guide's focus, a plate of the accent. */
+	.hero__now {
+		margin-inline: -0.6ch;
+		padding-inline: 0.6ch;
+		background: var(--accent);
+		color: var(--field);
+		font-weight: 700;
+	}
+
+	/* A phone: the screen first, then the copy, then the soundtrack, narrow */
+	/* enough that only the trumpet and the bass show. */
+	@media (max-width: 47.99rem) {
+		.hero {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto auto auto;
+			row-gap: var(--s-6);
+			padding-block: var(--s-8) var(--s-12);
+		}
+
+		.hero__screen,
+		.hero__track {
+			grid-column: 1;
+			inline-size: 100%;
+		}
+
+		.hero__screen {
+			grid-row: 1;
+			aspect-ratio: 4 / 5;
+		}
+
+		.hero__copy {
+			grid-column: 1;
+			grid-row: 2;
+			justify-self: start;
+		}
+
+		.hero__track {
+			grid-row: 3;
+			font-size: 11px;
+		}
+
+		.hero__head {
+			grid-template-columns: 3ch repeat(2, 11ch);
+		}
+
+		.hero__chan:nth-child(n + 4) {
+			display: none;
+		}
+	}
+</style>

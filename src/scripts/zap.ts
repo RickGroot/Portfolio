@@ -11,11 +11,13 @@
  *     again after a couple of seconds;
  *   - the new channel's headline decoding out of noise as it lands.
  *
- * The guide changes channel too, every time the programme in focus changes,
- * and asks for a lighter burst of the same static with `channel:zap`.
- * Changing page is the third: that static belongs to the view transition, in
+ * Changing page is the other: that static belongs to the view transition, in
  * CSS (zap.css, .vt-static), because a page that is leaving cannot run a
- * script over the one arriving.
+ * script over the one arriving. The guide changes programme without any: until
+ * 2026-10-14 every change of programme asked for a lighter burst over the
+ * whole page, and with the guide's own snow, wipe and decode on top of it a
+ * pointer crossing the rows set the page pulsing ("a little over sensitive",
+ * Rick). The guide's screen carries its own change now.
  *
  * Everything is a Web Animation or the shared loop (via decode), so there is
  * no second animation loop. The section advance is off under reduced motion,
@@ -29,17 +31,6 @@ import { decode } from '../lib/decode';
 const OSD_MS = 2200;
 /** The static burst. With the section advance's lock, never more than two a second. */
 const ZAP_MS = 520;
-
-/**
- * A change of programme in the guide: the same static at under half the
- * strength and half the length, with no roll bar. A pointer sweeping down the
- * guide changes programme on every block it crosses, so a light burst is
- * dropped while another is still on screen: at most one every ZAP_MS, whatever
- * the pointer does, and never a strobe.
- */
-const LIGHT_MS = 280;
-
-type Strength = 'full' | 'light';
 
 function make(tag: string, className: string): HTMLElement {
 	const el = document.createElement(tag);
@@ -67,32 +58,34 @@ export function boot(): void {
 	}
 
 	let hideTimer = 0;
-	let lastBurst = Number.NEGATIVE_INFINITY;
 
-	function burst(strength: Strength, down: boolean): void {
-		const now = performance.now();
-		// A full burst always plays, over whatever is running. A light one never
-		// interrupts: it waits its turn, and a turn missed is simply dropped.
-		if (strength === 'light' && now - lastBurst < ZAP_MS) return;
-		lastBurst = now;
-		const full = strength === 'full';
-		const duration = full ? ZAP_MS : LIGHT_MS;
+	// What is playing, kept so the next change can stop it without asking the
+	// browser. getAnimations() brings the page's style up to date before it
+	// answers, and on a change of channel that was a recalc of the whole page
+	// in the middle of the handler.
+	let statics: Animation[] = [];
+	let readout: Animation[] = [];
+	const stop = (playing: Animation[]): Animation[] => {
+		for (const a of playing) a.cancel();
+		return [];
+	};
 
-		for (const el of [zap, noise, bar]) el.getAnimations().forEach((a) => a.cancel());
-		zap.animate(
-			full
-				? [
-						{ opacity: 0 },
-						{ opacity: 0.4, offset: 0.12 },
-						{ opacity: 0.28, offset: 0.6 },
-						{ opacity: 0 },
-					]
-				: [{ opacity: 0 }, { opacity: 0.16, offset: 0.2 }, { opacity: 0 }],
+	/** A burst always plays, over whatever is running. */
+	function burst(down: boolean): void {
+		const duration = ZAP_MS;
+		statics = stop(statics);
+		const flash = zap.animate(
+			[
+				{ opacity: 0 },
+				{ opacity: 0.4, offset: 0.12 },
+				{ opacity: 0.28, offset: 0.6 },
+				{ opacity: 0 },
+			],
 			{ duration, easing: 'linear' },
 		);
 		// The texture jumps between offsets, which is what makes still noise
 		// read as live static without redrawing it.
-		noise.animate(
+		const texture = noise.animate(
 			[
 				{ transform: 'translate(0, 0)' },
 				{ transform: 'translate(-37px, 21px)' },
@@ -103,19 +96,18 @@ export function boot(): void {
 			],
 			{ duration, easing: 'steps(6, end)' },
 		);
-		if (!full) return;
-		bar.animate(
-			[
-				{ transform: `translateY(${down ? 122 : -22}vh)` },
-				{ transform: `translateY(${down ? -22 : 122}vh)` },
-			],
-			{ duration, easing: 'cubic-bezier(0.4, 0, 0.6, 1)' },
-		);
+		statics = [
+			flash,
+			texture,
+			bar.animate(
+				[
+					{ transform: `translateY(${down ? 122 : -22}vh)` },
+					{ transform: `translateY(${down ? -22 : 122}vh)` },
+				],
+				{ duration, easing: 'cubic-bezier(0.4, 0, 0.6, 1)' },
+			),
+		];
 	}
-
-	document.addEventListener('channel:zap', (ev) => {
-		burst('light', (ev as CustomEvent<{ dir: number }>).detail.dir > 0);
-	});
 
 	document.addEventListener('section:enter', (ev) => {
 		const section = ev.target;
@@ -123,26 +115,30 @@ export function boot(): void {
 		const from = (ev as CustomEvent<{ from: 'above' | 'below' }>).detail.from;
 
 		// ---- the static
-		burst('full', from === 'above');
+		burst(from === 'above');
 
 		// ---- the readout
 		num.textContent = String(sections.indexOf(section) + 1).padStart(2, '0');
 		name.textContent = section.dataset.osd ?? '';
-		osd.getAnimations().forEach((a) => a.cancel());
-		osd.animate(
-			[
-				{ opacity: 0, easing: 'steps(1, end)' },
-				{ opacity: 1, offset: 0.25, easing: 'steps(1, end)' },
-				{ opacity: 0.3, offset: 0.4, easing: 'steps(1, end)' },
-				{ opacity: 1, offset: 0.55 },
-				{ opacity: 1 },
-			],
-			{ duration: 360, fill: 'forwards' },
+		readout = stop(readout);
+		readout.push(
+			osd.animate(
+				[
+					{ opacity: 0, easing: 'steps(1, end)' },
+					{ opacity: 1, offset: 0.25, easing: 'steps(1, end)' },
+					{ opacity: 0.3, offset: 0.4, easing: 'steps(1, end)' },
+					{ opacity: 1, offset: 0.55 },
+					{ opacity: 1 },
+				],
+				{ duration: 360, fill: 'forwards' },
+			),
 		);
 		decode(name, { duration: 420, label: false });
 		window.clearTimeout(hideTimer);
 		hideTimer = window.setTimeout(() => {
-			osd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' });
+			readout.push(
+				osd.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' }),
+			);
 		}, OSD_MS);
 
 		// ---- the headline, landing

@@ -40,6 +40,10 @@ const {
 	contrast,
 } = Astro.props;
 
+// "Interlude / Signal" names the channel "Signal": on the readout, and in the
+// heading, so the two interludes are two regions rather than one twice.
+const name = caption.split('/').pop()?.trim() ?? caption;
+
 const levels = [
 	lift === undefined ? '' : `--duo-lift:${lift}`,
 	contrast === undefined ? '' : `--duo-contrast:${contrast}`,
@@ -54,14 +58,14 @@ const levels = [
 	aria-labelledby={`${id}-heading`}
 	data-section
 	data-channel={channel}
-	data-osd={caption.split('/').pop()?.trim()}
+	data-osd={name}
 	style={`${channelStyle(channel)};--art-focus:${focus}`}
 >
 	<h2 id={`${id}-heading`} class="visually-hidden">
-		Interlude
+		Interlude: {name}
 	</h2>
 
-	<div class="art__media duo" style={levels || undefined}>
+	<div class="art__media duo" data-dither style={levels || undefined}>
 		<Image
 			src={image}
 			alt={alt}
@@ -70,7 +74,7 @@ const levels = [
 			loading="lazy"
 			decoding="async"
 		/>
-		<span class="art__fade" aria-hidden="true"></span>
+		<span class="art__fade" data-fade aria-hidden="true"></span>
 	</div>
 
 	<div class="art__copy wrap">
@@ -100,11 +104,19 @@ const levels = [
 		inset: 0;
 		z-index: -1;
 		overflow: clip;
+		/* The fade below, as the 1-bit print dithers it (surfaces.css): it */
+		/* lands sooner than the gradient, at 80% rather than 92%, because a */
+		/* stray dot behind the small caption is noise where 8% of a gradient */
+		/* was not. The caption starts about 85% down a 720px screen, and */
+		/* tests/e2e/dither.spec.ts holds it to clean field. */
+		--dither-fade: 0.4 0.8;
 	}
 
 	/* Printed in the channel's two colours by .duo (surfaces.css), at full */
-	/* strength: the photograph IS the section, not a texture behind it. */
-	.art__media :global(img) {
+	/* strength: the photograph IS the section, not a texture behind it. The */
+	/* canvas is the same print in one bit, in the same box. */
+	.art__media :global(img),
+	.art__media :global(canvas) {
 		position: absolute;
 		inset-inline: 0;
 		inset-block-start: -12%;

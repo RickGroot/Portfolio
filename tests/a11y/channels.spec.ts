@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { restOn } from '../support/guide';
 import { readFileSync } from 'node:fs';
 import { AA, CHANNELS, PALETTE, channel, contrast } from '../../src/lib/channels';
 
@@ -118,8 +119,8 @@ test('moving through the programme guide retunes the page chrome', async ({ page
 		page.evaluate(() => document.documentElement.style.getPropertyValue('--field').trim());
 
 	await expect.poll(field).toBe(PALETTE.crimson);
-	await page.locator('#work [data-block="chromecast"]').hover();
+	await restOn(page, 'chromecast');
 	await expect.poll(field).toBe(PALETTE.ultramarine);
-	await page.locator('#work [data-block="vamp"]').hover();
+	await restOn(page, 'vamp');
 	await expect.poll(field).toBe(PALETTE.navy);
 });

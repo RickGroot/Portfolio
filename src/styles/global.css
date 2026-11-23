@@ -71,7 +71,7 @@
  * Cross-document view transitions.
  *
  * CSS only -- no JavaScript, and specifically NOT Astro's ClientRouter, which
- * would keep the field's RAF loop and its observers alive across navigations
+ * would keep the one RAF loop and its observers alive across navigations
  * and need real per-navigation teardown.
  *
  * "Limited availability": Chromium supports it, others navigate normally. Pure

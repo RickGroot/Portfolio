@@ -73,19 +73,22 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 	data-steps={form === 'screen' ? '' : undefined}
 	data-osd={form === 'screen' ? 'Guide' : undefined}
 	data-channel={form === 'screen' ? focus.data.channel : undefined}
+	data-dither-guide={form === 'screen' ? '' : undefined}
 	style={form === 'screen' ? `${channelStyle(focus.data.channel)};${axis}` : axis}
 >
 	{form === 'screen' && <span class="guide__wipe" data-guide-wipe aria-hidden="true" />}
 	<div class="guide__inner wrap">
+		{/* A heading in both forms: as a paragraph under a case study, the strip */}
+		{/* was the one part of the page a list of its headings skipped. */}
 		<header class="guide__bar">
 			{form === 'screen' ? (
 				<h2 id="work-heading" class="guide__label">
 					Work <span>Programme guide</span>
 				</h2>
 			) : (
-				<p class="guide__label">
+				<h2 class="guide__label">
 					On the guide <span>Every programme</span>
-				</p>
+				</h2>
 			)}
 			<p class="guide__hint" aria-hidden="true">
 				<span class="keyhint">▲</span>
@@ -94,80 +97,10 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 			<p class="guide__clock" data-guide-clock hidden></p>
 		</header>
 
-		{form === 'screen' && (
-			<div class="guide__previews">
-				{entries.map((e, i) => (
-					<article
-						class="guide__preview"
-						data-preview={e.id}
-						data-active={e.id === focus.id ? '' : undefined}
-						data-tone={e.data.channel}
-						style={`${channelStyle(e.data.channel)};--vt-title:${vt('title', e.id)};--vt-cover:${vt('cover', e.id)}`}
-					>
-						<div class="guide__info">
-							<p class="guide__status">
-								<span class="guide__num">CH {number(i)}</span>
-								{e.data.status === 'ongoing' ? (
-									<span class="onair onair--live">On air</span>
-								) : (
-									<span class="onair onair--ended">Ended {lastYear(e)}</span>
-								)}
-							</p>
-							<div class="guide__titlebox">
-								<h3 class="guide__title" data-decode>
-									{e.data.title}
-								</h3>
-							</div>
-							<p class="guide__meta">
-								{e.data.role}
-								<i>/</i>
-								{e.data.company}
-								<i>/</i>
-								{formatPeriod(e)}
-							</p>
-							<p class="guide__syn" id={`synopsis-${e.id}`}>
-								{e.data.summary}
-							</p>
-							<p class="guide__actions">
-								<a class="tvbtn tvbtn--solid" href={`/work/${e.id}`}>
-									<span aria-hidden="true">▶</span> Case study
-								</a>
-								{e.data.links[0] && (
-									<a
-										class="tvbtn"
-										href={e.data.links[0].href}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										{e.data.links[0].label} <span aria-hidden="true">↗</span>
-										<span class="visually-hidden">(opens in a new tab)</span>
-									</a>
-								)}
-							</p>
-						</div>
-
-						{/* The key art as it is, not printed in the channel's two colours */}
-						{/* like the site's photographs: NLZIET's pink logo printed in */}
-						{/* crimson and pink came out as one pink block (Rick, 2026-09-25). */}
-						<a class="guide__screen" href={`/work/${e.id}`} tabindex="-1" aria-hidden="true">
-							<Image
-								src={e.data.cover}
-								alt=""
-								widths={[640, 960, 1400]}
-								sizes="(min-width: 60rem) 58vw, 92vw"
-								loading={e.id === focus.id ? 'eager' : 'lazy'}
-								decoding="async"
-							/>
-							<span class="guide__static" data-guide-static></span>
-							<span class="guide__cue">
-								<span>▶</span> Case study
-							</span>
-						</a>
-					</article>
-				))}
-			</div>
-		)}
-
+		{/* The grid comes before the previews in the document, and CSS puts it */}
+		{/* under them: Tab goes through the programmes, then to the buttons of the */}
+		{/* one in focus. With the previews first, Shift+Tab from a programme went */}
+		{/* to the programme above, and no keyboard could reach VAMP's Live app. */}
 		<div class="guide__grid">
 			<div class="guide__scale" aria-hidden="true">
 				{guide.ticks.map((t) => (
@@ -231,6 +164,87 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 				);
 			})}
 		</div>
+		{form === 'screen' && (
+			<div class="guide__previews">
+				{entries.map((e, i) => (
+					<article
+						class="guide__preview"
+						data-preview={e.id}
+						data-active={e.id === focus.id ? '' : undefined}
+						data-tone={e.data.channel}
+						style={`${channelStyle(e.data.channel)};--vt-title:${vt('title', e.id)};--vt-cover:${vt('cover', e.id)}`}
+					>
+						<div class="guide__info">
+							<p class="guide__status">
+								<span class="guide__num">CH {number(i)}</span>
+								{e.data.status === 'ongoing' ? (
+									<span class="onair onair--live">On air</span>
+								) : (
+									<span class="onair onair--ended">Ended {lastYear(e)}</span>
+								)}
+							</p>
+							<div class="guide__titlebox">
+								<h3 class="guide__title" data-decode>
+									{e.data.title}
+								</h3>
+							</div>
+							{/* Real spaces round the slashes, and each part held whole: the */}
+							{/* line was one unbreakable word ("developer/Hypersolid/Ongoing"), */}
+							{/* broke inside a phrase on a phone and ran off it at 150% text. */}
+							<p class="guide__meta">
+								<span>{e.data.role}</span> <i>/</i> <span>{e.data.company}</span> <i>/</i>{' '}
+								<span>{formatPeriod(e)}</span>
+							</p>
+							<p class="guide__syn" id={`synopsis-${e.id}`}>
+								{e.data.summary}
+							</p>
+							<p class="guide__actions">
+								{/* Named for their programme: they come after the grid in the */}
+								{/* document, and "Case study" alone says nothing about which. */}
+								{/* The names are built in one string: split over lines, the */}
+								{/* whitespace between them read "Case study : KIJK". */}
+								<a
+									class="tvbtn tvbtn--solid"
+									href={`/work/${e.id}`}
+									aria-label={`Case study: ${e.data.title}`}
+								>
+									<span aria-hidden="true">▶</span> Case study
+								</a>
+								{e.data.links[0] && (
+									<a
+										class="tvbtn"
+										href={e.data.links[0].href}
+										target="_blank"
+										rel="noopener noreferrer"
+										aria-label={`${e.data.links[0].label}: ${e.data.title} (opens in a new tab)`}
+									>
+										{e.data.links[0].label} <span aria-hidden="true">↗</span>
+									</a>
+								)}
+							</p>
+						</div>
+
+						{/* The key art as it is, not printed in the channel's two colours */}
+						{/* like the site's photographs: NLZIET's pink logo printed in */}
+						{/* crimson and pink came out as one pink block (Rick, 2026-09-25). */}
+						<a class="guide__screen" href={`/work/${e.id}`} tabindex="-1" aria-hidden="true">
+							<Image
+								src={e.data.cover}
+								alt=""
+								widths={[640, 960, 1400]}
+								sizes="(min-width: 60rem) 58vw, 92vw"
+								loading={e.id === focus.id ? 'eager' : 'lazy'}
+								decoding="async"
+							/>
+							<span class="guide__static" data-guide-static></span>
+							<span class="guide__cue">
+								<span>▶</span> Case study
+							</span>
+						</a>
+					</article>
+				))}
+			</div>
+		)}
 	</div>
 </Tag>
 
@@ -309,13 +323,26 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 		gap: var(--s-4);
 	}
 
+	/* The grid is before the previews in the document, for the Tab order; */
+	/* on screen the preview stays above it. */
+	.guide__previews {
+		order: 1;
+	}
+
+	.guide__grid {
+		order: 2;
+	}
+
 	/* ---- the bar: what this is, and what time it is ------------------------ */
 
+	/* Wraps rather than runs off: at 200% text on a phone the bar's one line */
+	/* pushed the page sideways. */
 	.guide__bar {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: baseline;
 		justify-content: space-between;
-		gap: var(--s-4);
+		gap: var(--s-2) var(--s-4);
 		padding-block-end: var(--s-3);
 		border-block-end: 1px solid var(--line);
 		font-family: var(--font-mono);
@@ -336,6 +363,11 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 	.guide__label span {
 		color: var(--mark-dim);
 		margin-inline-start: 1.2em;
+	}
+
+	/* The strip's label was a paragraph, and keeps its weight as a heading. */
+	.guide--strip .guide__label {
+		font-weight: 400;
 	}
 
 	/* Only true when the section advance is on: without it, or on a screen */
@@ -374,7 +406,10 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 		/* make the image slightly bigger"). */
 		grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
 		gap: var(--s-8);
-		align-items: center;
+		/* Top, not centre. The previews share one cell, sized by the tallest */
+		/* -- CHROMECAST RECEIVERS, on two lines -- so a centred listing moved */
+		/* half that difference, 31px, every time the programme changed. */
+		align-items: start;
 		min-block-size: 0;
 		/* The preview carries its own channel's colours inline, but the screen */
 		/* behind it already retunes to the same channel, so it needs no */
@@ -440,10 +475,19 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 		color: var(--mark-dim);
 	}
 
+	/* Each part moves as a whole, so the line breaks at a slash: free to break */
+	/* at any space, it chose "Ongoing / since 2022". Inline blocks rather than */
+	/* nowrap: a part wider than the line -- "Connected TV developer" at 200% */
+	/* text on a small phone -- still wraps inside itself instead of running off. */
+	.guide__meta span {
+		display: inline-block;
+	}
+
+	/* Half the padding it had: the spaces either side now make up the rest. */
 	.guide__meta i {
 		font-style: normal;
 		color: var(--accent);
-		padding-inline: 0.7em;
+		padding-inline: 0.35em;
 	}
 
 	.guide__syn {
@@ -503,6 +547,26 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 			scale: 1.12;
 			translate: -2% -1%;
 		}
+	}
+
+	/* The 1-bit print (src/lib/dither/): one canvas over the picture, carried */
+	/* to whichever programme is on. It keeps the key art's own colours and */
+	/* lays the field's dots over it -- a hum bar, a lens under the pointer, */
+	/* snow on a change -- so the CSS static and scanlines below step aside */
+	/* while it draws. Nearest-neighbour, so a dot stays one colour. */
+	.guide__screen > :global(canvas) {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		inline-size: 100%;
+		block-size: 100%;
+		image-rendering: pixelated;
+		pointer-events: none;
+	}
+
+	.guide[data-dither-guide='on'] .guide__static,
+	.guide[data-dither-guide='on'] .guide__screen::after {
+		display: none;
 	}
 
 	/* The tuning burst: a flash of static when the screen changes channel. */
@@ -577,24 +641,12 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 			transition: transform 700ms var(--ease-out);
 		}
 
+		/* A little closer under the pointer. It was 1.07, and a crackle of */
+		/* static every time the pointer came onto the screen as well (Rick, */
+		/* 2026-10-14: "pulse too much"); the screen crackles on a change of */
+		/* programme only. */
 		.guide__screen:hover :global(img) {
-			transform: scale(1.07);
-		}
-
-		.guide__screen:hover .guide__static {
-			animation: guide-crackle 280ms steps(4, end);
-		}
-	}
-
-	@keyframes guide-crackle {
-		0% {
-			opacity: 0.7;
-		}
-		50% {
-			opacity: 0.35;
-		}
-		100% {
-			opacity: 0;
+			transform: scale(1.03);
 		}
 	}
 
@@ -736,7 +788,21 @@ const restCount = form === 'screen' ? Math.max(0, rows.length - SHOWN) : 0;
 		outline-offset: 3px;
 	}
 
+	/* Forced colours drop the fill, and the programme in focus looked like */
+	/* every other. It takes the system's own selection colours instead. */
+	@media (forced-colors: active) {
+		.guide__block[data-focus] {
+			forced-color-adjust: none;
+			background: Highlight;
+			border-color: Highlight;
+			color: HighlightText;
+		}
+	}
+
+	/* min-inline-size: 0, or the flex item never shrinks below its text and */
+	/* the ellipsis never comes: at 200% text the time was cut off instead. */
 	.guide__blocktitle {
+		min-inline-size: 0;
 		font-weight: 700;
 		overflow: clip;
 		text-overflow: ellipsis;

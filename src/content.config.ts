@@ -1,6 +1,6 @@
 import { defineCollection } from 'astro:content';
 import { z } from 'astro/zod';
-import { glob } from 'astro/loaders';
+import { file, glob } from 'astro/loaders';
 import { CHANNELS } from './lib/channels';
 
 /**
@@ -100,4 +100,20 @@ const work = defineCollection({
 			}),
 });
 
-export const collections = { work };
+/**
+ * How I work: the principles on the one-pager, one file, in `order`.
+ *
+ * A proof is required: it is the concrete, checkable detail that stops a
+ * principle being a slogan. The copy's own notes are at the top of the file.
+ */
+const practice = defineCollection({
+	loader: file('./src/content/practice.yaml'),
+	schema: z.object({
+		order: z.number().int().positive(),
+		title: z.string().min(1).max(60),
+		body: z.string().min(1),
+		proof: z.string().min(1),
+	}),
+});
+
+export const collections = { work, practice };

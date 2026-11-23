@@ -11,8 +11,8 @@
  *     replaces Martian Mono; a proportional face, so src/lib/decode.ts holds
  *     every letter's width itself instead of relying on a fixed grid.
  *   - Instrument Sans 400 and 600, for reading. It replaces Lato.
- *   - JetBrains Mono 500, for labels, which were a system monospace. The
- *     character field keeps the system face: see --font-field.
+ *   - JetBrains Mono 500, for labels, which were a system monospace, and
+ *     for the masthead's tracker, with its ligatures off.
  *
  * Each file is declared across a weight RANGE, so a rule asking for 700 gets
  * the real 800 or 600 rather than a bold the browser fakes from the regular.

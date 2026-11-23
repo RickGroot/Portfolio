@@ -21,7 +21,8 @@
  *     carries its own text as an aria-label for as long as the decode runs.
  *   - It has no loop of its own. It subscribes to the one animation loop on the
  *     site (src/lib/field/loop.ts) for half a second and leaves, so the budget
- *     of exactly one loop still holds.
+ *     of exactly one loop still holds. A timer finishes it where no frames
+ *     come.
  *
  * Reduced motion: the text is simply there.
  */
@@ -135,8 +136,10 @@ export function decode(el: HTMLElement | null, options: DecodeOptions = {}): voi
 
 	let elapsed = 0;
 	let unsubscribe: (() => void) | null = null;
+	let fallback = 0;
 
 	const finish = (): void => {
+		window.clearTimeout(fallback);
 		for (const { node, placed } of swaps) {
 			const first = placed[0];
 			// Someone replaced the text while it ran (the readout sets a new
@@ -164,5 +167,10 @@ export function decode(el: HTMLElement | null, options: DecodeOptions = {}): voi
 			if (c.text.data !== next) c.text.data = next;
 		}
 	});
+	// A tab that draws no frames -- hidden, or in a window the system has
+	// covered -- never ticks, and kept a title in noise until it was shown
+	// again. Timers still run there, throttled or not, so one puts the text
+	// back. On a tab that draws, the loop gets there first.
+	fallback = window.setTimeout(finish, duration + 500);
 	running.set(el, finish);
 }

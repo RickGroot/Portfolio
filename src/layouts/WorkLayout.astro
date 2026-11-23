@@ -1,10 +1,11 @@
 ---
-import { Image } from 'astro:assets';
+import { getImage, Image } from 'astro:assets';
 import BaseLayout from './BaseLayout.astro';
 import Guide from '@components/Guide.astro';
 import { formatPeriod, getPublishedWork, type PublishedWorkEntry } from '@lib/work';
 import { channelStyle } from '@lib/channels';
 import { vt } from '@lib/vt';
+import { site } from '@lib/site';
 
 /**
  * A case study, as the programme-information screen of the guide it came from.
@@ -24,14 +25,48 @@ const { entry, index } = Astro.props;
 const { title, role, company, summary, tags, channel, cover, coverAlt, links, status } = entry.data;
 const all = await getPublishedWork();
 const lastYear = entry.data.period.split('–').pop();
+
+// The link preview: the key art, cropped to the card's 1200x630.
+const shareArt = await getImage({
+	src: cover,
+	width: 1200,
+	height: 630,
+	fit: 'cover',
+	format: 'jpg',
+	quality: 80,
+});
+const share = { src: shareArt.src, width: 1200, height: 630, alt: coverAlt };
+
+// The case study for search engines: a piece of work, and who wrote it up.
+const work = {
+	'@context': 'https://schema.org',
+	'@type': 'CreativeWork',
+	name: title,
+	description: summary,
+	url: new URL(`/work/${entry.id}`, site.url).href,
+	image: new URL(shareArt.src, site.url).href,
+	keywords: tags.join(', '),
+	author: { '@type': 'Person', name: site.name, url: `${site.url}/` },
+};
 ---
 
-<BaseLayout title={title} description={summary} channel={channel} bleed>
+<BaseLayout
+	title={title}
+	description={summary}
+	ogImage={share}
+	jsonLd={work}
+	channel={channel}
+	bleed
+>
 	<article class="info" data-channel={channel} style={channelStyle(channel)}>
 		<header class="info__head">
 			{/* The key art as it is, like the guide's screen it came from, and */}
 			{/* the stage everything above the story stands on. */}
-			<div class="info__screen" style={`view-transition-name:${vt('cover', entry.id)}`}>
+			<div
+				class="info__screen"
+				data-dither-stage
+				style={`view-transition-name:${vt('cover', entry.id)}`}
+			>
 				<Image
 					src={cover}
 					alt={coverAlt}
@@ -118,8 +153,10 @@ const lastYear = entry.data.period.split('–').pop();
 					<dt>On air</dt>
 					<dd>{formatPeriod(entry)}</dd>
 				</div>
+				{/* Tags, not Stack: they name the platform and the kind of work as */}
+				{/* well as the code ("Connected TV / Advertisements / THEOplayer"). */}
 				<div>
-					<dt>Stack</dt>
+					<dt>Tags</dt>
 					<dd>{tags.join(' / ')}</dd>
 				</div>
 			</dl>
@@ -146,10 +183,12 @@ const lastYear = entry.data.period.split('–').pop();
 	void document.fonts.ready.then(() => decode(document.querySelector<HTMLElement>('.info__title')));
 
 	/*
-	 * Escape and Backspace go back to the guide, like the Back key on a remote.
-	 * Straight back through history when the visitor came from the one-pager,
-	 * so the guide is where they left it; otherwise to the guide itself.
-	 * Never while typing, and never when something else already took the key.
+	 * Escape goes back to the guide, like the Back key on a remote. Straight
+	 * back through history when the visitor came from the one-pager, so the
+	 * guide is where they left it; otherwise to the guide itself. Never while
+	 * typing, and never when something else already took the key. Backspace
+	 * did the same until 2026-09-29: browsers dropped it as Back years ago,
+	 * because it cost people what they had typed, and nobody expects it here.
 	 */
 	const back = document.querySelector<HTMLAnchorElement>('[data-back]');
 
@@ -167,7 +206,7 @@ const lastYear = entry.data.period.split('–').pop();
 		});
 
 		window.addEventListener('keydown', (ev) => {
-			if (ev.key !== 'Escape' && ev.key !== 'Backspace') return;
+			if (ev.key !== 'Escape') return;
 			if (ev.defaultPrevented || ev.metaKey || ev.ctrlKey || ev.altKey) return;
 			const el = ev.target as HTMLElement | null;
 			if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
@@ -175,6 +214,24 @@ const lastYear = entry.data.period.split('–').pop();
 			if (cameFromGuide()) history.back();
 			else location.assign(back.href);
 		});
+
+		// On a narrow screen the facts are not beside the story, and the way back,
+		// pinned to the top, sat over the line being read. It steps out of the
+		// way as the page goes down and comes back the moment it goes up. A
+		// flag, flipped only when the direction changes; the move is CSS.
+		const narrow = window.matchMedia('(max-width: 63.99rem)');
+		let lastY = window.scrollY;
+		window.addEventListener(
+			'scroll',
+			() => {
+				const y = window.scrollY;
+				if (Math.abs(y - lastY) < 8) return;
+				const away = narrow.matches && y > lastY && y > window.innerHeight * 0.5;
+				if (away !== back.hasAttribute('data-away')) back.toggleAttribute('data-away', away);
+				lastY = y;
+			},
+			{ passive: true },
+		);
 	}
 </script>
 
@@ -233,13 +290,22 @@ const lastYear = entry.data.period.split('–').pop();
 		text-decoration: none;
 		transition:
 			background-color var(--speed) var(--ease),
-			color var(--speed) var(--ease);
+			color var(--speed) var(--ease),
+			translate var(--speed) var(--ease-out);
 	}
 
 	.info__back:hover,
 	.info__back:focus-visible {
 		background: var(--mark);
 		color: var(--field);
+	}
+
+	/* Out of the way while the story is read on a narrow screen (the script */
+	/* below): up off the top as the page goes down, back as soon as it goes */
+	/* up. Pinned over the text, it covered the line being read on every phone */
+	/* case study. Never while it has focus. */
+	.info__back[data-away]:not(:focus-visible) {
+		translate: 0 calc(-100% - var(--s-6) - 4px);
 	}
 
 	/* A chip to match the back button: the same height, frame and field, so */
@@ -345,6 +411,28 @@ const lastYear = entry.data.period.split('–').pop();
 		inline-size: 100%;
 		block-size: 130%;
 		object-fit: cover;
+	}
+
+	/* The 1-bit print (src/lib/dither/) over the stage: the key art in its own */
+	/* colours, its push and parallax redrawn under a fixed dot grid, and the */
+	/* foot's fade dithered into the field, clear of the title. While it draws, */
+	/* the <img> under it rests and the foot's gradient steps aside. */
+	.info__screen > :global(canvas) {
+		position: absolute;
+		inset: 0;
+		inline-size: 100%;
+		block-size: 100%;
+		image-rendering: pixelated;
+		pointer-events: none;
+	}
+
+	.info__screen[data-dither-stage='on'] > :global(img) {
+		visibility: hidden;
+		animation: none;
+	}
+
+	.info__screen[data-dither-stage='on'] ~ .info__foot {
+		background: none;
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -562,10 +650,14 @@ const lastYear = entry.data.period.split('–').pop();
 			gap: var(--s-16);
 		}
 
-		/* The facts stay beside the story as it scrolls. */
+		/* The facts stay beside the story as it scrolls. Aligned to the start of */
+		/* their row: stretched to the row, as a grid item is, the box was as tall */
+		/* as the story, had no room to stick, and scrolled up under the way back */
+		/* at the top of the screen instead. */
 		.info__facts {
 			position: sticky;
 			inset-block-start: var(--s-24);
+			align-self: start;
 		}
 	}
 </style>

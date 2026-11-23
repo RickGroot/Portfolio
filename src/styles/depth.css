@@ -4,8 +4,8 @@
  * Every layer here moves against the page as its section scrolls. --depth > 0
  * comes forward -- it travels faster than the page -- and --depth < 0 sits
  * back and lags behind it. Because the section advance scrolls, every change of
- * channel is a layered move: the name's two words pulling apart, the portrait
- * falling behind, the guide's listings rising past its screen.
+ * channel is a layered move: the masthead's copy coming off its screen, the
+ * guide's listings rising past its own.
  *
  * All layers in a section run on that SECTION's view timeline, not their own.
  * A section at rest fills the screen and sits exactly halfway through its
@@ -38,21 +38,24 @@
 		}
 
 		/* ---- the layers ---- */
-		.hero .field,
-		.hero__clock,
-		.hero__card,
+		.hero__copy,
+		.hero__screen,
+		.hero__track,
 		.guide--screen .guide__bar,
 		.guide--screen .guide__info,
 		.guide--screen .guide__screen,
 		.guide--screen .guide__grid,
 		.art__media img,
+		.art__media canvas,
 		.art__copy,
 		[data-section] .section__head,
 		.practice__backdrop img,
+		.practice__backdrop canvas,
 		.practice__lede,
 		.practice__item,
 		.contact__photo,
-		.contact__photo img {
+		.contact__photo img,
+		.contact__photo canvas {
 			animation: depth linear both;
 			animation-timeline: --channel;
 			animation-range: cover 0% cover 100%;
@@ -60,17 +63,16 @@
 
 		/* ---- the depths ---- */
 
-		/* The masthead: the card's picture falls behind, and its boxes come
-		   forward off it as it leaves -- the name's plate furthest, the clock on
-		   the circle less. The castellations are the frame, and stay put. */
-		.hero .field {
-			--depth: -0.5;
+		/* The masthead: the programme's picture sits back on its screen, and
+		   the copy comes forward off it as it leaves, the soundtrack less. */
+		.hero__screen {
+			--depth: -0.35;
 		}
-		.hero__clock {
-			--depth: 0.25;
+		.hero__copy {
+			--depth: 0.45;
 		}
-		.hero__card {
-			--depth: 0.6;
+		.hero__track {
+			--depth: 0.2;
 		}
 
 		/* The guide: its screen sits back, its listings come forward. */
@@ -88,7 +90,8 @@
 		}
 
 		/* The interludes: a deep picture under a statement that comes forward. */
-		.art__media img {
+		.art__media img,
+		.art__media canvas {
 			--depth: -0.55;
 		}
 		.art__copy {
@@ -99,7 +102,8 @@
 		[data-section] .section__head {
 			--depth: 0.2;
 		}
-		.practice__backdrop img {
+		.practice__backdrop img,
+		.practice__backdrop canvas {
 			--depth: -0.45;
 		}
 		.practice__lede {
@@ -120,7 +124,8 @@
 		.contact__photo {
 			--depth: 0.3;
 		}
-		.contact__photo img {
+		.contact__photo img,
+		.contact__photo canvas {
 			--depth: -0.3;
 		}
 
@@ -132,8 +137,8 @@
 				--depth-unit: 7vh;
 			}
 
-			.hero__clock,
-			.hero__card,
+			.hero__copy,
+			.hero__track,
 			.guide--screen .guide__bar,
 			.guide--screen .guide__info,
 			.guide--screen .guide__grid,

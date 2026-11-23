@@ -35,21 +35,49 @@ CI quality gates, and the service-worker kill switch.
 
 **This phase must be shippable on its own.**
 
+### Hover, calmer (2026-10-14)
+
+Rick: _"All hover effects are a bit too much and pulse too much making everything a little over
+sensitive, also what is the really big outline on the mouse when hovering images?"_ The outline was
+the print's lens: 240px across, ringed in the channel's colour, turning key art to one bit inside,
+with the pointer's ring swollen to 57px in its middle. Toned down, nothing removed outright:
+
+- **The print** (`src/lib/dither/`): the lens is 56px, on photographs only, its edge frayed rather
+  than drawn; ripples only for a flick, fainter and fewer; the guide's snow 380 ms, not 700.
+- **The pointer's ring** (`cursor.css`): swells to 1.3, not 1.9, over a link; barely with speed.
+- **The guide**: a row takes the screen after 260 ms of rest, not 150, so a hand on its way past
+  no longer retunes it; no static over the whole page on a change of programme (the light burst
+  Rick's _"can that be applied more?"_ brought it — a change of channel keeps its static); the
+  listing slides 12px, not 28; the screen's hover push is 1.03 and no longer crackles.
+- **The buttons**: a change of colour under the pointer; the 5% scale and the ring stay for
+  keyboard focus, as on a TV, and a press gives a little.
+
+### The masthead (2026-10-14)
+
+Rick: _"the header on the top of the page. To be honest I don't like it at all, can you redesign
+it in the same style and remove that awful picture"_, and _"I want it to go with music"_. Three
+music headers came first (a trumpet printed in one bit with a staff opening out of its bell, a
+tracker pattern, a broadcast waveform); his answer was _"I still want an image there, but better
+UI/UX"_. Three photo layouts followed and he picked the programme: channel 01 in the guide's own
+grammar, his gallery photograph in the 1-bit print, and a tracker of "When the Saints Go Marching
+In" as its soundtrack (`docs/art-system.md`, "The masthead"). The test card, the character field,
+the portrait map and `portrait.jpg` are retired (`docs/retired/character-field.md`).
+
 ### The Channels redesign (2026-09-24)
 
 Rick: _"the app feels too static and too dark."_ The visual layer is being replaced with one idea:
 the one-pager is a television, and each full-screen section is a **channel** — its own flat colour
 field, its own number. Delivered in stages, each ending with Rick's review.
 
-| Stage                                                                    | State                     |
-| ------------------------------------------------------------------------ | ------------------------- |
-| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done**                  |
-| 1b. The programme guide — work, case studies, no header, deep grounds    | **Done**                  |
-| 2. Channels on the DOM — readout, static, decode, depth; number keys     | **Part done — in review** |
-| 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | —                         |
-| 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                         |
-| 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                         |
-| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | **Prototype deleted**     |
+| Stage                                                                    | State                      |
+| ------------------------------------------------------------------------ | -------------------------- |
+| 1. Colour and type — channels, duotone photos, Martian Mono, hard edges  | **Done**                   |
+| 1b. The programme guide — work, case studies, no header, deep grounds    | **Done**                   |
+| 2. Channels on the DOM — readout, static, decode, depth; number keys     | **Part done — in review**  |
+| 3. Renderer core, proven on one image (canvas rule 0 → ≤ 1, same commit) | **Done** — the 1-bit print |
+| 4. The ASCII hero — colour portrait, lens, velocity scatter              | —                          |
+| 5. Generalise — every panel, interludes, VAMP pulse, GPU wipe            | —                          |
+| 6. Polish and clean-up — delete `/design/type` and `fonts/proto/`        | **Prototype deleted**      |
 
 **Stage 2, part one: motion (2026-09-24).** Rick: _"Can you add more parallax scrolling effects and
 animations when switching channels?"_
@@ -410,7 +438,10 @@ Nothing on this list may be installed without moving it off the list first.
 
 ## Open items
 
-1. **TODO: replace the hero portrait with a real selfie** (Rick, 2026-09-25: "I don't want an AI
+1. **Resolved 2026-10-14.** The masthead is no longer a test card: it is the first programme in the
+   guide, with a real photograph of Rick (`gallery.jpg`) on its screen, and `portrait.jpg` is gone
+   from the codebase. Contact's retouched photograph went the same day, for one he took in Prague.
+   It read: ~~replace the hero portrait with a real selfie~~ (Rick, 2026-09-25: "I don't want an AI
    generated image to be the main subject"). `portrait.jpg` is Rick's portrait on black retouched
    with an image model, and since the header shows the photograph itself under the characters, it
    is the main subject of the home page. What the photo needs is in `docs/art-system.md` § Changing
@@ -437,10 +468,11 @@ Nothing on this list may be installed without moving it off the list first.
 9. **Done (2026-09-25).** `/design/type` and its candidate fonts in `public/fonts/proto/` are gone,
    now that the type is chosen. `robots.txt` and the sitemap filter still keep `/design/` out, for
    the next prototype.
-10. **`src/lib/practice.ts` is placeholder copy.** The three `How I work` cards are written in a
+10. **`src/content/practice.yaml` is placeholder copy.** The three `How I work` cards are written in a
     plausible voice, not Rick's, and the claims are about this repo. They need his own words before
     launch — the file says so at the top.
-11. **Homepage LCP is decided by a race.** The LCP element is the character field, and which layer
+11. **Obsolete since 2026-10-14**, with the character field: the masthead's LCP element is now its
+    photograph or its title, both in the server's HTML. It read: **Homepage LCP is decided by a race.** The LCP element is the character field, and which layer
     counts varies run to run: the server-rendered frame (layer a) paints early, but the live field's
     first render (layer b) can cover a larger area and replace it as the LCP candidate once
     JavaScript has booted. Under 4x throttle that makes LCP bimodal — ~840–1030ms or ~1240–1470ms on
@@ -449,7 +481,8 @@ Nothing on this list may be installed without moving it off the list first.
     the static frame's. Since the test card (2026-09-28) the element is the circle's layer, C, which
     the renderer writes once when it mounts: 964 ms in the vitals run, the fast side of the old race,
     but still a paint that waits on JavaScript.
-12. **On a slow CPU the character field fills the main thread** while the hero is on screen (it
+12. **Obsolete since 2026-10-14**, with the character field; what moves in its place, the tracker,
+    writes a line four times a second. It read: **On a slow CPU the character field fills the main thread** while the hero is on screen (it
     also ran behind the guide until 2026-09-25; see the desktop run). At 4× throttle the idle hero
     keeps it 100% busy and manages about 28 renders a second, at 30fps or 60. Most of that is the
     browser laying out and painting two full-screen `<pre>` of up to 6000 characters, not the
@@ -466,3 +499,7 @@ Nothing on this list may be installed without moving it off the list first.
     picture you came from has nothing to pair with. Production HTML is cacheable
     (`max-age=0, must-revalidate`, no unload handlers), so a visitor who came from the guide gets
     the right morph. The fix is to carry the programme in the back link.
+15. **The 1-bit print is unmeasured on a real GPU** (2026-10-13). Every lab number is SwiftShader,
+    which is the CPU. Worth a 4× CPU run on a real machine: the tune-in's cost during an advance,
+    and that loading the print never moves LCP (the interludes are below the fold, so it should
+    not).

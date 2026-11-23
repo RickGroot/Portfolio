@@ -1,23 +1,23 @@
 /**
- * Cursor and trail — one script, no animation loop.
+ * The pointer's trail -- one ring, one script, no animation loop.
  *
- *   - The TRAIL is the lag between two elements. The dot has
- *     `transition: none`, the ring has `transition: translate 420ms`. Because
- *     the ring interpolates a longer distance in a fixed time, it stretches
- *     further behind on fast movement automatically. No rAF, no lerp.
- *   - VELOCITY is one smoothed number published as `--pointer-v`.
+ *   - The ring follows the pointer with `transition: translate 420ms`, so it
+ *     trails behind a fast move and catches up when it stops. No rAF, no lerp.
+ *   - VELOCITY is one smoothed number published as `--pointer-v`, on the ring:
+ *     the only thing that reads it.
  *
- * The proximity glow that used to live here -- a soft light following the
- * pointer across cards -- went with the rest of the glows in the Channels
- * redesign: flat fields, no light effects. The pointer's job from here on is to
- * reveal the photograph under it, which is the renderer's to do.
+ * The visitor's own pointer stays. Until 2026-09-29 a dot stood in for it and
+ * the real one was hidden (`cursor: none`) almost everywhere: after every page
+ * load there was no pointer at all until the mouse moved, a low-vision
+ * visitor's enlarged or recoloured system pointer was gone, and over links two
+ * cursors showed at once. The ring is decoration beside it, in the colour of
+ * the channel you are on (src/scripts/channel.ts).
  *
  * `pointermove` is already coalesced to frame rate by the browser, so sampling
  * it directly is not wasteful.
  *
- * The one loop on this site belongs to the character field
- * (src/lib/field/loop.ts). This file must never schedule frames — eslint
- * enforces that.
+ * The site has one animation loop (src/lib/field/loop.ts). This file must
+ * never schedule frames — eslint enforces that.
  */
 
 const FINE_POINTER = '(hover: hover) and (pointer: fine)';
@@ -27,22 +27,11 @@ interface Disposable {
 }
 
 function mountCursor(): Disposable | null {
-	const root = document.documentElement;
-
-	const dot = document.createElement('div');
-	dot.className = 'cursor__dot';
 	const ring = document.createElement('div');
 	ring.className = 'cursor__ring';
 	// Decoration. Never announce it, never let it take a click.
-	for (const el of [dot, ring]) {
-		el.setAttribute('aria-hidden', 'true');
-		document.body.appendChild(el);
-	}
-
-	// Only claim the native cursor once our own nodes exist. If this script
-	// never runs, the page must not be left with `cursor: none` and nothing
-	// drawn in its place.
-	root.dataset.cursor = 'custom';
+	ring.setAttribute('aria-hidden', 'true');
+	document.body.appendChild(ring);
 
 	const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -55,7 +44,6 @@ function mountCursor(): Disposable | null {
 	function onMove(ev: PointerEvent): void {
 		const x = ev.clientX;
 		const y = ev.clientY;
-		dot.style.translate = `${x}px ${y}px`;
 		ring.style.translate = `${x}px ${y}px`;
 
 		if (reduced.matches) return;
@@ -69,27 +57,28 @@ function mountCursor(): Disposable | null {
 		// Smoothed, clamped. An impulse that decays as movement slows.
 		velocity = velocity * 0.86 + Math.min(1, step / 2.2) * 0.14;
 
-		// Publish coarsely: a custom property write invalidates the inherited
-		// subtree, so doing it every event would be wasteful. 0.05 steps are
-		// finer than the effect can show.
+		// Published coarsely, and on the ring. On <html> every write restyled
+		// the whole page for one 30px element: 20 to 28 recalcs of about 15ms
+		// each in 150 moves across a case study, at a 4x CPU slowdown. Here
+		// the ring restyles alone (measured 2026-09-29).
 		const q = Math.round(velocity * 20) / 20;
 		if (q !== published) {
 			published = q;
-			root.style.setProperty('--pointer-v', String(q));
+			ring.style.setProperty('--pointer-v', String(q));
 		}
 	}
 
 	function onDown(): void {
-		root.dataset.pressed = '';
+		ring.dataset.pressed = '';
 	}
 	function onUp(): void {
-		delete root.dataset.pressed;
+		delete ring.dataset.pressed;
 	}
 	function onLeave(): void {
-		root.dataset.cursorOut = '';
+		ring.dataset.out = '';
 	}
 	function onEnter(): void {
-		delete root.dataset.cursorOut;
+		delete ring.dataset.out;
 	}
 
 	window.addEventListener('pointermove', onMove, { passive: true });
@@ -105,18 +94,17 @@ function mountCursor(): Disposable | null {
 			window.removeEventListener('pointerup', onUp);
 			document.removeEventListener('pointerleave', onLeave);
 			document.removeEventListener('pointerenter', onEnter);
-			dot.remove();
 			ring.remove();
-			delete root.dataset.cursor;
-			root.style.removeProperty('--pointer-v');
 		},
 	};
 }
 
 export function boot(): void {
-	// Coarse pointers get none of this. There is no touch equivalent of a
-	// cursor.
+	// Coarse pointers get none of this: there is no touch equivalent of a
+	// trail. Nor do forced colours, where the system draws what matters and a
+	// ring in the page's colours would be one more thing to see past.
 	if (!window.matchMedia(FINE_POINTER).matches) return;
+	if (window.matchMedia('(forced-colors: active)').matches) return;
 
 	mountCursor();
 }
