@@ -130,12 +130,31 @@ html:not(.js) .still-toggle {
 		aspect-ratio: 4 / 3;
 	}
 
-	.slot.listing {
-		aspect-ratio: 5 / 4;
-	}
-
 	/* The record slides out of the sleeve into the gap beside it. */
 	.sleeve {
 		--w: 92%;
+	}
+}
+
+/* The smallest phones (320px): the text has hit its 10.5px floor, so the */
+/* backs need height, not smaller type. A narrower gutter, the full column */
+/* for the sleeve, and taller tapes and listings; without this, VAMP, */
+/* Sleeve, NOS and Streamz scrolled on the back. */
+@media (max-width: 360px) {
+	.table,
+	.bar {
+		padding-inline: 16px;
+	}
+
+	.sleeve {
+		--w: 100%;
+	}
+
+	.slot.tape {
+		aspect-ratio: 6 / 5;
+	}
+
+	.slot.listing {
+		aspect-ratio: 10 / 9;
 	}
 }

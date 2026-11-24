@@ -1,9 +1,20 @@
 # How I work: the three principles on the one-pager, in `order`.
 #
 # Rewritten 2026-11-24 around Rick's own brief: AI-first with a human in the
-# loop; integrations that go beyond one platform; workflows that help teams of
-# different disciplines. Read in order they are one story: how I work with AI,
+# loop; integrations that go beyond one platform (told as the phone-and-TV
+# journey); workflows that help teams of different disciplines. Read in order they are one story: how I work with AI,
 # what I build, how it reaches the team.
+#
+# Principle 2 follows Rick's Medium article of 2026-10-23 ("The TV is still
+# the center. It's no longer the whole experience.") as Rick's stance, not a
+# user story: a connection is the easy part, the work is what survives a
+# dropped one. The article's clipping card already tells the phone-and-TV
+# journey, so do not repeat it here. Say it in new words; do not quote the
+# article, its title phrase included.
+#
+# All three follow the shape Rick approved for principle 2 (2026-11-24): a
+# stance, a concrete way it goes wrong, the habit, and a concrete action to
+# end on. No slogans to close, no lists of three for rhythm.
 #
 # Each principle is a title and a body, nothing else: the separate proof lines
 # went on Rick's call (2026-11-24). Parallel imperatives read as generated (the
@@ -21,27 +32,28 @@
   order: 1
   title: AI drafts, I decide
   body: >-
-    I work AI-first. An agent writes the first draft of the code, the tests,
-    and often the question I had not thought to ask. I stay in the loop at
-    every decision that matters: I choose between the options, review what
-    ships, and answer for it.
+    I work AI-first. An agent is quick, and it can be wrong in ways that look
+    fine: a test that passes because it checks nothing, or the obvious
+    approach where the awkward one was needed. So I let it draft the code and
+    the tests, then I read the diff, run it and choose the approach myself. I
+    merge nothing I could not explain to a colleague.
 
 - id: across-screens
   order: 2
-  title: Integrations that cross screens
+  title: Connected is only the start
   body: >-
-    A viewer does not think in platforms. They start on the phone, cast to the
-    TV, and expect the programme, the position and the subtitles to come along.
-    The work I like best lives between the screens: the cast session between a
-    phone and a receiver, a player and analytics that report the same way on
-    every device. I design those integrations first, so every platform plays
-    its part in the same agreement.
+    A phone and a TV that connect make a good demo. The work is in what
+    happens next: the phone locks, the network drops, the TV app restarts
+    mid-episode. I decide early which state has to survive that and sync only
+    that, and I would rather drop a second-screen feature than ship one that
+    cannot. Then I test on the oldest TV I can get.
 
 - id: whole-team
   order: 3
-  title: Workflows the whole team runs
+  title: I write the checks down once
   body: >-
-    Design, QA, product and development each know something the others need. I
-    write that knowledge into workflows that colleagues and agents both run, as
-    rules, prompts and checks, so accessibility and performance are the default
-    and good work does not depend on who is in the room.
+    A designer knows what accessible looks like, and QA knows what broke last
+    time. If that stays in their heads it is lost at handover, and an agent
+    never learns it at all. So I turn it into rules, prompts and checks that
+    colleagues and agents both run. Accessibility and performance problems
+    then fail the build before anyone has to notice them.

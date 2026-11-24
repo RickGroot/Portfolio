@@ -13,7 +13,8 @@
 # person, one line of thought each.
 #
 # COPY CHECK (2026-11-24): the standfirsts and points are drafted from the
-# articles; the read times are estimated from their word counts. Check both.
+# articles. The read times and dates were checked against Medium on
+# 2026-11-24.
 
 - id: tv-still-the-center
   order: 5
@@ -24,7 +25,7 @@
     follow the viewer between them.
   url: https://medium.com/@rickgroot41/the-tv-is-still-the-center-its-no-longer-the-whole-experience-a5fecf75f7d0
   date: 2026-10-23
-  minutes: 7
+  minutes: 8
   pigment: blue
   points:
     - Let each screen do its best job. Browse and sign in on the phone, watch on the TV.
@@ -40,7 +41,7 @@
     changes how the app is built.
   url: https://medium.com/@rickgroot41/why-tv-apps-are-not-just-web-apps-on-a-bigger-screen-d150cf4dc5dc
   date: 2026-05-29
-  minutes: 6
+  minutes: 7
   pigment: red
   points:
     - On a TV, focus is the interface. Every control is one more stop on the way through.

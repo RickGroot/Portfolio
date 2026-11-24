@@ -79,7 +79,9 @@ by kind, laid out in `card.css` ("the backs"):
 The back lines of a work card are drafted from that entry's own notes and carry a
 `# COPY CHECK` comment until Rick confirms them. Keep each list to 3-5 short items: a back has a
 fixed height and must not scroll. Back body text is at least 10.5px and mono labels at least 9px
-(`max(10.5px, Ncqw)`); in the narrow column a tape is 4:3 and a listing 5:4 so the text still fits (only the liner does). Without JavaScript every back lies
+(`max(10.5px, Ncqw)`); only the liner scrolls. A listing is 5:4, and in the narrow column a tape is
+4:3, so the text still fits; at 360px and below a tape is 6:5, a listing 10:9 and the sleeve takes
+the full column. Without JavaScript every back lies
 under its front, in full.
 
 The `built` list is labelled as highlights, never "what I built": "Side A · highlights" on a tape,

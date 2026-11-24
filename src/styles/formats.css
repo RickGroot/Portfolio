@@ -242,8 +242,9 @@
 
 /* ---- 3 - LISTING: a programme listing ------------------------------------ */
 
+/* 5:4 at every width: at 4:3 the back's episodes ran into its links. */
 .listing {
-	--ar: 4 / 3;
+	--ar: 5 / 4;
 }
 
 .listing .front {
