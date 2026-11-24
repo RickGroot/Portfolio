@@ -27,8 +27,6 @@ const person = {
 	name: site.name,
 	jobTitle: site.tagline,
 	url: `${site.url}/`,
-	// Open to work: Hypersolid is a former employer, so alumniOf, not worksFor.
-	alumniOf: { '@type': 'Organization', name: 'Hypersolid' },
 	homeLocation: { '@type': 'Country', name: 'Netherlands' },
 	sameAs: socialLinks.filter((l) => !l.href.startsWith('mailto:')).map((l) => l.href),
 };

@@ -190,7 +190,15 @@ const requestableBlob = distFiles
 	.map((f) => readFileSync(f, 'utf8'))
 	.join('\n');
 
-const ALLOWED = ['rickgroot.nl', 'schema.org', 'github.com', 'linkedin.com', 'rickgroot.github.io'];
+// Hosts the page only links out to (the article cards link to medium.com); none is fetched.
+const ALLOWED = [
+	'rickgroot.nl',
+	'schema.org',
+	'github.com',
+	'linkedin.com',
+	'rickgroot.github.io',
+	'medium.com',
+];
 const origins = new Set();
 for (const m of requestableBlob.matchAll(/https:\/\/([a-z0-9.-]+)/gi))
 	origins.add(m[1].toLowerCase());

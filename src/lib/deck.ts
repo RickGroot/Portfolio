@@ -82,14 +82,28 @@ export type SlideCard = Base & {
 export type LinerCard = Base & {
 	kind: 'liner';
 	title: string;
-	items: { number: string; title: string; body: string; proof: string }[];
+	items: { number: string; title: string; body: string }[];
 };
 export type TicketCard = Base & {
 	kind: 'ticket';
 	title: string;
 	links: Link[];
 };
-export type Card = WorkCard | PlayerCard | SlideCard | LinerCard | TicketCard;
+export type ArticleCard = Base & {
+	/** A clipping: an article I wrote, linked, never embedded. */
+	kind: 'article';
+	title: string;
+	topic: string;
+	standfirst: string;
+	/** "Oct 2026", on the front. */
+	month: string;
+	/** "23 Oct 2026", on the back. */
+	date: string;
+	minutes: number;
+	points: string[];
+	url: string;
+};
+export type Card = WorkCard | PlayerCard | SlideCard | LinerCard | ArticleCard | TicketCard;
 
 /** Omit that distributes over the union, so each card keeps its own fields. */
 type Unnumbered<T> = T extends unknown ? Omit<T, 'number'> : never;
@@ -145,19 +159,43 @@ function slideCard(s: CollectionEntry<'slides'>): Omit<SlideCard, 'number'> {
 	};
 }
 
+// In UTC: the date is a calendar day, and the build machine's zone must not move it.
+const day = (d: Date, opts: Intl.DateTimeFormatOptions): string =>
+	d.toLocaleDateString('en-GB', { ...opts, timeZone: 'UTC' });
+
+function articleCard(a: CollectionEntry<'articles'>): Omit<ArticleCard, 'number'> {
+	const d = a.data;
+	return {
+		id: a.id,
+		kind: 'article',
+		label: `Article: ${d.title}`,
+		pigment: d.pigment,
+		title: d.title,
+		topic: d.topic,
+		standfirst: d.standfirst,
+		month: day(d.date, { month: 'short', year: 'numeric' }),
+		date: day(d.date, { day: 'numeric', month: 'short', year: 'numeric' }),
+		minutes: d.minutes,
+		points: d.points,
+		url: d.url,
+	};
+}
+
 export async function getDeck(): Promise<Card[]> {
-	const [work, slides, practice, players] = await Promise.all([
+	const [work, slides, articles, practice, players] = await Promise.all([
 		getPublishedWork(),
 		getCollection('slides'),
+		getCollection('articles'),
 		getCollection('practice'),
 		getCollection('player'),
 	]);
 	const rick = players[0];
 	if (!rick) throw new Error('deck: src/content/player.yaml has no player card.');
 
-	// The middle of the deck: work, then How I work, with the photographs woven
-	// in at the places their `order` names (1 = right after the player). A place
-	// past the end just goes last; the work keeps its own order.
+	// The middle of the deck: work, then How I work, with the photographs and
+	// the article clippings woven in at the places their `order` names (1 =
+	// right after the player). A place past the end just goes last; the work
+	// keeps its own order.
 	const fillers: Unnumbered<Card>[] = [
 		...work.map(workCard),
 		{
@@ -172,15 +210,17 @@ export async function getDeck(): Promise<Card[]> {
 					number: String(p.data.order).padStart(2, '0'),
 					title: p.data.title,
 					body: p.data.body,
-					proof: p.data.proof,
 				})),
 		},
 	];
 	const middle: Unnumbered<Card>[] = [];
-	for (const s of [...slides].sort((a, b) => a.data.order - b.data.order)) {
-		const card = slideCard(s);
-		// Fill the places before this one from the work, then put the photograph down.
-		while (middle.length < s.data.order - 1 && fillers.length > 0) middle.push(fillers.shift()!);
+	const placed = [
+		...slides.map((s) => ({ order: s.data.order, card: slideCard(s) })),
+		...articles.map((a) => ({ order: a.data.order, card: articleCard(a) })),
+	].sort((a, b) => a.order - b.order);
+	for (const { order, card } of placed) {
+		// Fill the places before this one from the work, then put the card down.
+		while (middle.length < order - 1 && fillers.length > 0) middle.push(fillers.shift()!);
 		middle.push(card);
 	}
 	middle.push(...fillers);

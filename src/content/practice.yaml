@@ -1,56 +1,47 @@
 # How I work: the three principles on the one-pager, in `order`.
 #
-# Rewritten 2026-09-25 around Rick's three themes: an AI-first approach,
-# keeping responsibility, and aligning competences through smart tooling.
+# Rewritten 2026-11-24 around Rick's own brief: AI-first with a human in the
+# loop; integrations that go beyond one platform; workflows that help teams of
+# different disciplines. Read in order they are one story: how I work with AI,
+# what I build, how it reaches the team.
 #
-# The brief still holds -- "Show the real workflow: decisions, constraints,
-# iterations, code or terminal fragments, before/after measurements, and
-# shipped results. Do not invent fake technical artifacts." -- so each theme
-# carries a proof that is true of this repository and can be checked in it:
-# the git log, the test suite, the rules file. Parallel imperatives read as
-# generated (the 2026-09-22 note on the first version), so the titles say
-# what happens rather than what to do.
+# Each principle is a title and a body, nothing else: the separate proof lines
+# went on Rick's call (2026-11-24). Parallel imperatives read as generated (the
+# 2026-09-22 note on the first version), so the titles say what happens rather
+# than what to do. The front types the titles on ruled lines: keep them under
+# about 32 characters.
 #
-# A proof quotes no count that grows with the work: "37 commits" and "105
-# tests" were both stale within a week. The numbers it does quote are the ones
-# the checks enforce, and tests/e2e/claims.spec.ts fails when the two part:
-# the load budget and its CPU slowdown (tests/support/budgets.ts), and the
-# contrast floor (AA in src/lib/palette.ts).
+# Quote no count that grows with the work: "37 commits" and "105 tests" were
+# both stale within a week. tests/e2e/claims.spec.ts fails on one.
 #
-# Rick: the themes are yours, the sentences are mine. Rewrite them in your own
-# voice -- that is the one thing I cannot do for you.
+# COPY CHECK (2026-11-24): the themes are Rick's, the sentences are drafted.
+# Rewrite them in your own voice.
 
-- id: first-draft
+- id: in-the-loop
   order: 1
-  title: An agent writes the first draft
-  # "I work AI-first." opens the section's lede, so it does not open this too.
+  title: AI drafts, I decide
   body: >-
-    Every change starts as an agent’s draft: the code, the tests, and often the
-    question I had not thought to ask. My time goes to what needs a person:
-    choosing between options, and deciding what not to build.
-  proof: >-
-    Every commit in this site’s rebuild is co-authored by Claude, and says so.
-    Every new look on it was one of three full-size candidates I chose between.
+    I work AI-first. An agent writes the first draft of the code, the tests,
+    and often the question I had not thought to ask. I stay in the loop at
+    every decision that matters: I choose between the options, review what
+    ships, and answer for it.
 
-- id: what-ships
+- id: across-screens
   order: 2
-  title: I answer for what ships
+  title: Integrations that cross screens
   body: >-
-    An agent can write the code; it cannot be responsible for it. So nothing
-    goes in that I have not read, and every claim the site makes has a check
-    behind it that can fail: a test, a budget, a build that refuses.
-  proof: >-
-    A test suite that runs on every push, a 2.5-second load budget measured on
-    a CPU slowed four times, and a colour check that fails the build below
-    4.5:1 contrast.
+    A viewer does not think in platforms. They start on the phone, cast to the
+    TV, and expect the programme, the position and the subtitles to come along.
+    The work I like best lives between the screens: the cast session between a
+    phone and a receiver, a player and analytics that report the same way on
+    every device. I design those integrations first, so every platform plays
+    its part in the same agreement.
 
-- id: in-the-tools
+- id: whole-team
   order: 3
-  title: Expertise, built into the tools
+  title: Workflows the whole team runs
   body: >-
-    Expertise should not depend on who is in the room. I write it into what
-    colleagues and agents both run, rules, prompts and checks, so accessibility
-    and performance are the default, not a comment in review.
-  proof: >-
-    One rules file here is read by every change, human or agent. A scrollbar
-    bug no test could see became a rule and a test the same day.
+    Design, QA, product and development each know something the others need. I
+    write that knowledge into workflows that colleagues and agents both run, as
+    rules, prompts and checks, so accessibility and performance are the default
+    and good work does not depend on who is in the room.

@@ -1217,6 +1217,120 @@ html:not(.js) .ticket .code {
 	border-bottom: 1px solid color-mix(in srgb, var(--ink) 35%, transparent);
 }
 
+/* ---- 10 - ARTICLE: a clipping from a page I wrote ----------------------- */
+/*
+ * Newsprint, not a field: the pigment is the kicker and the byline strip. The
+ * rest of the page is columns of type, drawn as rules. A clipping lies still:
+ * it has no idle loop.
+ */
+
+.article {
+	--ar: 4 / 5;
+	--w: 88%;
+}
+
+.article .front {
+	padding: 5cqw 5cqw 4cqw;
+	gap: 2.6cqw;
+}
+
+.article .front > .meta:first-child {
+	padding-bottom: 2cqw;
+	border-bottom: var(--rule) solid var(--ink);
+}
+
+.article .kicker {
+	align-self: flex-start;
+	padding: 1cqw 2cqw;
+	background: var(--field);
+	color: var(--on-field);
+	border: var(--rule) solid var(--ink);
+	font: 500 clamp(9px, 2.6cqw, 11px) / 1.2 var(--mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.article .front h2,
+.article .front h1 {
+	margin-left: -0.4cqw;
+}
+
+.article .sub {
+	font: 600 4cqw / 1.25 var(--sans);
+	max-width: 30ch;
+}
+
+.article .cols {
+	flex: 1;
+	min-height: 6cqw;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 5cqw;
+}
+
+.article .cols i {
+	background: repeating-linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--ink) 22%, transparent) 0 1.2cqw,
+		transparent 1.2cqw 3cqw
+	);
+}
+
+/* The second column ends on a short line, as a column of type does. */
+.article .cols i:last-child {
+	-webkit-mask: linear-gradient(180deg, var(--ink) 0 70%, transparent 70%);
+	mask: linear-gradient(180deg, var(--ink) 0 70%, transparent 70%);
+}
+
+.article .front footer {
+	padding-top: 2cqw;
+	border-top: 1px solid var(--ink);
+}
+
+.back .clip {
+	gap: 1.4cqw;
+	padding-top: 0;
+}
+
+.back .bb.clip > .byline {
+	margin: 0 -4cqw 1cqw;
+	padding: 1.8cqw 4cqw;
+	background: var(--field);
+	color: var(--on-field);
+	border-bottom: var(--rule) solid var(--ink);
+	max-width: none;
+	white-space: nowrap;
+}
+
+.clip h3 {
+	margin-top: 1.4cqw;
+	padding-top: 1.4cqw;
+	border-top: var(--rule) solid var(--ink);
+}
+
+.clip .points {
+	list-style: none;
+	padding: 0;
+	display: grid;
+	gap: 1.4cqw;
+	font-size: max(10.5px, 3.3cqw);
+}
+
+.clip .points li {
+	display: grid;
+	grid-template-columns: 2.4cqw 1fr;
+	gap: 2cqw;
+	align-items: baseline;
+}
+
+.clip .points li::before {
+	content: '';
+	width: 2.4cqw;
+	aspect-ratio: 1;
+	background: var(--field);
+	border: 1px solid var(--ink);
+}
+
 /* ---- keyframes ----------------------------------------------------------- */
 
 @keyframes spin {

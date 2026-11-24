@@ -161,8 +161,8 @@ const work = defineCollection({
 /**
  * How I work: the principles on the one-pager, one file, in `order`.
  *
- * A proof is required: it is the concrete, checkable detail that stops a
- * principle being a slogan. The copy's own notes are at the top of the file.
+ * A principle is a title and a body. The copy's own notes are at the top of
+ * the file.
  */
 const practice = defineCollection({
 	loader: file('./src/content/practice.yaml'),
@@ -170,7 +170,6 @@ const practice = defineCollection({
 		order: z.number().int().positive(),
 		title: z.string().min(1).max(60),
 		body: z.string().min(1),
-		proof: z.string().min(1),
 	}),
 });
 
@@ -204,6 +203,33 @@ const slides = defineCollection({
 		}),
 });
 
+/**
+ * Articles: what I wrote on Medium, one clipping card each. The card only
+ * links out; nothing on the page is loaded from Medium.
+ */
+const articles = defineCollection({
+	loader: file('./src/content/articles.yaml'),
+	schema: z.object({
+		/** The article's own title. */
+		title: z.string().min(1).max(80),
+		/** The kicker above the headline. */
+		topic: z.string().min(1).max(24),
+		/** One or two sentences in my words, not a quote from the article. */
+		standfirst: z.string().min(1).max(140),
+		url: z
+			.url()
+			.refine((u) => u.startsWith('https://medium.com/'), 'An article links to medium.com.'),
+		date: z.coerce.date(),
+		/** The read time Medium shows on the article. Check it there: the card prints it as Medium's. */
+		minutes: z.number().int().positive().max(60),
+		pigment: z.enum(PIGMENTS),
+		/** The back: what the article argues, first person, one line each. */
+		points: z.array(z.string().min(1).max(110)).min(2).max(4),
+		/** Where the clipping lies in the middle of the deck, counted like a slide's `order`. */
+		order: z.number().int().positive(),
+	}),
+});
+
 /** The player card: Rick, the first card of the deck. */
 const player = defineCollection({
 	loader: file('./src/content/player.yaml'),
@@ -218,4 +244,4 @@ const player = defineCollection({
 	}),
 });
 
-export const collections = { work, practice, slides, player };
+export const collections = { work, practice, slides, articles, player };

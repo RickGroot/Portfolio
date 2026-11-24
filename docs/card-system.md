@@ -32,6 +32,7 @@ turns; the page prints no instruction. Decided by Rick, 2026-11-23, layout "A, t
 | liner    | How I work             | notes type in           |
 | slide    | a 35mm photograph      | a small wobble          |
 | polaroid | a snapshot (Prague)    | none                    |
+| article  | a Medium article       | none                    |
 | ticket   | Get in touch, 404      | the stub kicks out      |
 
 `src/lib/deck.ts` builds the deck from content (the work entries carry `format` and `pigment`);
@@ -72,6 +73,7 @@ by kind, laid out in `card.css` ("the backs"):
 | cast     | a TV running the receiver: a splash that resolves into a now-playing screen (title, blurb, the highlights as the up-next queue, a progress bar, links) | `blurb`, `built`, `links`                  |
 | polaroid | the back of a print: where, when, who took it, a note                                                                                                  | `place`, `date`, `credit`, `note`          |
 | liner    | the full principles, in a scrolling region (unchanged)                                                                                                 | `practice.yaml`                            |
+| article  | a newspaper clipping: a byline strip (date, read time), the headline, "In short" with three points, and one link out to Medium                         | `articles.yaml`                            |
 | ticket   | none: it carries its links on its front (see Ticket)                                                                                                   |                                            |
 
 The back lines of a work card are drafted from that entry's own notes and carry a
@@ -112,8 +114,8 @@ VAMP's sleeve, from scrolling just because its buttons grew.
 
 ## Deck order
 
-Work cards are ordered by `order`. Slides and polaroids are woven in by their `order`, which is a
-position in the middle of the deck (1 = the first card after the player). How I work trails the
+Work cards are ordered by `order`. Slides, polaroids and article clippings are woven in by their
+`order`, which is a position in the middle of the deck (1 = the first card after the player). How I work trails the
 work; the ticket is last.
 
 ## Motion

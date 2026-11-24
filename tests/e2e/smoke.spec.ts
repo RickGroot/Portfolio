@@ -22,6 +22,20 @@ test('a card has its case study on the back, with real links', async ({ page }) 
 	await expect(back.getByRole('link', { name: /Live app/ })).toHaveCount(1);
 });
 
+test('an article is a clipping that links out to Medium, and only links', async ({ page }) => {
+	await page.goto('/');
+	const articles = page.locator('[data-card].article');
+	expect(await articles.count()).toBeGreaterThan(0);
+	for (const card of await articles.all()) {
+		const links = card.locator('.back a');
+		await expect(links).toHaveCount(1);
+		await expect(links).toHaveAttribute('href', /^https:\/\/medium\.com\//);
+		// The label repeats on every clipping, so the accessible name carries the title.
+		const title = (await card.locator('.back h2').textContent())!.trim();
+		expect((await links.evaluate((a) => a.textContent)).replace(/\s+/g, ' ')).toContain(title);
+	}
+});
+
 test('no dead read.cv link survives', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('a[href*="read.cv"]')).toHaveCount(0);

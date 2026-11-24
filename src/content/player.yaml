@@ -9,5 +9,4 @@
   facts:
     - { label: Status, value: Open to work }
     - { label: Role, value: Connected TV developer }
-    - { label: Was at, value: Hypersolid }
     - { label: Off-duty, value: Trumpet }

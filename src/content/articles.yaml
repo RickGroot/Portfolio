@@ -1,0 +1,64 @@
+# Articles: what I wrote on Medium, one clipping card each.
+#
+# The card links to the article; nothing is loaded from Medium (no images, no
+# fonts, no embeds: a test asserts no third-party origins at runtime). The
+# title is the article's own. Everything else is a short summary in my words,
+# never a quote: the article is the place to read the article.
+#
+# `order` is where the clipping lies in the middle of the deck, counted the
+# same way as the photographs in src/content/slides (1 = first card after the
+# player). The work cards and How I work fill the other places.
+#
+# `minutes` is the read time Medium shows. Keep `points` to three, first
+# person, one line of thought each.
+#
+# COPY CHECK (2026-11-24): the standfirsts and points are drafted from the
+# articles; the read times are estimated from their word counts. Check both.
+
+- id: tv-still-the-center
+  order: 5
+  title: The TV is still the center. It's no longer the whole experience.
+  topic: Connected TV
+  standfirst: >-
+    The living room now runs on more than one screen, and the product has to
+    follow the viewer between them.
+  url: https://medium.com/@rickgroot41/the-tv-is-still-the-center-its-no-longer-the-whole-experience-a5fecf75f7d0
+  date: 2026-10-23
+  minutes: 7
+  pigment: blue
+  points:
+    - Let each screen do its best job. Browse and sign in on the phone, watch on the TV.
+    - The cast button is the easy part to show. Who owns the session after it is the real work.
+    - Plan the whole journey rather than one app per platform, and add a second screen only where it helps.
+
+- id: tv-apps-are-not-web-apps
+  order: 9
+  title: Why TV Apps Are Not Just Web Apps on a Bigger Screen
+  topic: Connected TV
+  standfirst: >-
+    A remote with a handful of buttons changes more than the layout. It
+    changes how the app is built.
+  url: https://medium.com/@rickgroot41/why-tv-apps-are-not-just-web-apps-on-a-bigger-screen-d150cf4dc5dc
+  date: 2026-05-29
+  minutes: 6
+  pigment: red
+  points:
+    - On a TV, focus is the interface. Every control is one more stop on the way through.
+    - Viewers sit across the room, so the bigger screen ends up showing less.
+    - Reuse the components and the brand, but not the assumptions that came with the web.
+
+- id: seamless-cast-session
+  order: 12
+  title: What Makes a Cast Session Feel Seamless?
+  topic: Casting
+  standfirst: >-
+    Not speed but continuity. The phone and the TV should agree on what is
+    playing, every moment.
+  url: https://medium.com/@rickgroot41/what-makes-a-cast-session-feel-seamless-882197081da2
+  date: 2026-04-28
+  minutes: 4
+  pigment: orange
+  points:
+    - Give playback one clear owner, so the phone and the receiver never disagree.
+    - Controls should show what is really playing, not what the phone last assumed.
+    - Viewers lock phones, switch networks and seek straight away. Recovery has to stay calm.

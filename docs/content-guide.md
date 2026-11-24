@@ -20,7 +20,11 @@ woven between the work by their `order`) and the ticket (`src/lib/deck.ts`).
 
 Other card content lives beside work: `src/content/player.yaml` (the masthead card),
 `src/content/practice.yaml` (How I work, the liner notes), `src/content/slides/*.md` (the
-photographs).
+photographs) and `src/content/articles.yaml` (my Medium articles, as clippings).
+
+An article card only links out: nothing is loaded from Medium. Its `title` is the article's own;
+the `standfirst` (≤ 140) and the three `points` (≤ 110 each) are short summaries in my own words,
+never quotes. `minutes` is the read time Medium shows, and `order` works as it does for a slide.
 
 ## Fields
 

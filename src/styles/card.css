@@ -279,12 +279,6 @@
 	text-transform: none;
 }
 
-.back .principles p + p {
-	margin-top: 0.6em;
-	padding-left: 2cqw;
-	border-left: var(--rule) solid var(--field);
-}
-
 /* ---- the backs: the other side of each object ----------------------------- */
 /*
  * Every back is the reverse of its thing, in the same flat print: a cassette's

@@ -57,6 +57,7 @@ const AR = {
 	player: '5 / 7',
 	slide: '1 / 1',
 	liner: '5 / 3',
+	article: '4 / 5',
 } as const;
 
 const loading = eager ? 'eager' : 'lazy';
@@ -344,6 +345,29 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 					</>
 				)}
 
+				{card.kind === 'article' && (
+					<>
+						<div class="meta">
+							<span class="cat">{card.number}</span>
+							<span>{card.month}</span>
+						</div>
+						<p class="kicker">{card.topic}</p>
+						<Title class="disp" style={size(fit(card.title.length, 11, 250))}>
+							{card.title}
+						</Title>
+						<p class="sub">{card.standfirst}</p>
+						{/* The rest of the page: columns of type, set as rules. */}
+						<div class="cols" aria-hidden="true">
+							<i />
+							<i />
+						</div>
+						<footer class="meta">
+							<span>Medium</span>
+							<span>{card.minutes} min read</span>
+						</footer>
+					</>
+				)}
+
 				{card.kind === 'ticket' && (
 					<>
 						<div class="main">
@@ -483,7 +507,6 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 											{i.number} {i.title}
 										</h3>
 										<p>{i.body}</p>
-										<p>{i.proof}</p>
 									</li>
 								))}
 							</ol>
@@ -678,6 +701,25 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 									</li>
 								))}
 							</ol>
+						</div>
+					) : card.kind === 'article' ? (
+						<div class="bb clip">
+							<p class="meta byline">
+								<span>Medium</span>
+								<span>
+									{card.date} · {card.minutes} min read
+								</span>
+							</p>
+							<h2 class="disp" style={size(fit(card.title.length, 7.4, 190))}>
+								{card.title}
+							</h2>
+							<h3>In short</h3>
+							<ul class="points">
+								{card.points.map((p) => (
+									<li>{p}</li>
+								))}
+							</ul>
+							<Links links={[{ label: 'Read on Medium', sr: card.title, href: card.url }]} />
 						</div>
 					) : null}
 				</div>
