@@ -46,6 +46,14 @@ body {
 	overflow-x: clip;
 }
 
+/* body's overflow passes to the viewport, where `clip` acts as `hidden`: the */
+/* page still measured wider than the window (a spinning record's square box */
+/* on a phone, a card's hover pad at the edge). <main> is a plain box, so */
+/* its clip really clips (2026-11-24). */
+main {
+	overflow-x: clip;
+}
+
 /* One paper-grain layer over the whole page. Fixed, so it costs one layer. */
 body::after {
 	content: '';

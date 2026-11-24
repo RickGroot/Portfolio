@@ -20,7 +20,7 @@ built:
   - 'Chapters in video playback'
   - 'A maintainable Svelte UI for the remote'
   - 'Live and on-demand playback, THEOplayer'
-order: 5
+order: 6
 ---
 
 For the Dutch broadcaster NOS, I worked on the development of their Smart TV app, with focus on

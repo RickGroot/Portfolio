@@ -23,6 +23,7 @@ file names are not kept either: phone file names are capture timestamps.
 | `work/screens/vamp.jpg`           | Crop: VAMP's chord editor, Rick's own screenshot                        | VAMP cover             |
 | `work/screens/nos.jpg`            | Crop: the NOS app's screen, Rick's own screenshot                       | NOS cover              |
 | `work/screens/streamz-vtm-go.jpg` | Crop: the VTM GO app's screen, Rick's own screenshot                    | Streamz & VTM GO cover |
+| `work/screens/sleeve.jpg`         | Crop: the Sleeve skin before play, Rick's own screenshot                | Sleeve cover           |
 
 Chromecast has no image: its card draws a phone casting to a TV that runs the receiver, as inline SVG.
 
@@ -63,6 +64,11 @@ programme art inside the screenshots belongs to the broadcasters.
 Crop rectangles on the old 1672x941 composites (x, y, width, height): NLZIET 664,164,564,284; KIJK
 535,147,603,315; VTM GO 592,166,450,256; NOS 552,141,612,346; VAMP 515,195,330,330 (the chord
 blocks, squared for the sleeve). Where a screen was angled, the largest clean rectangle inside it.
+
+Sleeve's cover (2026-11-24) is not from a composite: it is the "ready" screenshot in Rick's own Sleeve
+repository (`docs/media/sleeve-1-ready.jpg`, 1600x1200), cropped to 64,140,1472,920 so the whole
+player fits the listing's 16:10 screen, then resized to 960x600. The frame inside the player is from
+NASA's Cosmic Dawn trailer, NASA media.
 
 ## How the photographs were chosen
 

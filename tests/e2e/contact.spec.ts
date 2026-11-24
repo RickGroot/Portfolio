@@ -86,6 +86,51 @@ test('the stub tears off, turns over to the actions, and puts back', async ({ pa
 	await expect(tear).toBeFocused();
 });
 
+// The back of the stub is drawn in px (44px targets, 12px type) on a card
+// drawn in cqw, so it ran out of room on every width (2026-11-24).
+for (const width of [320, 375, 821, 1366]) {
+	test(`${width}px: the torn stub holds every action without overflowing`, async ({ browser }) => {
+		const context = await browser.newContext({
+			viewport: { width, height: 900 },
+			reducedMotion: 'reduce',
+		});
+		const page = await context.newPage();
+		await page.goto('/');
+		const ticket = page.locator('.slot.ticket');
+		await ticket.scrollIntoViewIfNeeded();
+		await ticket.locator('.tear').click();
+		await expect(ticket).toHaveClass(/is-torn/);
+		const back = await ticket.locator('.stub.bk').evaluate((el) => ({
+			over: el.scrollHeight - el.clientHeight,
+			wide: el.scrollWidth - el.clientWidth,
+		}));
+		expect(back.over, 'the stub back overflows downwards').toBeLessThanOrEqual(0);
+		expect(back.wide, 'the stub back overflows sideways').toBeLessThanOrEqual(0);
+		await context.close();
+	});
+}
+
+// Hover lifts a card and the pointer tilts it away, which carried a corner out
+// from under the pointer: hover dropped, the card fell back, and it flickered.
+test('a pointer resting on the ticket corner keeps it hovered', async ({ browser }) => {
+	const context = await browser.newContext({ viewport: { width: 430, height: 900 } });
+	const page = await context.newPage();
+	await page.goto('/');
+	const ticket = page.locator('.slot.ticket');
+	await ticket.scrollIntoViewIfNeeded();
+	await page.waitForTimeout(900); // the deal
+	const box = await ticket.boundingBox();
+	if (!box) throw new Error('no ticket');
+	await page.mouse.move(box.x + box.width * 0.99, box.y + box.height * 0.01);
+	const states: boolean[] = [];
+	for (let i = 0; i < 20; i++) {
+		await page.waitForTimeout(30);
+		states.push(await ticket.evaluate((el) => el.matches(':hover')));
+	}
+	expect(states.every(Boolean), states.map((s) => (s ? 'H' : '-')).join('')).toBe(true);
+	await context.close();
+});
+
 test('with reduced motion the stub just swaps state', async ({ browser }) => {
 	const context = await browser.newContext({ reducedMotion: 'reduce' });
 	const page = await context.newPage();

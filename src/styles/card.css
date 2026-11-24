@@ -749,6 +749,16 @@ html:not(.js) .disc {
 }
 
 @media (hover: hover) {
+	/* A hover pad that does not move. Hover lifts the card and the pointer */
+	/* tilts it away, which carries a corner out from under the pointer; */
+	/* without the pad hover drops, the card falls back under the pointer, */
+	/* and it flickers. Painted first, so the card itself is hit above it. */
+	.slot::before {
+		content: '';
+		position: absolute;
+		inset: -14px;
+	}
+
 	.slot:hover {
 		z-index: 3;
 	}

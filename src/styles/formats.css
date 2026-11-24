@@ -358,6 +358,11 @@
 	--print-lift: 1.4;
 }
 
+/* Sleeve's screen is already printed (an orange field, a greyscale picture). */
+[data-card='sleeve'] {
+	--print-lift: 1.15;
+}
+
 .print::after {
 	content: '';
 	position: absolute;
@@ -609,6 +614,13 @@ html:not(.js) .ticket .code {
 	font: 900 max(15px, 4.6cqw) / 1.1 var(--display);
 	font-stretch: 62%;
 	text-transform: uppercase;
+}
+
+/* The back of the stub is sized in px, not cqw: 44px touch targets and 12px */
+/* type. Four rows of them need about 290px of height, which a 4:3 ticket */
+/* never has, so the ticket is never shorter than that (2026-11-24). */
+.ticket.tearable {
+	min-height: 300px;
 }
 
 /* The ways to reach me, on the back of the stub. */

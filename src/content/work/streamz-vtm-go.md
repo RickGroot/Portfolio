@@ -16,7 +16,7 @@ built:
   - 'A white-label Smart TV app'
   - 'One monorepo serving Streamz and VTM GO'
   - 'From browsing to playback on the remote'
-order: 6
+order: 7
 ---
 
 From 2022 to 2024 I worked on the Smart TV apps of Streamz and VTM GO, two Belgian streaming

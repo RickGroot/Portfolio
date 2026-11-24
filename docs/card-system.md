@@ -26,7 +26,7 @@ turns; the page prints no instruction. Decided by Rick, 2026-11-23, layout "A, t
 | -------- | ---------------------- | ----------------------- |
 | player   | Rick (the masthead)    | the record light blinks |
 | tape     | NLZIET, KIJK, Streamz  | the reels spin          |
-| listing  | NOS                    | the progress bar fills  |
+| listing  | NOS, Sleeve            | the progress bar fills  |
 | cast     | Chromecast             | the cast arcs send      |
 | sleeve   | VAMP (a record behind) | the record turns        |
 | liner    | How I work             | notes type in           |

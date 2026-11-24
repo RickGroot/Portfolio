@@ -71,7 +71,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 ---
 
 <div
-	class={`slot ${card.kind}`}
+	class={`slot ${card.kind}${tearable ? ' tearable' : ''}`}
 	data-card={card.id}
 	style={`--ar:${card.kind === 'ticket' && !tearable ? '5 / 2' : AR[card.kind]};${pigmentStyle(card.pigment)};${lean}`}
 >

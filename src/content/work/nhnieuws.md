@@ -10,7 +10,7 @@ format: listing
 pigment: blue
 # No cover: the one first supplied had no known source and left the repository
 #   (2026-09-25). Add a cover Rick owns + `coverAlt`, then drop `draft: true`.
-order: 7
+order: 8
 draft: true
 ---
 

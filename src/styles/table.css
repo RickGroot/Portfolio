@@ -73,7 +73,12 @@ html:not(.js) .still-toggle {
 	display: none;
 }
 
+/* An inline-block, not a block with break-inside: avoid. As a block, the */
+/* ticket's 3D stub at the foot of the last column spilled into a phantom */
+/* fourth column and the page scrolled sideways (2026-11-24, at 12 cards). */
 .slot {
+	display: inline-block;
+	vertical-align: top;
 	break-inside: avoid;
 	width: var(--w, 100%);
 	margin: 0 0 64px;

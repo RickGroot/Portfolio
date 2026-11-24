@@ -195,8 +195,9 @@ export function boot(): void {
 			return;
 		}
 		const r = slot.getBoundingClientRect();
-		const x = (e.clientX - r.left) / r.width;
-		const y = (e.clientY - r.top) / r.height;
+		// Clamped: on the hover pad around the card the pointer is outside it.
+		const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+		const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
 		slot.style.setProperty('--ry', `${((x - 0.5) * 14).toFixed(2)}deg`);
 		slot.style.setProperty('--rx', `${((0.5 - y) * 14).toFixed(2)}deg`);
 		slot.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`);

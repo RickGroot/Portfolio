@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('the table renders identity and the work as cards', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toHaveText('Rick Groot');
-	for (const id of ['nlziet', 'vamp', 'kijk', 'nos', 'chromecast', 'streamz-vtm-go']) {
+	for (const id of ['nlziet', 'vamp', 'sleeve', 'kijk', 'nos', 'chromecast', 'streamz-vtm-go']) {
 		await expect(page.locator(`[data-card="${id}"]`), id).toHaveCount(1);
 	}
 });

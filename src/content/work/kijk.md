@@ -22,7 +22,7 @@ stack:
   - { label: Framework, value: Svelte }
   - { label: Language, value: TypeScript }
   - { label: Player, value: THEOplayer }
-order: 4
+order: 5
 ---
 
 I worked on the KIJK streaming platform, building a seamless and
