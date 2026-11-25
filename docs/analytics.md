@@ -24,8 +24,12 @@ city. Cloud Logging keeps it 30 days by default.
 
 ## Turning it on (once)
 
-Firebase console → Hosting → **Cloud Logging integration** → Link, for the `portfolio-rick-groot`
-site. Until that is linked the beacons are requested and recorded nowhere.
+Linked on 2026-11-25. If it ever has to be done again: Firebase console → Project settings →
+Integrations → **Cloud Logging** → Link, and tick the `portfolio-rick-groot` site. It needs no paid
+plan. While it is not linked the beacons are requested and recorded nowhere.
+
+A request usually shows up in the log within 30 minutes, not at once, and only requests made after
+linking are there. An empty result straight after a visit means wait, not broken.
 
 ## Reading it
 
