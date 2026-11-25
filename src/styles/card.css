@@ -136,10 +136,52 @@
 	pointer-events: none;
 }
 
-/* The ring goes round the whole card, outside it, on the table. */
+/* Forced colours drop the gradient; a border triangle in the text colour stays. */
+@media (forced-colors: active) {
+	.turn .corner {
+		width: 0;
+		background: none;
+		border-top: 12px solid transparent;
+		border-right: 12px solid CanvasText;
+		forced-color-adjust: none;
+	}
+}
+
+/*
+ * Focus: crop marks. A card in focus is picked up, as under the pointer, and
+ * a printer's corner marks close in round it and its shadow, with the same gap
+ * on every side (the card lifts 4px up-left, the shadow lies --drop down-right).
+ * Blue clears 3:1 on the paper. The marks are a border with the middle of each
+ * side masked away, not a background, so forced colours keep them.
+ */
 .slot:has(.turn:focus-visible) {
-	outline: 3px solid var(--blue);
-	outline-offset: 8px;
+	z-index: 3;
+}
+
+.slot:has(.turn:focus-visible) .tilt {
+	--lx: -4px;
+	--ly: -4px;
+}
+
+.slot:has(.turn:focus-visible)::after {
+	--gap: 10px;
+	--arm: clamp(18px, 16cqw, 56px);
+	content: '';
+	position: absolute;
+	inset: calc(-4px - var(--gap)) calc(-1 * var(--drop) - var(--gap))
+		calc(-1 * var(--drop) - var(--gap)) calc(-4px - var(--gap));
+	border: 3px solid var(--blue);
+	mask: conic-gradient(at var(--arm) var(--arm), transparent 75%, var(--blue) 0) 0 0 /
+		calc(100% - var(--arm)) calc(100% - var(--arm));
+	pointer-events: none;
+	transition: scale 220ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+/* The marks close in from a little wider, a snap, not a fade. */
+@starting-style {
+	.slot:has(.turn:focus-visible)::after {
+		scale: 1.08;
+	}
 }
 
 /* ---- the back: the short case study -------------------------------------- */
@@ -163,7 +205,7 @@
 	background: none;
 	padding: 1.2cqw 2.4cqw;
 	cursor: pointer;
-	font: 500 clamp(9px, 2.6cqw, 11px) / 1 var(--mono);
+	font: 500 clamp(0.5625rem, 2.6cqw, 0.6875rem) / 1 var(--mono);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
@@ -206,13 +248,13 @@
 	flex-direction: column;
 	gap: 2cqw;
 	padding: 3.6cqw 4cqw 4cqw;
-	font-size: clamp(11px, 3.3cqw, 14px);
+	font-size: clamp(0.6875rem, 3.3cqw, 0.875rem);
 	line-height: 1.35;
 	overflow: auto;
 }
 
 .back h2 {
-	font-size: clamp(22px, 9cqw, 34px);
+	font-size: clamp(1.375rem, 9cqw, 2.125rem);
 }
 
 .back .bb p {
@@ -223,7 +265,7 @@
 	display: grid;
 	grid-template-columns: auto 1fr;
 	gap: 0.6cqw 3cqw;
-	font: 500 clamp(9px, 2.6cqw, 11px) / 1.4 var(--mono);
+	font: 500 clamp(0.5625rem, 2.6cqw, 0.6875rem) / 1.4 var(--mono);
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
 }
@@ -248,7 +290,7 @@
 	color: var(--on-field);
 	border: var(--rule) solid var(--ink);
 	padding: 1.6cqw 3cqw;
-	font: 500 clamp(9px, 2.6cqw, 11px) / 1 var(--mono);
+	font: 500 clamp(0.5625rem, 2.6cqw, 0.6875rem) / 1 var(--mono);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	text-decoration: none;
@@ -269,8 +311,33 @@
 	gap: 3cqw;
 }
 
-.back .scroll:focus-visible {
+.back .scroll:focus-visible,
+.back .is-long:focus-visible,
+.ticket .stub.bk.is-long:focus-visible {
 	outline-offset: -6px;
+}
+
+/*
+ * Larger text can outgrow a back; then its body scrolls and becomes a tab stop
+ * (`fit()` in table.ts adds `.is-long`). Its scrollbar is printed in the text
+ * colour (ink, or card paper on the cast's screen). Set on every body, not on
+ * `.is-long`, so turning scrolling on never changes the width the text wraps in.
+ * It scrolls one way only: a long word breaks rather than pushing the body
+ * sideways, where Left and Right belong to the remote.
+ */
+.back .bb,
+.back .np,
+.ticket .stub.bk {
+	scrollbar-width: thin;
+	scrollbar-color: currentColor transparent;
+	/* anywhere, not break-word: it also lowers a flex or grid item's minimum width. */
+	overflow-wrap: anywhere;
+}
+
+/* The labels on a back grow with the reader's text size, like its body. */
+.back .meta,
+.ticket .stub.bk .meta {
+	font-size: clamp(0.5625rem, 2.6cqw, 0.6875rem);
 }
 
 .back .principles {
@@ -294,7 +361,7 @@
  */
 
 .back h3 {
-	font: 500 clamp(9px, 2.6cqw, 11px) / 1.2 var(--mono);
+	font: 500 clamp(0.5625rem, 2.6cqw, 0.6875rem) / 1.2 var(--mono);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
@@ -315,7 +382,7 @@
 	gap: 0 1cqw;
 	padding: 0.7cqw 0;
 	border-bottom: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
-	font-size: max(10.5px, 3cqw);
+	font-size: max(0.6562rem, 3cqw);
 	line-height: 1.2;
 }
 
@@ -345,22 +412,25 @@
 	border-bottom: var(--rule) solid var(--ink);
 }
 
+/* A floor in rem under the cqw size: below every card's own cqw size, so it */
+/* only lifts a title when the reader's text is larger. */
 .back .jcard h2 {
-	font-size: 7cqw;
+	font-size: max(1.125rem, 7cqw);
 	line-height: 1.1;
-	white-space: nowrap;
 }
 
 .jcard .top .meta {
-	font-size: max(9px, 2.5cqw);
+	font-size: max(0.5625rem, 2.5cqw);
 	line-height: 1.2;
 }
 
 .jcard .body {
-	flex: 1;
-	min-height: 0;
+	/* Fills the card, and never shrinks below its sides: under large text the */
+	/* J-card scrolls, and the spine runs the full length of what it holds. */
+	flex: 1 0 auto;
 	display: grid;
-	grid-template-columns: 8cqw 1fr;
+	/* minmax(0, …): a long word under large text breaks, never widens the card. */
+	grid-template-columns: 8cqw minmax(0, 1fr);
 }
 
 /* The spine: the strip down the fold of a J-card, the catalogue number running along it. */
@@ -375,7 +445,7 @@
 .jcard .spine span {
 	writing-mode: vertical-rl;
 	transform: rotate(180deg);
-	font-size: max(9px, 2.6cqw);
+	font-size: max(0.5625rem, 2.6cqw);
 	white-space: nowrap;
 }
 
@@ -383,7 +453,7 @@
 	min-height: 0;
 	display: grid;
 	/* Side A gets the room: highlights are sentences, Side B is short labels. */
-	grid-template-columns: 1.45fr 1fr;
+	grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
 	/* A fold line under the panels, where the insert would bend. */
 	border-bottom: 1px dashed color-mix(in srgb, var(--ink) 45%, transparent);
 }
@@ -401,7 +471,7 @@
 }
 
 .back .jcard .tracks li {
-	font-size: max(10.5px, 3cqw);
+	font-size: max(0.6562rem, 3cqw);
 	padding: 0.6cqw 0;
 }
 
@@ -409,7 +479,7 @@
 	display: grid;
 	grid-template-columns: 1fr;
 	gap: 1.2cqw;
-	font: 500 max(10.5px, 3cqw) / 1.2 var(--sans);
+	font: 500 max(0.6562rem, 3cqw) / 1.2 var(--sans);
 	text-transform: none;
 	letter-spacing: 0;
 }
@@ -419,7 +489,7 @@
 	padding: 0;
 	display: grid;
 	gap: 1.2cqw;
-	font: 500 max(10.5px, 3cqw) / 1.2 var(--sans);
+	font: 500 max(0.6562rem, 3cqw) / 1.2 var(--sans);
 }
 
 .jcard .topics li {
@@ -435,7 +505,7 @@
 }
 
 .back dl dt {
-	font: 500 max(9px, 2.5cqw) / 1.2 var(--mono);
+	font: 500 max(0.5625rem, 2.5cqw) / 1.2 var(--mono);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	opacity: 0.7;
@@ -461,9 +531,9 @@
 	background: var(--field);
 	color: var(--on-field);
 	border-bottom: var(--rule) solid var(--ink);
-	font-size: max(9px, 2.6cqw);
+	font-size: max(0.5625rem, 2.6cqw);
 	max-width: none;
-	white-space: nowrap;
+	flex-wrap: wrap;
 }
 
 .entry .slotline .ch {
@@ -471,7 +541,7 @@
 }
 
 .back .entry h2 {
-	font-size: 7.4cqw;
+	font-size: max(1.125rem, 7.4cqw);
 	margin-top: 0.6cqw;
 }
 
@@ -482,7 +552,7 @@
 }
 
 .entry .blurb {
-	font-size: max(10.5px, 3.3cqw);
+	font-size: max(0.6562rem, 3.3cqw);
 }
 
 .entry h3 {
@@ -494,7 +564,7 @@
 	grid-template-columns: 8cqw 1fr;
 	align-items: center;
 	padding: 0.45cqw 0;
-	font-size: max(10.5px, 3.1cqw);
+	font-size: max(0.6562rem, 3.1cqw);
 }
 
 /* The time slot: each episode sits in a guide's little cell. */
@@ -506,7 +576,7 @@
 	background: color-mix(in srgb, var(--field) 35%, var(--card));
 	border: 1px solid var(--ink);
 	opacity: 1;
-	font-size: max(9px, 2.4cqw);
+	font-size: max(0.5625rem, 2.4cqw);
 }
 
 .entry .links {
@@ -520,30 +590,30 @@
 }
 
 .back .cover h2 {
-	font-size: 7cqw;
+	font-size: max(1.125rem, 7cqw);
 }
 
 .back .cover dl {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 0.4cqw 3cqw;
-	font: 500 max(10.5px, 2.9cqw) / 1.2 var(--sans);
+	font: 500 max(0.6562rem, 2.9cqw) / 1.2 var(--sans);
 	text-transform: none;
 	letter-spacing: 0;
 }
 
 .back .cover .tracks li {
 	padding: 0.3cqw 0;
-	font-size: max(10.5px, 3cqw);
+	font-size: max(0.6562rem, 3cqw);
 }
 
 .back .cover dl dt {
-	font-size: max(9px, 2.4cqw);
+	font-size: max(0.5625rem, 2.4cqw);
 }
 
 .back .cover .explain {
 	max-width: none;
-	font-size: max(12px, 3.4cqw);
+	font-size: max(0.75rem, 3.4cqw);
 	line-height: 1.35;
 	margin-bottom: 0.6cqw;
 }
@@ -555,7 +625,7 @@
 	padding: 0;
 	display: grid;
 	gap: 0.6cqw;
-	font-size: max(10.5px, 2.9cqw);
+	font-size: max(0.6562rem, 2.9cqw);
 	line-height: 1.25;
 }
 
@@ -577,7 +647,7 @@
 .cover .note {
 	border-left: var(--rule) solid var(--field);
 	padding-left: 2cqw;
-	font-size: max(10.5px, 2.8cqw);
+	font-size: max(0.6562rem, 2.8cqw);
 	line-height: 1.25;
 }
 
@@ -625,13 +695,13 @@
 .mount .hand dl {
 	grid-template-columns: 14cqw 1fr;
 	gap: 0.6cqw 2cqw;
-	font: 500 max(10.5px, 3.6cqw) / 1.35 var(--sans);
+	font: 500 max(0.6562rem, 3.6cqw) / 1.35 var(--sans);
 	text-transform: none;
 	letter-spacing: 0;
 }
 
 .mount .hand dt {
-	font: 500 max(9px, 2.4cqw) / 2 var(--mono);
+	font: 500 max(0.5625rem, 2.4cqw) / 2 var(--mono);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	opacity: 0.7;
@@ -651,7 +721,7 @@
 }
 
 .stats .bio {
-	font-size: max(10.5px, 3.4cqw);
+	font-size: max(0.6562rem, 3.4cqw);
 }
 
 .stats dl {
@@ -669,18 +739,18 @@
 
 .stats dt {
 	display: block;
-	font-size: max(9px, 2.5cqw);
+	font-size: max(0.5625rem, 2.5cqw);
 }
 
 .stats dd {
-	font: 600 max(10.5px, 3.6cqw) / 1.2 var(--sans);
+	font: 600 max(0.6562rem, 3.6cqw) / 1.2 var(--sans);
 	text-transform: none;
 	letter-spacing: 0;
 }
 
 .stats .record {
 	display: grid;
-	font-size: max(10.5px, 3.4cqw);
+	font-size: max(0.6562rem, 3.4cqw);
 }
 
 .stats .record li {
@@ -692,7 +762,7 @@
 }
 
 .stats .record li span:last-child {
-	font: 500 max(9px, 2.8cqw) / 1.5 var(--mono);
+	font: 500 max(0.5625rem, 2.8cqw) / 1.5 var(--mono);
 	white-space: nowrap;
 }
 
@@ -700,13 +770,27 @@
 
 .slot.is-off *,
 .slot.is-off *::before,
-.slot.is-off *::after,
-.still .slot *,
-.still .slot *::before,
-.still .slot *::after {
+.slot.is-off *::after {
 	/* !important: a format's `animation` shorthand resets the play state, */
 	/* and its selector is often the more specific one. */
 	animation-play-state: paused !important;
+}
+
+/* Still ("Pause motion", or no script to offer the switch): the loops stop on */
+/* a finished frame, as under reduced motion (formats.css). Paused, they would */
+/* freeze on their first frame, and the liner's lines would print blank. */
+html:is(.still, :not(.js)) .slot *,
+html:is(.still, :not(.js)) .slot *::before,
+html:is(.still, :not(.js)) .slot *::after {
+	animation: none !important;
+}
+
+.still .flip,
+.still .tilt,
+.still .shadow,
+.still .card::after,
+.still .slot::after {
+	transition: none;
 }
 
 /* ---- without JavaScript: nothing turns, so each back lies under its front -- */

@@ -6,6 +6,7 @@
  *   - drag:   a card can be moved about the table, wide screens, mouse only.
  *   - pause:  a card that is off screen stops its idle loops.
  *   - deal:   the cards are dealt from a stack when the page opens.
+ *   - remote: the arrow keys move focus to the nearest card that way, as on a TV.
  *
  * There is no requestAnimationFrame loop here, and eslint forbids one: the
  * only per-frame work is the browser's own (CSS animations and transitions,
@@ -30,6 +31,34 @@ const raise = (slot: HTMLElement): void => {
 	slot.style.zIndex = String(++top);
 };
 
+/**
+ * Focus a control and bring it into view when it is not: first inside a back
+ * that scrolls (large text), then in the window: the whole card when that
+ * fits, else just the control (a tall card at high zoom).
+ */
+const reveal = (el: HTMLElement | null | undefined): void => {
+	if (!el) return;
+	el.focus({ preventScroll: true });
+	const box = el.parentElement?.closest<HTMLElement>('.is-long, .scroll, .stub.bk');
+	if (box) {
+		// Vertical only: a back turned away is mirrored left to right, not up and down.
+		const b = box.getBoundingClientRect();
+		const c = el.getBoundingClientRect();
+		if (c.top < b.top) box.scrollTop -= b.top - c.top;
+		else if (c.bottom > b.bottom) box.scrollTop += Math.min(c.bottom - b.bottom, c.top - b.top);
+	}
+	const card = el.closest('.slot') ?? el;
+	const fits = card.getBoundingClientRect().height <= innerHeight;
+	const shown = fits ? card : el;
+	const r = shown.getBoundingClientRect();
+	if (r.top < 0 || r.bottom > innerHeight) {
+		shown.scrollIntoView({
+			block: fits ? 'center' : 'nearest',
+			behavior: reduced() ? 'auto' : 'smooth',
+		});
+	}
+};
+
 const front = (slot: HTMLElement): HTMLElement | null => slot.querySelector('.front');
 const back = (slot: HTMLElement): HTMLElement | null => slot.querySelector('.back');
 
@@ -50,11 +79,11 @@ function flip(slot: HTMLElement, flipped: boolean, moveFocus = true): void {
 		// The back opens first, then takes focus, THEN the front is shut: an
 		// inert element that holds focus drops it to <body>.
 		b.inert = false;
-		if (moveFocus) b.querySelector<HTMLElement>('.turn-back')?.focus({ preventScroll: true });
+		if (moveFocus) reveal(b.querySelector<HTMLElement>('.turn-back'));
 		f.inert = true;
 	} else {
 		f.inert = false;
-		if (moveFocus) turn.focus({ preventScroll: true });
+		if (moveFocus) reveal(turn);
 		b.inert = true;
 	}
 }
@@ -78,6 +107,8 @@ async function copyAddress(button: HTMLButtonElement): Promise<void> {
 	}
 	if (status) status.textContent = message === 'Copied' ? 'Copied to clipboard' : message;
 	window.clearTimeout(copyTimers.get(button));
+	// A printed address stays until the next press: it is there to copy by hand.
+	if (message !== 'Copied') return;
 	copyTimers.set(
 		button,
 		window.setTimeout(() => {
@@ -85,6 +116,146 @@ async function copyAddress(button: HTMLButtonElement): Promise<void> {
 			if (status) status.textContent = '';
 		}, 2500),
 	);
+}
+
+/*
+ * The remote: a TV app's focus engine, for a keyboard. An arrow moves focus to
+ * the nearest control that lies that way, on any card or in the bar. Controls
+ * on a face that is turned away are inert and never count. With nothing
+ * focused, the first arrow lands on the card nearest the window's top-left.
+ */
+const ARROWS: Record<string, readonly [number, number]> = {
+	ArrowRight: [1, 0],
+	ArrowLeft: [-1, 0],
+	ArrowDown: [0, 1],
+	ArrowUp: [0, -1],
+};
+const FOCUSABLE = 'a[href], button:not(:disabled), [tabindex="0"]';
+
+/** Can focus land here: not on a face turned away, not hidden, laid out. */
+const usable = (el: HTMLElement): boolean =>
+	!el.closest('[inert]') &&
+	el.getClientRects().length > 0 &&
+	getComputedStyle(el).visibility !== 'hidden';
+
+/**
+ * Where the remote starts when nothing has focus: the card control nearest the
+ * window's top-left corner, among those whose centre is on screen. The first
+ * arrow wakes the remote, as the first press on a TV shows where you are.
+ */
+function start(table: Element): HTMLElement | null {
+	let best: HTMLElement | null = null;
+	let bestScore = Infinity;
+	for (const el of table.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+		if (!usable(el)) continue;
+		const r = el.getBoundingClientRect();
+		const cx = (r.left + r.right) / 2;
+		const cy = (r.top + r.bottom) / 2;
+		if (cx < 0 || cx > innerWidth || cy < 0 || cy > innerHeight) continue;
+		const score = Math.hypot(Math.max(0, r.left), Math.max(0, r.top));
+		if (score < bestScore) {
+			bestScore = score;
+			best = el;
+		}
+	}
+	return best;
+}
+
+function nearest(
+	from: HTMLElement,
+	[x, y]: readonly [number, number],
+	area: Element,
+): HTMLElement | null {
+	const sign = x || y;
+	// A box as [start, end] along the direction of travel (mirrored when it
+	// points back, so "further" is always larger), and as a span across it.
+	const along = (r: DOMRect): [number, number] =>
+		x
+			? sign > 0
+				? [r.left, r.right]
+				: [-r.right, -r.left]
+			: sign > 0
+				? [r.top, r.bottom]
+				: [-r.bottom, -r.top];
+	const across = (r: DOMRect): [number, number] => (x ? [r.top, r.bottom] : [r.left, r.right]);
+	const o = from.getBoundingClientRect();
+	const [, oEnd] = along(o);
+	const [oA, oB] = across(o);
+	// An open card holds focus until nothing on it lies that way, like a panel on a TV.
+	const home = from.closest('.slot');
+	let best: HTMLElement | null = null;
+	let bestScore = Infinity;
+	for (const el of area.querySelectorAll<HTMLElement>(FOCUSABLE)) {
+		if (el === from || !usable(el)) continue;
+		const r = el.getBoundingClientRect();
+		const [start, end] = along(r);
+		// Its centre must lie past the far edge of `from`, so a card in the same
+		// column, leaning a little, is not "to the right".
+		if ((start + end) / 2 <= oEnd) continue;
+		const [a, b] = across(r);
+		const gap = Math.max(0, start - oEnd);
+		const off = Math.abs(a + b - oA - oB) / 2;
+		// In line (the two overlap across the direction) beats off to one side.
+		const inLine = a < oB && b > oA;
+		const score = (home?.contains(el) ? 0 : 2e5) + (inLine ? gap + off / 4 : 1e5 + gap + off * 2);
+		if (score < bestScore) {
+			bestScore = score;
+			best = el;
+		}
+	}
+	return best;
+}
+
+/**
+ * A back is laid out to fit its card, but larger text (text-only zoom, a
+ * reader's own spacing) can outgrow it. A body that overflows becomes a
+ * scroller a keyboard can reach: a tab stop, named by the card's title, that
+ * Up and Down scroll (the remote). One that fits again goes back to plain,
+ * but not while it holds focus: that would drop focus to <body>, so it waits
+ * for the blur. The cast's body is its screen, `.np`; the ticket's is the back
+ * of its stub, which keeps its own role and name. The liner is always a
+ * scroller, in its markup.
+ */
+const SCROLLERS = '.back .bb:not(.scroll), .back .np, .stub.bk';
+const waiting = new WeakSet<HTMLElement>();
+function fit(slot: HTMLElement): void {
+	for (const el of slot.querySelectorAll<HTMLElement>(SCROLLERS)) {
+		// The stub's back only counts once it is torn off: before that it is a
+		// narrow strip, turned away and inert, that no one needs to scroll.
+		const shut = el.matches('.stub.bk') && !slot.classList.contains('is-torn');
+		const over = !shut && el.scrollHeight - el.clientHeight > 1;
+		if (over === el.classList.contains('is-long')) continue;
+		if (!over && el === document.activeElement) {
+			if (!waiting.has(el)) {
+				waiting.add(el);
+				el.addEventListener(
+					'blur',
+					() => {
+						waiting.delete(el);
+						fit(slot);
+					},
+					{ once: true },
+				);
+			}
+			continue;
+		}
+		el.classList.toggle('is-long', over);
+		if (over) {
+			el.tabIndex = 0;
+			const title = slot.querySelector<HTMLElement>('.back h2');
+			if (!el.hasAttribute('role') && title) {
+				// Named by the title it holds, so the name is the heading's own text.
+				title.id ||= `${slot.dataset.card ?? 'card'}-title`;
+				el.setAttribute('role', 'region');
+				el.setAttribute('aria-labelledby', title.id);
+			}
+		} else {
+			el.removeAttribute('tabindex');
+			if (el.hasAttribute('aria-labelledby')) {
+				for (const a of ['role', 'aria-labelledby']) el.removeAttribute(a);
+			}
+		}
+	}
 }
 
 export function boot(): void {
@@ -98,6 +269,19 @@ export function boot(): void {
 		const b = back(slot);
 		if (b) b.inert = true;
 	}
+
+	// ---- backs that outgrow their card scroll, and say so ------------------
+	// Watched by size (the window, zoom) and their content's size (text-only
+	// zoom, fonts loading); spacing applied by a reader's own style sheet
+	// changes neither box, so a card is checked again when it turns and when
+	// focus enters it.
+	const fitAll = (): void => slots.forEach(fit);
+	const grown = new ResizeObserver(fitAll);
+	for (const el of table.querySelectorAll<HTMLElement>(SCROLLERS)) {
+		grown.observe(el);
+		for (const child of el.children) grown.observe(child);
+	}
+	void document.fonts.ready.then(fitAll);
 
 	// ---- still: pause every idle loop -------------------------------------
 	const toggle = document.querySelector<HTMLButtonElement>('.still-toggle');
@@ -138,13 +322,14 @@ export function boot(): void {
 		if (torn) {
 			raise(slot);
 			bk.inert = false;
-			bk.querySelector<HTMLElement>('.actions .go')?.focus({ preventScroll: true });
+			reveal(bk.querySelector<HTMLElement>('.actions .go'));
 			fr.inert = true;
 		} else {
 			fr.inert = false;
-			fr.focus({ preventScroll: true });
+			reveal(fr);
 			bk.inert = true;
 		}
+		fit(slot);
 	}
 	table.addEventListener('click', (e) => {
 		const target = e.target;
@@ -185,6 +370,53 @@ export function boot(): void {
 		if (slot) flip(slot, false);
 		const torn = active?.closest<HTMLElement>('.slot.is-torn');
 		if (torn) tear(torn, false);
+	});
+
+	// ---- remote: the arrow keys move focus to the nearest control that way ----
+	const area = table.closest('main') ?? table;
+	document.addEventListener('keydown', (e) => {
+		const dir = ARROWS[e.key];
+		if (!dir || e.defaultPrevented || e.isComposing) return;
+		if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+		const a = document.activeElement;
+		const page = !a || a === document.body || a === document.documentElement;
+		if (!page && !(a instanceof HTMLElement && area.contains(a))) return;
+		const active = a instanceof HTMLElement && !page ? a : null;
+		if (active?.isContentEditable || active?.matches('input, textarea, select')) return;
+		let next: HTMLElement | null;
+		if (!active || !active.matches(FOCUSABLE)) {
+			// No control has focus (the page, or `main` after a click on the paper or
+			// the skip link): the first arrow lands on a card.
+			next = start(table);
+		} else {
+			// A scrolling back (the liner, or one that outgrew its card) scrolls under
+			// Up and Down until it reaches its end; then the arrow moves on. At the
+			// foot, Down goes to its own links first: they lie inside it, so they are
+			// never "below" it.
+			const scroller = active.matches('.scroll, .is-long');
+			if (scroller && dir[1] !== 0) {
+				const room =
+					dir[1] > 0
+						? active.scrollTop + active.clientHeight < active.scrollHeight - 1
+						: active.scrollTop > 0;
+				if (room) return;
+			}
+			next =
+				(scroller && dir[1] > 0
+					? [...active.querySelectorAll<HTMLElement>(FOCUSABLE)].find(usable)
+					: null) ?? nearest(active, dir, area);
+		}
+		if (!next) return; // nothing that way: the arrow keeps its usual job
+		e.preventDefault();
+		reveal(next);
+	});
+
+	// A card in focus comes to the top of the pile, so one dragged over it
+	// cannot hide the control that has focus.
+	table.addEventListener('focusin', (e) => {
+		const slot = (e.target as Element).closest<HTMLElement>('.slot');
+		if (slot && slot.style.zIndex !== String(top)) raise(slot);
+		if (slot) fit(slot);
 	});
 
 	// ---- tilt: a mouse only. Touch has no hover to lean toward. ------------

@@ -3,8 +3,10 @@
 interface Props {
 	/** `sr` is read after the label by screen readers only, when the label alone repeats across cards. */
 	links: { label: string; href: string; sr?: string }[];
+	/** The card's name: the default `sr`, so two "Source" links read "Source: VAMP" and "Source: Sleeve". */
+	of?: string;
 }
-const { links } = Astro.props;
+const { links, of } = Astro.props;
 ---
 
 {links.length > 0 && (
@@ -13,7 +15,7 @@ const { links } = Astro.props;
 			<li>
 				<a class="go" href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}>
 					{l.label}
-					{l.sr && <span class="visually-hidden">: {l.sr}</span>}
+					{(l.sr ?? of) && <span class="visually-hidden">: {l.sr ?? of}</span>}
 				</a>
 			</li>
 		))}

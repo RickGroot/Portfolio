@@ -63,12 +63,55 @@
 	box-shadow: none;
 }
 
+/*
+ * Focus: the cards' crop marks, small. The chip lifts 2px and its shadow grows
+ * to match, and the marks close in round chip and shadow with an even gap
+ * (card.css has the long version of this).
+ */
+.chip {
+	position: relative;
+	transition:
+		translate 120ms ease-out,
+		box-shadow 120ms ease-out;
+}
+
+.chip:focus-visible {
+	outline: none;
+	translate: -2px -2px;
+	box-shadow: 5px 5px 0 var(--ink);
+}
+
+.chip:focus-visible::after {
+	--gap: 6px;
+	--arm: 10px;
+	content: '';
+	position: absolute;
+	inset: calc(-1 * var(--rule) - var(--gap)) calc(-1 * var(--rule) - 5px - var(--gap))
+		calc(-1 * var(--rule) - 5px - var(--gap)) calc(-1 * var(--rule) - var(--gap));
+	border: 3px solid var(--blue);
+	mask: conic-gradient(at var(--arm) var(--arm), transparent 75%, var(--blue) 0) 0 0 /
+		calc(100% - var(--arm)) calc(100% - var(--arm));
+	pointer-events: none;
+	transition: scale 220ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+@starting-style {
+	.chip:focus-visible::after {
+		scale: 1.12;
+	}
+}
+
+.still .chip,
+.still .chip::after {
+	transition: none;
+}
+
 .still-toggle[aria-pressed='true'] {
 	background: var(--ink);
 	color: var(--paper);
 }
 
-/* Without the script nothing moves, so the switch has nothing to stop. */
+/* Without the script the loops do not run (card.css), so there is nothing to stop. */
 html:not(.js) .still-toggle {
 	display: none;
 }

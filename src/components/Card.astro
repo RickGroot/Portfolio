@@ -485,8 +485,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 				<div class="card back">
 					<div class="bh meta">
 						<button class="turn-back" type="button">
-							Turn back
-							<span class="visually-hidden">: {label}</span>
+							Turn back<span class="visually-hidden">: {label}</span>
 						</button>
 						<span class="cat">{card.number}</span>
 					</div>
@@ -556,7 +555,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 									</section>
 								</div>
 							</div>
-							<Links links={card.back.links} />
+							<Links links={card.back.links} of={label} />
 						</div>
 					) : card.kind === 'listing' ? (
 						<div class="bb entry">
@@ -573,7 +572,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 									<li>{t}</li>
 								))}
 							</ol>
-							<Links links={card.back.links} />
+							<Links links={card.back.links} of={label} />
 						</div>
 					) : card.kind === 'sleeve' ? (
 						<div class="bb cover">
@@ -596,7 +595,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 								</dl>
 							)}
 							<p class="note">{card.back.note}</p>
-							<Links links={card.back.links} />
+							<Links links={card.back.links} of={label} />
 						</div>
 					) : card.kind === 'cast' ? (
 						<div class="bb tv">
@@ -634,7 +633,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 								</div>
 								<div class="stand" aria-hidden="true" />
 							</div>
-							<Links links={card.back.links} />
+							<Links links={card.back.links} of={label} />
 						</div>
 					) : card.kind === 'polaroid' ? (
 						<div class="bb photoback">
