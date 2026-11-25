@@ -9,7 +9,7 @@ Astro 7 (static output) · strict TypeScript · native CSS with custom propertie
 
 The site is one page, "The Collection": loose cards on a paper table, draggable, each flipping to its
 case study. The card system is in `docs/card-system.md`. The earlier TV-channel site is commit
-5f1bb67; its notes are in `docs/retired/`.
+4bd873d; its notes are in `docs/retired/`.
 
 ## Pinned versions — and why
 

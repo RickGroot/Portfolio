@@ -4,7 +4,7 @@ The site is one page: a table with loose cards on it. Each card is a physical ob
 record sleeve, a slide), one flat pigment, a hard shadow. Click or press Enter and it turns over;
 the back is the case study. A quiet corner mark (`.turn .corner`) and the pointer cursor say a card
 turns; the page prints no instruction. Decided by Rick, 2026-11-23, layout "A, the table". The old site
-(TV channels) is commit 5f1bb67.
+(TV channels) is commit 4bd873d.
 
 ## Tokens
 

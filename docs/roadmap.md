@@ -29,7 +29,7 @@ their turn arrives — not guessed at today.
 ### The Collection redesign (2026-11-23)
 
 The TV-channel guide is replaced by one page of loose cards on a table ("The Collection"):
-`redesign/cards`, the old site safe in 5f1bb67. No new dependency. Seven card formats, one flat
+`redesign/cards`, the old site safe in 4bd873d. No new dependency. Seven card formats, one flat
 pigment each, a flip for the case study (no `/work/**` pages; Firebase 301s them), per-format idle
 loops in CSS and a WAAPI deal, no canvas and no rAF. Homepage JS is 2.6 KB gzip. See
 `docs/card-system.md`. Phases 3 to 6 below were written for the channel site and need rewriting
