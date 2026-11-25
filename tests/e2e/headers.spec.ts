@@ -39,9 +39,25 @@ test.describe('security headers: the config', () => {
 		}
 		expect(directive('object-src')).toEqual(["'none'"]);
 		expect(directive('frame-ancestors')).toEqual(["'none'"]);
-		// No third-party origin may run (CLAUDE.md), so nothing but self, hashes,
-		// data: images and the CSP1 fallback.
+		// No third-party origin may run (CLAUDE.md), so nothing but self, hashes
+		// and data: images. style-src keeps 'unsafe-inline' for the palette's
+		// style attributes.
 		expect(csp).not.toMatch(/https?:|\*|'unsafe-eval'|'strict-dynamic'/);
+		// Scripts run by hash. script-src's 'unsafe-inline' is only the fallback
+		// for CSP1-only TV browsers: a browser that knows hashes ignores it once
+		// a hash is listed, so it must never stand without one.
+		expect(directive('script-src').some((s) => s.startsWith("'sha256-"))).toBe(true);
+	});
+
+	// With cleanUrls the homepage is requested as `/`, which `**/*.html` never
+	// matches; without its own rule it would get Firebase's default one-hour cache.
+	test('the HTML is revalidated on every visit, `/` included', () => {
+		const cache = (source: string) =>
+			config.hosting.headers
+				.find((b) => b.source === source)
+				?.headers.find((h) => h.key === 'Cache-Control')?.value;
+		expect(cache('/')).toMatch(/max-age=0/);
+		expect(cache('**/*.@(html)')).toMatch(/max-age=0/);
 	});
 
 	// Firebase merges every matching block; a narrower one setting the same key
@@ -119,6 +135,7 @@ test.describe('security headers: the page under them', () => {
 		if (PREVIEW) {
 			const got = await response!.allHeaders();
 			for (const h of all) expect(got[h.key.toLowerCase()], h.key).toBe(h.value);
+			expect(got['cache-control'], 'Cache-Control on /').toMatch(/max-age=0/);
 		}
 		await page.waitForTimeout(900); // the deal
 		// The bootstrap ran (it is the inline script the hash allows).
