@@ -6,7 +6,7 @@ role: Your role on it
 company: Hypersolid # or Independent
 period: '2024' # or '2022–2025'. First-to-last year, NOT a claim of continuous work.
 status: completed # or ongoing -> renders as "Ongoing since <period>"
-summary: One sentence, 50-180 characters. This becomes the meta description, so write it for a search result.
+summary: One sentence, 50-180 characters. Not rendered on the one-page site; keep it as the one-line pitch for the work.
 tags: ['Tag one', 'Tag two'] # 1-4. The card layout breaks past four.
 format: tape # tape, listing, sleeve or cast: the shape of its card. See docs/card-system.md.
 pigment: red # yellow, orange, red, blue or green: the flat field of its card.

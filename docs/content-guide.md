@@ -14,7 +14,7 @@ All public work content lives in `src/content/work/*.md`. **No content lives in 
 
 There are no sub-pages: `/work` and `/work/**` are 301 redirects to `/` in `firebase.json`. The
 card's front is a short pitch (title, meta, one picture); its back is the other side of the object
-(`built`, `stack`, `blurb`, `note` and its links; the `summary` is the meta description). Cards keep `order`, which also sets their catalogue number
+(`built`, `stack`, `blurb`, `note` and its links; the `summary` is not rendered). Cards keep `order`, which also sets their catalogue number
 (`RG 002`...). The deck is the work cards plus the player, How I work, the photographs (slides and polaroids,
 woven between the work by their `order`) and the ticket (`src/lib/deck.ts`).
 
@@ -35,7 +35,7 @@ never quotes. `minutes` is the read time Medium shows, and `order` works as it d
 | `company`  | `Hypersolid` or `Independent`                        | An enum costs nothing and prevents `hypersolid` / `Hypersolid ` drift.           |
 | `period`   | `2023` or `2022–2025` (en dash)                      | First-to-last year of involvement. **See the note below.**                       |
 | `status`   | `ongoing` or `completed`                             | `ongoing` renders as "Ongoing since 2022". See below.                            |
-| `summary`  | 50–180 chars                                         | This becomes the `<meta name="description">`. Write it for a search result.      |
+| `summary`  | 50–180 chars                                         | Not rendered on the one-page site; the one-line pitch, kept for reuse.           |
 | `tags`     | 1–4 items                                            | The card layout breaks past four.                                                |
 | `format`   | `tape`, `listing`, `sleeve`, `cast`                  | Which card it is printed as. See `docs/card-system.md`.                          |
 | `pigment`  | a palette name                                       | The card's flat colour. A name, not a hex: every pigment is contrast-solved.     |
