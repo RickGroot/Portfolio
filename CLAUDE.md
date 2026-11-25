@@ -91,8 +91,9 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
   server. `astro check` writes that cache, and the dev server keeps serving the old shape from it.
 - **CSS is minified by esbuild, not Lightning CSS** (`astro.config.mjs`). Lightning folds
   `animation-timeline` into the `animation` shorthand, which is invalid, and the browser drops it.
-- **Fonts are budgeted at 160 KB total** (`scripts/check-assets.mjs`), up from 80 KB: the Archivo
-  variable file is 90 KB unsubset. Subsetting it (needs `pyftsubset`) would win the room back.
+- **Fonts are budgeted at 80 KB total** (`scripts/check-assets.mjs`). Archivo is a static 900 / 62%
+  instance (11.8 KB), not the variable file: a new weight or width means cutting a new instance with
+  the recipe in `docs/performance.md`, under a new file name.
 
 ## Budgets
 
@@ -117,7 +118,8 @@ measurement). Run it with `pnpm test:vitals`.
 
 `pnpm test` covers routes and the `/work` redirect config, smoke, share metadata, scrollbars at four
 widths, axe on `/` and the 404, the remote (arrow keys move focus spatially), the keyboard flip (Enter turns a card, focus moves, the hidden face
-is inert), reduced motion, pigment contrast with the manifest and favicon pinned to the palette,
+is inert), drag (a mouse moves a card on a wide screen and letting go does not turn it; a short
+press still turns it; a narrow screen does not drag), reduced motion, pigment contrast with the manifest and favicon pinned to the palette,
 no third-party origins, the JS budget and the service-worker kill switch. `astro preview` does not
 read `firebase.json`, so redirects are asserted on the config.
 

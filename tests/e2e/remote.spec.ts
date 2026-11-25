@@ -18,7 +18,13 @@ const focused = (page: Page) =>
 	page.evaluate(() => {
 		const a = document.activeElement;
 		const slot = a?.closest<HTMLElement>('[data-card]');
-		const r = slot?.getBoundingClientRect();
+		// The largest piece, as table.ts measures: WebKit splits a tilted card at
+		// the top of a column across the column break.
+		const r = slot
+			? [...slot.getClientRects()].reduce((a, b) =>
+					b.width * b.height > a.width * a.height ? b : a,
+				)
+			: undefined;
 		return {
 			card: slot?.dataset.card ?? null,
 			cls: a?.className ?? '',

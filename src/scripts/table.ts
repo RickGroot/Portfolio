@@ -25,6 +25,26 @@ const root = document.documentElement;
 const reduced = (): boolean =>
 	root.classList.contains('still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/**
+ * Where an element is on screen. Not getBoundingClientRect: in WebKit a tilted
+ * card at the top of a column pokes a corner above the column, and WebKit maps
+ * that corner to the foot of the column before, so the bounding box of the
+ * first card in a column spans the whole table. The largest piece is the card.
+ */
+const rect = (el: Element): DOMRect => {
+	let best = el.getBoundingClientRect();
+	const parts = el.getClientRects();
+	if (parts.length < 2) return best;
+	let area = -1;
+	for (const r of parts) {
+		if (r.width * r.height > area) {
+			area = r.width * r.height;
+			best = r;
+		}
+	}
+	return best;
+};
+
 /** The stacking counter: the card handled last lies on top. */
 let top = 10;
 const raise = (slot: HTMLElement): void => {
@@ -42,15 +62,15 @@ const reveal = (el: HTMLElement | null | undefined): void => {
 	const box = el.parentElement?.closest<HTMLElement>('.is-long, .scroll, .stub.bk');
 	if (box) {
 		// Vertical only: a back turned away is mirrored left to right, not up and down.
-		const b = box.getBoundingClientRect();
-		const c = el.getBoundingClientRect();
+		const b = rect(box);
+		const c = rect(el);
 		if (c.top < b.top) box.scrollTop -= b.top - c.top;
 		else if (c.bottom > b.bottom) box.scrollTop += Math.min(c.bottom - b.bottom, c.top - b.top);
 	}
 	const card = el.closest('.slot') ?? el;
-	const fits = card.getBoundingClientRect().height <= innerHeight;
+	const fits = rect(card).height <= innerHeight;
 	const shown = fits ? card : el;
-	const r = shown.getBoundingClientRect();
+	const r = rect(shown);
 	if (r.top < 0 || r.bottom > innerHeight) {
 		shown.scrollIntoView({
 			block: fits ? 'center' : 'nearest',
@@ -148,7 +168,7 @@ function start(table: Element): HTMLElement | null {
 	let bestScore = Infinity;
 	for (const el of table.querySelectorAll<HTMLElement>(FOCUSABLE)) {
 		if (!usable(el)) continue;
-		const r = el.getBoundingClientRect();
+		const r = rect(el);
 		const cx = (r.left + r.right) / 2;
 		const cy = (r.top + r.bottom) / 2;
 		if (cx < 0 || cx > innerWidth || cy < 0 || cy > innerHeight) continue;
@@ -178,7 +198,7 @@ function nearest(
 				? [r.top, r.bottom]
 				: [-r.bottom, -r.top];
 	const across = (r: DOMRect): [number, number] => (x ? [r.top, r.bottom] : [r.left, r.right]);
-	const o = from.getBoundingClientRect();
+	const o = rect(from);
 	const [, oEnd] = along(o);
 	const [oA, oB] = across(o);
 	// An open card holds focus until nothing on it lies that way, like a panel on a TV.
@@ -187,7 +207,7 @@ function nearest(
 	let bestScore = Infinity;
 	for (const el of area.querySelectorAll<HTMLElement>(FOCUSABLE)) {
 		if (el === from || !usable(el)) continue;
-		const r = el.getBoundingClientRect();
+		const r = rect(el);
 		const [start, end] = along(r);
 		// Its centre must lie past the far edge of `from`, so a card in the same
 		// column, leaning a little, is not "to the right".
@@ -426,7 +446,7 @@ export function boot(): void {
 		if (!slot || slot.classList.contains('is-flipped') || slot.classList.contains('is-dragging')) {
 			return;
 		}
-		const r = slot.getBoundingClientRect();
+		const r = rect(slot);
 		// Clamped: on the hover pad around the card the pointer is outside it.
 		const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
 		const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
@@ -517,7 +537,7 @@ export function boot(): void {
 		const originY = Math.max(t.top, 0) + 80;
 		let n = 0;
 		for (const slot of slots) {
-			const r = slot.getBoundingClientRect();
+			const r = rect(slot);
 			if (r.top > innerHeight) continue; // below the fold: already on the table
 			const dx = originX - (r.left + r.width / 2);
 			const dy = originY - (r.top + r.height / 2);
