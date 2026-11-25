@@ -23,7 +23,8 @@
 		"test:vitals": "playwright test --grep @vitals --workers=1",
 		"setup:browsers": "playwright install --with-deps chromium",
 		"jazz": "node scripts/jazz.mjs",
-		"check:assets": "node scripts/check-assets.mjs"
+		"check:assets": "node scripts/check-assets.mjs",
+		"stats": "node scripts/stats.mjs"
 	},
 	"dependencies": {
 		"astro": "7.3.3"

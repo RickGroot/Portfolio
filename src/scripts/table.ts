@@ -7,6 +7,7 @@
  *   - pause:  a card that is off screen stops its idle loops.
  *   - deal:   the cards are dealt from a stack when the page opens.
  *   - remote: the arrow keys move focus to the nearest card that way, as on a TV.
+ *   - count:  a view, a turned card and a link out are counted (see beacon.ts).
  *
  * There is no requestAnimationFrame loop here, and eslint forbids one: the
  * only per-frame work is the browser's own (CSS animations and transitions,
@@ -17,6 +18,8 @@
  * Without this script the page is still complete: CSS lays each back out under
  * its front (`html:not(.js)`), so every case study and link is reachable.
  */
+
+import { leaving, mark, view } from './beacon';
 
 const DRAG_THRESHOLD = 5;
 const WIDE = '(min-width: 821px)';
@@ -283,6 +286,10 @@ function fit(slot: HTMLElement): void {
 }
 
 export function boot(): void {
+	view();
+	document.addEventListener('click', leaving);
+	document.addEventListener('auxclick', leaving);
+
 	const table = document.querySelector<HTMLElement>('.table');
 	if (!table) return;
 	const slots = [...table.querySelectorAll<HTMLElement>('.slot')];
@@ -361,6 +368,7 @@ export function boot(): void {
 		const slot = target.closest<HTMLElement>('.slot');
 		if (slot && target.closest('.tear')) {
 			tear(slot, true);
+			mark('tear');
 			return;
 		}
 		if (slot && target.closest('.put-back')) {
@@ -368,7 +376,10 @@ export function boot(): void {
 			return;
 		}
 		const copy = target.closest<HTMLButtonElement>('.copy');
-		if (copy) void copyAddress(copy);
+		if (copy) {
+			void copyAddress(copy);
+			mark('copy');
+		}
 	});
 
 	// ---- flip ------------------------------------------------------------
@@ -382,6 +393,7 @@ export function boot(): void {
 		if (target.closest('.turn')) {
 			if (swallow) return; // the click that ends a drag is not a flip
 			flip(slot, true);
+			mark(`flip.${slot.dataset.card ?? 'card'}`);
 		} else if (target.closest('.turn-back')) {
 			flip(slot, false);
 		}

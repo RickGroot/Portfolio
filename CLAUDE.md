@@ -68,6 +68,10 @@ attributable failure. The trade-off: a local `pnpm build` will not catch type er
 - **`global.css` is imported exactly once, in `BaseLayout.astro`.** Never `@import` it from a
   component (the old site duplicated `@font-face` into every stylesheet that way).
 - **No third-party origins at runtime.** Fonts are self-hosted. A test asserts this.
+- **Analytics is the host's request log, nothing else.** `src/scripts/beacon.ts` sends a same-origin
+  `GET /e?c=<event>` (an empty file in `public/`, served `no-store`); no cookie, no id, no service,
+  and nothing for a browser that sends GPC or Do Not Track. See `docs/analytics.md`. Do not add an
+  analytics script or SDK.
 - **Security headers live in `firebase.json`** (the `**` block). The CSP allows the one inline
   script, the bootstrap in `BaseLayout.astro`, by its sha256. Change a byte of it and
   `tests/e2e/headers.spec.ts` fails with the new hash to paste into `script-src`. No inline event
@@ -120,7 +124,9 @@ measurement). Run it with `pnpm test:vitals`.
 widths, axe on `/` and the 404, the remote (arrow keys move focus spatially), the keyboard flip (Enter turns a card, focus moves, the hidden face
 is inert), drag (a mouse moves a card on a wide screen and letting go does not turn it; a short
 press still turns it; a narrow screen does not drag), reduced motion, pigment contrast with the manifest pinned to the palette,
-no third-party origins, external links opening a new tab, the JS budget and the service-worker kill switch. `astro preview` does not
+no third-party origins, external links opening a new tab, the beacon (one view, one count per turned
+card and link out, the referrer cut to its host, nothing under Global Privacy Control), the JS
+budget and the service-worker kill switch. `astro preview` does not
 read `firebase.json`, so redirects are asserted on the config.
 
 ## Publishing hygiene

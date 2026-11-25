@@ -78,6 +78,15 @@
 				]
 			},
 			{
+				"source": "/e",
+				"headers": [
+					{
+						"key": "Cache-Control",
+						"value": "no-store"
+					}
+				]
+			},
+			{
 				"source": "/",
 				"headers": [
 					{
