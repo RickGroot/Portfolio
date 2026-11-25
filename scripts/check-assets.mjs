@@ -168,6 +168,10 @@ for (const f of distFiles.filter((f) => /\.(js|css|html)$/.test(f))) {
 	const bare = s.replace(/https?:\/\/[^\s"'<>)]*/g, '');
 	if (username && username.length > 3 && bare.includes(username))
 		fail(`${f} leaks the build machine's username`);
+	// The rAF ban in eslint.config.js cannot see a <script> in an .astro file:
+	// eslint-plugin-astro extracts no script blocks under Astro 7. The build can.
+	if (!f.endsWith('.css') && s.includes('requestAnimationFrame'))
+		fail(`${f} calls requestAnimationFrame (CLAUDE.md: no rAF)`);
 }
 
 /* ---- 6. Third-party origins ---------------------------------------------- */

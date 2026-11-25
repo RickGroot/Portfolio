@@ -80,6 +80,10 @@ export default [
 		 * WAAPI deal, so the page has no frame loop to keep honest. This is a
 		 * real control -- a comment saying 'please do not add a loop' is not.
 		 * A loop would have to be a deliberate edit to this block.
+		 *
+		 * This covers .ts files and .astro frontmatter only: eslint-plugin-astro
+		 * extracts no <script> blocks under Astro 7, so check-assets also scans
+		 * the built JS and HTML for the call.
 		 */
 		files: ['src/**/*.ts', 'src/**/*.astro'],
 		rules: {

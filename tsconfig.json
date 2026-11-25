@@ -4,14 +4,13 @@
 	"exclude": ["dist", "node_modules", "test-results", "playwright-report"],
 	"compilerOptions": {
 		"verbatimModuleSyntax": true,
-		"baseUrl": ".",
 		"paths": {
-			"@components/*": ["src/components/*"],
-			"@layouts/*": ["src/layouts/*"],
-			"@styles/*": ["src/styles/*"],
-			"@lib/*": ["src/lib/*"],
-			"@scripts/*": ["src/scripts/*"],
-			"@assets/*": ["src/assets/*"]
+			"@components/*": ["./src/components/*"],
+			"@layouts/*": ["./src/layouts/*"],
+			"@styles/*": ["./src/styles/*"],
+			"@lib/*": ["./src/lib/*"],
+			"@scripts/*": ["./src/scripts/*"],
+			"@assets/*": ["./src/assets/*"]
 		}
 	}
 }
