@@ -76,18 +76,37 @@ which is the behaviour we want. Phase 2 makes this a CI gate.
 Three faces, self-hosted as WOFF2 in `public/fonts/`, Latin subset, `font-display: swap`, each with
 its SIL OFL licence alongside (`OFL-<Family>.txt` — redistribution requires it):
 
-| Role    | Face                        | File                        | Size    | Preloaded |
-| ------- | --------------------------- | --------------------------- | ------- | --------- |
-| Display | Archivo variable (900, 62%) | `archivo-var-latin.woff2`   | 90.1 KB | yes       |
-| Reading | Instrument Sans 400         | `instrument-sans-400.woff2` | 16.9 KB | yes       |
-| Reading | Instrument Sans 600         | `instrument-sans-600.woff2` | 17.4 KB | no        |
-| Labels  | JetBrains Mono 500          | `jetbrains-mono-500.woff2`  | 21.8 KB | no        |
+| Role    | Face                       | File                         | Size    | Preloaded |
+| ------- | -------------------------- | ---------------------------- | ------- | --------- |
+| Display | Archivo 900 / 62% (static) | `archivo-900-62-latin.woff2` | 11.8 KB | yes       |
+| Reading | Instrument Sans 400        | `instrument-sans-400.woff2`  | 16.9 KB | yes       |
+| Reading | Instrument Sans 600        | `instrument-sans-600.woff2`  | 17.4 KB | no        |
+| Labels  | JetBrains Mono 500         | `jetbrains-mono-500.woff2`   | 21.8 KB | no        |
 
 Archivo replaced Bricolage Grotesque with the card redesign (2026-11-23): it is VAMP's sleeve face,
-set at weight 900 and 62% width. The file is the full variable font, Latin, unsubset, which is why
-the `check-assets` budget went from 80 KB to 160 KB of WOFF2 (what a visitor downloads; the licence
-texts are not counted). The set is 146 KB. Subsetting Archivo to the two axes and the glyphs in use
-(`pyftsubset`) would win most of that back.
+set at weight 900 and 62% width, and nothing else. The file is a static instance at exactly that
+style, cut once from the variable font (90.1 KB → 11.8 KB), so the `check-assets` budget is 80 KB of
+WOFF2 (what a visitor downloads; the licence texts are not counted). The set is 68 KB. It keeps the
+whole Latin subset and every layout feature (kerning, ligatures, accents), so it is not capitals-only
+even though the site only sets capitals. Checked against the variable font at 900 / 62% in Chromium
+and WebKit: under 0.02% of pixels differ, all anti-aliasing.
+
+To cut a different weight or width, with fonttools in a throwaway virtualenv (it is not a project
+dependency):
+
+```bash
+python3 -m venv /tmp/ft && /tmp/ft/bin/pip install fonttools brotli
+# Pin the axes. --update-name-table fails at wdth=62 (no named instance), so leave it off.
+/tmp/ft/bin/fonttools varLib.instancer archivo-variable.woff2 wght=900 wdth=62 -o inst.ttf
+/tmp/ft/bin/pyftsubset inst.ttf --flavor=woff2 --layout-features='*' \
+  --unicodes='U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD' \
+  --output-file=archivo-<weight>-<width>-latin.woff2
+```
+
+The variable source is VAMP's `archivo-var-latin.woff2`, which this site shipped until the static
+instance replaced it. It is still in git history:
+`git log --diff-filter=D -- public/fonts/archivo-var-latin.woff2` names the commit that removed it,
+and `git show <that commit>^:public/fonts/archivo-var-latin.woff2 > archivo-variable.woff2` restores it.
 
 The reading and label faces are Google's own WOFF2 builds, downloaded once and committed. **There is deliberately no font
 build dependency.** To refresh one, or add a weight:

@@ -26,10 +26,9 @@ const LIMITS = {
 	htmlGzip: 25 * 1024,
 	cssGzip: 20 * 1024,
 	jsGzipTotal: 45 * 1024,
-	// Raised from 80 KB with the card redesign: Archivo's variable file is 88 KB
-	// on its own (the full width and weight axes, because the display type uses
-	// 62% width at 900). Four files, ~146 KB, each preloaded or loaded on use.
-	fontsTotal: 160 * 1024,
+	// Back to 80 KB: Archivo is a static 900 / 62% instance (12 KB) rather than
+	// the 88 KB variable file. Four files, ~68 KB, each preloaded or loaded on use.
+	fontsTotal: 80 * 1024,
 };
 
 const IMAGE = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
