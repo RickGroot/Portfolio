@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import { pigmentStyle } from '@lib/palette';
+import { linkProps } from '@lib/links';
 import type { Card } from '@lib/deck';
 import Links from './Links.astro';
 
@@ -392,11 +393,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 									<ul class="links nojs">
 										{card.links.map((l) => (
 											<li>
-												<a
-													class="go"
-													href={l.href}
-													rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}
-												>
+												<a class="go" href={l.href} {...linkProps(l.href)}>
 													{l.label}
 												</a>
 											</li>
@@ -407,7 +404,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 								<ul class="links">
 									{card.links.map((l) => (
 										<li>
-											<a class="go" href={l.href}>
+											<a class="go" href={l.href} {...linkProps(l.href)}>
 												{l.label}
 											</a>
 										</li>
@@ -451,7 +448,7 @@ const mailto = (href: string): string => href.replace(/^mailto:/, '');
 															</button>
 														</>
 													) : (
-														<a class="go" href={l.href} rel="noopener">
+														<a class="go" href={l.href} {...linkProps(l.href)}>
 															{l.label}
 														</a>
 													),

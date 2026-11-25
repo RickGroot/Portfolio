@@ -2,6 +2,7 @@
 import BaseHead from '@components/BaseHead.astro';
 import { site, type ShareImage } from '@lib/site';
 import { PALETTE, paletteStyle } from '@lib/palette';
+import { NEW_TAB } from '@lib/links';
 
 // The ONE place global.css is imported. See CLAUDE.md.
 import '@styles/global.css';
@@ -58,6 +59,10 @@ const { title, description = site.description, ogImage, jsonLd, noindex } = Astr
 		<main id="main" tabindex="-1">
 			<slot />
 		</main>
+		{/* Read after the name of every link that opens a new tab (src/lib/links.ts). */}
+		<span id={NEW_TAB} hidden>
+			Opens in a new tab
+		</span>
 
 		<script>
 			import '../scripts/table';

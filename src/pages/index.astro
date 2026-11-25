@@ -3,6 +3,7 @@ import BaseLayout from '@layouts/BaseLayout.astro';
 import Card from '@components/Card.astro';
 import shareCard from '@assets/share/home.png';
 import { socialLinks } from '@lib/social';
+import { linkProps } from '@lib/links';
 import { getDeck } from '@lib/deck';
 import { site } from '@lib/site';
 
@@ -37,7 +38,7 @@ const person = {
 		<ul class="reach" aria-label="Contact">
 			{socialLinks.map((l) => (
 				<li>
-					<a class="chip" href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}>
+					<a class="chip" href={l.href} {...linkProps(l.href)}>
 						{l.label}
 					</a>
 				</li>

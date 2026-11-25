@@ -1,4 +1,6 @@
 ---
+import { linkProps } from '@lib/links';
+
 /** A back's links: real anchors, printed in the card's pigment. Nothing when there are none. */
 interface Props {
 	/** `sr` is read after the label by screen readers only, when the label alone repeats across cards. */
@@ -13,7 +15,7 @@ const { links, of } = Astro.props;
 	<ul class="links">
 		{links.map((l) => (
 			<li>
-				<a class="go" href={l.href} rel={l.href.startsWith('mailto:') ? undefined : 'noopener'}>
+				<a class="go" href={l.href} {...linkProps(l.href)}>
 					{l.label}
 					{(l.sr ?? of) && <span class="visually-hidden">: {l.sr ?? of}</span>}
 				</a>
