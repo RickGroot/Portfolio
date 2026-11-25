@@ -1,6 +1,5 @@
 ---
 title: NOS
-# COPY CHECK (2026-11-23): role says what I did.
 role: TV app front-end
 company: Hypersolid
 period: '2023–2025'
@@ -10,11 +9,8 @@ tags: ['Svelte', 'THEOplayer', 'Video streaming']
 format: listing
 pigment: orange
 cover: ../../assets/work/screens/nos.jpg
-# COPY CHECK (2026-11-23): alt for the new cover.
 coverAlt: "The NOS app: the Programma's screen, a grid of broadcast artwork for NOS Journaal, Achtuurjournaal, Jeugdjournaal, Nieuwsuur and the sport shows, with the first tile focused."
-# COPY CHECK (2026-11-23): rewritten, first person.
 blurb: I built the interface of the Smart TV app of the Dutch broadcaster NOS.
-# COPY CHECK (2026-11-23): rewritten, adds the auto-playing header and chapters.
 built:
   - 'The auto-playing header of the app'
   - 'Chapters in video playback'

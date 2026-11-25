@@ -9,15 +9,13 @@
 # same way as the photographs in src/content/slides (1 = first card after the
 # player). The work cards and How I work fill the other places.
 #
-# `minutes` is the read time Medium shows. Keep `points` to three, first
-# person, one line of thought each.
+# `minutes` is the read time Medium shows. Keep `points` to three, one line of
+# the article's argument each, in its own voice (advice reads as advice).
 #
-# COPY CHECK (2026-11-24): the standfirsts and points are drafted from the
-# articles. The read times and dates were checked against Medium on
-# 2026-11-24.
+# The read times and dates were checked against Medium on 2026-11-24.
 
 - id: tv-still-the-center
-  order: 5
+  order: 3
   title: The TV is still the center. It's no longer the whole experience.
   topic: Connected TV
   standfirst: >-
@@ -33,7 +31,7 @@
     - Plan the whole journey rather than one app per platform, and add a second screen only where it helps.
 
 - id: tv-apps-are-not-web-apps
-  order: 9
+  order: 10
   title: Why TV Apps Are Not Just Web Apps on a Bigger Screen
   topic: Connected TV
   standfirst: >-
@@ -49,7 +47,7 @@
     - Reuse the components and the brand, but not the assumptions that came with the web.
 
 - id: seamless-cast-session
-  order: 12
+  order: 7
   title: What Makes a Cast Session Feel Seamless?
   topic: Casting
   standfirst: >-

@@ -9,10 +9,8 @@ export interface SocialLink {
  * link in production. A /cv page built from the work collection is the sensible
  * replacement when someone wants one.
  *
- * TODO(rick): confirm the LinkedIn URL. The old README used
- * /in/rick-groot-469777193/ (LinkedIn's auto-generated form) and the unreleased
- * branch used /in/r-groot/ (a chosen vanity URL). The vanity URL is assumed
- * current here because it supersedes the generated one, but it is unverified.
+ * LinkedIn is the vanity URL, the same one the GitHub profile links to
+ * (confirmed 2026-11-25).
  */
 export const socialLinks: readonly SocialLink[] = [
 	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/r-groot/' },

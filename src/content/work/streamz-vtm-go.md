@@ -1,6 +1,5 @@
 ---
 title: Streamz & VTM GO
-# COPY CHECK (2026-11-23): role says what I did.
 role: White-label TV app
 company: Hypersolid
 period: '2022–2024'
@@ -11,7 +10,6 @@ format: tape
 pigment: yellow
 cover: ../../assets/work/screens/streamz-vtm-go.jpg
 coverAlt: 'The VTM GO home screen: a featured entertainment show above rows of programme tiles.'
-# COPY CHECK (2026-11-23): rewritten around the white-label monorepo, first person.
 built:
   - 'A white-label Smart TV app'
   - 'One monorepo serving Streamz and VTM GO'

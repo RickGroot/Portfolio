@@ -25,8 +25,6 @@
 # Quote no count that grows with the work: "37 commits" and "105 tests" were
 # both stale within a week. tests/e2e/claims.spec.ts fails on one.
 #
-# COPY CHECK (2026-11-24): the themes are Rick's, the sentences are drafted.
-# Rewrite them in your own voice.
 
 - id: in-the-loop
   order: 1

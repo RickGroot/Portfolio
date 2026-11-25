@@ -4,7 +4,7 @@ The site is one page: a table with loose cards on it. Each card is a physical ob
 record sleeve, a slide), one flat pigment, a hard shadow. Click or press Enter and it turns over;
 the back is the case study. A quiet corner mark (`.turn .corner`) and the pointer cursor say a card
 turns; the page prints no instruction. Decided by Rick, 2026-11-23, layout "A, the table". The old site
-(TV channels) is commit 97ef1ec.
+(TV channels) is commit 5f1bb67.
 
 ## Tokens
 
@@ -78,8 +78,9 @@ by kind, laid out in `card.css` ("the backs"):
 
 The back lines of a work card are drafted from that entry's own notes and carry a
 `# COPY CHECK` comment until Rick confirms them. Keep each list to 3-5 short items: a back has a
-fixed height and must not scroll. Back body text is at least 10.5px and mono labels at least 9px
-(`max(10.5px, Ncqw)`); only the liner scrolls. A listing is 5:4, and in the narrow column a tape is
+fixed height and must not scroll at default settings. Back body text is at least 10.5px and mono
+labels at least 9px, written in rem (`max(0.6562rem, Ncqw)`) so text-only zoom grows them; fronts
+keep px. Only the liner scrolls by design. A listing is 5:4, and in the narrow column a tape is
 4:3, so the text still fits; at 360px and below a tape is 6:5, a listing 10:9 and the sleeve takes
 the full column. Without JavaScript every back lies
 under its front, in full.
@@ -120,6 +121,12 @@ Work cards are ordered by `order`. Slides, polaroids and article clippings are w
 `order`, which is a position in the middle of the deck (1 = the first card after the player). How I work trails the
 work; the ticket is last.
 
+On a desktop the table is three columns that fill top to bottom, so the cards that head each column
+are the ones seen first (at 1280-1920px: the player, the trumpet polaroid and a clipping; VAMP closes
+the first, NOS and Streamz & VTM GO sit below the clipping and the lighthouse in the third). The
+column breaks follow card heights, so after a reorder check where each card lands, not just the list. Decided by Rick, 2026-11-25: NLZIET, Chromecast and the personal projects
+first, the clippings between them, NOS and Streamz & VTM GO later.
+
 ## Motion
 
 - **Deal** on load: WAAPI, 520ms, 70ms stagger, only for cards above the fold.
@@ -141,12 +148,39 @@ Nothing interactive is nested in anything interactive.
 - The back has a "Turn back" button and real links. Whichever face is turned away is `inert`
   (`src/scripts/table.ts` keeps it in step; without JavaScript the back stays inert and the front
   stays readable).
-- Turning moves focus: to the back's button when opening, to the front button when closing. Escape
-  turns a card back.
-- A visible 3px blue focus ring, a real `<h1>` (the player's name), a skip link, alt text from
-  content.
+- Turning moves focus: to the back's button when opening, to the front button when closing, and
+  scrolls it into view when it is off screen (`reveal()` in `table.ts`). Escape turns a card back.
+- **Focus is crop marks.** A card in focus lifts as under the pointer, comes to the top of the
+  pile (so a dragged card cannot hide it), and four 3px blue printer's corner marks close in round
+  card and shadow with the same gap on every side. They are a masked border, not a background, so
+  forced colours keep them. The sleeve's arms are shorter, to clear the record sliding out.
+- A real `<h1>` (the player's name), a skip link, alt text from content. Repeated link labels
+  ("Source", "Turn back") carry the card's name in visually-hidden text.
+- **Still.** "Pause motion" (and a page without JavaScript) stops the loops on their finished frame,
+  as reduced motion does, and cuts the flip, lift and focus transitions.
 - The liner's back is a scrollable focusable region (`tabindex=0`, labelled), so keyboard users can
   scroll it.
+- **A back that outgrows its card** (text zoom, a reader's own spacing: WCAG 1.4.4, 1.4.12) scrolls
+  and becomes the same kind of region: `fit()` in `table.ts` adds `.is-long`, `tabindex=0`,
+  `role=region` and `aria-labelledby` pointing at the back's own `h2`, and takes them off when it
+  fits again (not while it holds focus: it waits for the blur, so focus never drops to the page).
+  The cast's scroller is its screen (`.np`); the ticket's is its torn stub's back (only once torn),
+  which keeps its own role and name. Focus moved by a flip, a tear or the remote scrolls its control
+  into view inside such a scroller first (`reveal()`). Back type has rem floors under its `cqw` sizes, long words break and nothing
+  is `nowrap`, so a back only ever scrolls down, never sideways. Checked on resize, font load and
+  when focus enters a card. The scrollbar is thin and in the text colour.
+  `tests/e2e/backs.spec.ts` (200% text plus the 1.4.12 spacing).
+- **The bar's chips** take the same crop marks, small, round chip and shadow.
+- **The remote.** The arrow keys work like a TV app's focus engine: focus moves to the nearest
+  control that way, on any card or in the bar (`nearest()` in `table.ts`). With nothing focused,
+  the first arrow lands on the card control nearest the window's top-left (`start()`), so the
+  remote works without a Tab first. A control in line wins
+  over one off to the side, and an open card keeps focus until nothing on it lies that way. In the
+  phone column Up and Down step through the cards and Left and Right do nothing. A scrolling back
+  (the liner, or a long one) scrolls under Up and Down until its end, then the arrow moves on; Down
+  goes to its own links first. An arrow with nothing that way, or with a
+  modifier, keeps its usual job (scrolling the page). Tab order is untouched; the page prints no
+  hint. `tests/e2e/remote.spec.ts`.
 
 ## Adding a card
 

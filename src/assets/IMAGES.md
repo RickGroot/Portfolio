@@ -1,6 +1,6 @@
 # Images: provenance
 
-No image here is stock. The photographs are Rick's own, and three of them were retouched with an
+No image here is stock. The photographs are Rick's own (one, of him, by another photographer, credited on its card), and three of them were retouched with an
 image model; the work covers are crops of his own app screenshots, halftoned in CSS, and Chromecast
 draws its art as inline SVG. Which is which, and how, is recorded below, because a portfolio should be able
 to say.
@@ -13,17 +13,18 @@ originals carried GPS coordinates. Nothing in this directory does, and `check-as
 build on EXIF in `src/assets` and in `dist`, so a future image cannot slip one through. The original
 file names are not kept either: phone file names are capture timestamps.
 
-| File                              | What it is                                                              | Used in                |
-| --------------------------------- | ----------------------------------------------------------------------- | ---------------------- |
-| `gallery.jpg`                     | Rick in a white-walled gallery in Prague: his own photo                 | The player card (Rick) |
-| `prague.jpg`                      | Rick over the rooftops of Prague: his own photo, 2026-10                | The Prague slide       |
-| `art/lighthouse.jpg`              | A lighthouse silhouetted at sunset; place and photographer not recorded | The lighthouse slide   |
-| `work/screens/nlziet.jpg`         | Crop: the NLZIET app's screen, Rick's own screenshot                    | NLZIET cover           |
-| `work/screens/kijk.jpg`           | Crop: the KIJK app's screen, Rick's own screenshot                      | KIJK cover             |
-| `work/screens/vamp.jpg`           | Crop: VAMP's chord editor, Rick's own screenshot                        | VAMP cover             |
-| `work/screens/nos.jpg`            | Crop: the NOS app's screen, Rick's own screenshot                       | NOS cover              |
-| `work/screens/streamz-vtm-go.jpg` | Crop: the VTM GO app's screen, Rick's own screenshot                    | Streamz & VTM GO cover |
-| `work/screens/sleeve.jpg`         | Crop: the Sleeve skin before play, Rick's own screenshot                | Sleeve cover           |
+| File                              | What it is                                                             | Used in                |
+| --------------------------------- | ---------------------------------------------------------------------- | ---------------------- |
+| `gallery.jpg`                     | Rick in a white-walled gallery in Prague: his own photo                | The player card (Rick) |
+| `prague.jpg`                      | Rick over the rooftops of Prague: his own photo, 2026-10               | The Prague slide       |
+| `trumpet.jpg`                     | Rick playing trumpet: by Fred Homan, his watermark kept in the file    | The trumpet polaroid   |
+| `art/lighthouse.jpg`              | A lighthouse at sunset, southern Montenegro; photographer not recorded | The lighthouse slide   |
+| `work/screens/nlziet.jpg`         | Crop: the NLZIET app's screen, Rick's own screenshot                   | NLZIET cover           |
+| `work/screens/kijk.jpg`           | Crop: the KIJK app's screen, Rick's own screenshot                     | KIJK cover             |
+| `work/screens/vamp.jpg`           | Crop: VAMP's chord editor, Rick's own screenshot                       | VAMP cover             |
+| `work/screens/nos.jpg`            | Crop: the NOS app's screen, Rick's own screenshot                      | NOS cover              |
+| `work/screens/streamz-vtm-go.jpg` | Crop: the VTM GO app's screen, Rick's own screenshot                   | Streamz & VTM GO cover |
+| `work/screens/sleeve.jpg`         | Crop: the Sleeve skin before play, Rick's own screenshot               | Sleeve cover           |
 
 Chromecast has no image: its card draws a phone casting to a TV that runs the receiver, as inline SVG.
 

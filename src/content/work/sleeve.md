@@ -9,11 +9,8 @@ tags: ['Video.js', 'CSS', 'TypeScript']
 format: listing
 pigment: red
 cover: ../../assets/work/screens/sleeve.jpg
-# COPY CHECK (2026-11-24): alt for the cover (the README's "ready" screenshot).
 coverAlt: 'The Sleeve video skin before play: an orange cover panel reading "Ready, NASA Cosmic Dawn trailer, 1:51" beside a greyscale rocket launch, over a strip of square control cells.'
-# COPY CHECK (2026-11-24): a listing's one line, first person.
 blurb: My Video.js skin prints the player on the video, like a record cover.
-# COPY CHECK (2026-11-24): drafted from the repository's README and design note.
 built:
   - 'A colour field that sizes to the player state'
   - 'An audio look for media without a picture'

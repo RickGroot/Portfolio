@@ -27,7 +27,7 @@ on the same machine rather than in absolute terms.
 ### Retired with the channel guide
 
 The console line ("Signal acquired.") and the number keys that tuned channels went with the TV
-site (2026-11-23, in commit 97ef1ec if you want them back). The site now logs nothing, and
+site (2026-11-23, in commit 5f1bb67 if you want them back). The site now logs nothing, and
 `tests/e2e/smoke.spec.ts` asserts it. The planned `jazz` typing egg and the "lost signal" 404 were
 channel jokes too and are dropped; the 404 is now a ticket, "Lost: page 404", with a way back.
 

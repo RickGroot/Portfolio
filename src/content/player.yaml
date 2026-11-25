@@ -3,9 +3,8 @@
 # entry, the structured data).
 - id: rick
   name: Rick Groot
-  # COPY CHECK (2026-11-23): the back of the card, first person; says he is open to work, not why.
   bio: I build TV apps, Chromecast receivers and video players that run well on constrained hardware. I'm open to new work.
-  # COPY CHECK (2026-11-23): work and off-duty kept apart. The FIRST fact is the front's "open to work" strip; the rest print under the photograph, in order.
+  # Work and off-duty kept apart. The FIRST fact is the front's "open to work" strip; the rest print under the photograph, in order.
   facts:
     - { label: Status, value: Open to work }
     - { label: Role, value: Connected TV developer }

@@ -4,28 +4,25 @@ role: Solo project
 company: Independent
 period: '2026'
 status: ongoing
-summary: A local-first, offline PWA for sketching chord progressions and looping backing tracks to practise over. No login, no backend, no accounts.
+summary: A local-first, browser-only PWA for sketching chord progressions and looping backing tracks to practise over. No login, no backend, no accounts.
 tags: ['SvelteKit', 'Tone.js', 'PWA', 'Web Audio']
 format: sleeve
 pigment: yellow
 cover: ../../assets/work/screens/vamp.jpg
-# COPY CHECK (2026-11-23): alt for the new cover.
 coverAlt: 'The VAMP editor: a bold "Jazz ii-V-I in C" title over a yellow transport panel showing the Dm7 chord, tempo 100 BPM, key C major, and a three-bar Dm7, G7, Cmaj7 chord grid.'
-# COPY CHECK (2026-11-23): written from the notes below, first person.
-blurb: 'I play trumpet, and wanted to sketch a chord progression, loop it and play over it. VAMP does that offline, with no account and no backend.'
-# COPY CHECK (2026-11-23): the features, as the secondary list.
+blurb: 'I play trumpet, and wanted to sketch a chord progression, loop it and play over it. VAMP runs in the browser: no account, no backend.'
 built:
   - 'A pitch switch for transposing instruments'
   - 'Trade-solos mode drops the backing out'
   - 'A drone generator for practising modes'
   - 'Share URL that holds the progression'
-# COPY CHECK (2026-11-23): four, so the back fits without scrolling (smplr and tonal are in the notes below).
+# Four, so the back fits without scrolling (smplr and tonal are in the notes below).
 stack:
   - { label: Framework, value: SvelteKit }
   - { label: Audio, value: Tone.js }
   - { label: Notation, value: VexFlow }
   - { label: Storage, value: IndexedDB }
-# COPY CHECK (2026-11-23): shortened so the back fits; the CDN caveat stays in the notes below.
+# Shortened so the back fits; the CDN caveat stays in the notes below.
 note: Personal project, not production software.
 order: 3
 links:
@@ -36,7 +33,7 @@ links:
 ---
 
 VAMP is the tool I wanted as a trumpet player and could not find: somewhere to sketch a chord
-progression, loop it, and play over it. No account, no subscription, no network connection.
+progression, loop it, and play over it. No account, no subscription, no backend: it runs in the browser.
 Enter chords into bars, set tempo and time signature, pick a sampled instrument, and
 jam. Everything stays on the device.
 

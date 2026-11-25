@@ -1,6 +1,5 @@
 ---
 title: Chromecast receivers
-# COPY CHECK (2026-11-23): role says what I did; ended with Hypersolid, end year 2026 assumed.
 role: Receivers and a TypeScript boilerplate
 company: Hypersolid
 period: '2023–2026'
@@ -9,9 +8,7 @@ summary: Custom Chromecast receivers for multiple projects, plus a TypeScript bo
 tags: ['JavaScript', 'Chromecast', 'Shaka player']
 format: cast
 pigment: green
-# COPY CHECK (2026-11-23): rewritten for the TV receiver back, first person.
 blurb: I built custom Chromecast receivers for several projects, and a TypeScript boilerplate that keeps them quick to build and consistent.
-# COPY CHECK (2026-11-23): rewritten from the notes below, first person.
 built:
   - 'Custom receivers for several projects'
   - 'A shared TypeScript boilerplate'
