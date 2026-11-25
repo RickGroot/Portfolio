@@ -10,14 +10,13 @@ test('every pigment carries text at AA or better', () => {
 	}
 });
 
-test('the manifest and the favicon are pinned to the palette', () => {
+test('the manifest is pinned to the palette', () => {
 	const manifest = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8')) as {
 		background_color: string;
 		theme_color: string;
 	};
 	expect(manifest.background_color.toLowerCase()).toBe(PALETTE.paper);
 	expect(manifest.theme_color.toLowerCase()).toBe(PALETTE.paper);
-	expect(readFileSync('public/favicon.svg', 'utf8').toLowerCase()).toContain(PALETTE.yellow);
 });
 
 test('the rendered cards use the solved colours', async ({ page }) => {

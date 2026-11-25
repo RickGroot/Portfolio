@@ -14,7 +14,7 @@ turns; the page prints no instruction. Decided by Rick, 2026-11-23, layout "A, t
   `color-mix` on these.
 - **Pigment:** each card sets `--field` and `--on-field`. `solve()` picks ink or card paper, whichever
   has the better contrast, and **throws below 4.5:1**, so a bad pigment stops the build.
-  `tests/a11y/palette.spec.ts` also pins `manifest.webmanifest` and `favicon.svg` to the palette.
+  `tests/a11y/palette.spec.ts` also pins `manifest.webmanifest` to the palette.
 - **Shape:** radius 0 (only records, reels and dots are round), one 2px ink rule, a hard 6px offset
   shadow on its own element that never flips, paper grain.
 - **Type:** Archivo (wide-condensed 900, capitals) for titles, sized in `cqw` so a title fits its card;

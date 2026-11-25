@@ -9,9 +9,9 @@
  *
  * The palette and each pigment's solved text colour are emitted as inline
  * custom properties (BaseLayout's <html>, each card's own style); stylesheets
- * only read them, so there is no second hex value to drift. The two files that
- * cannot read a custom property, public/favicon.svg and the web manifest,
- * carry copies, and tests/a11y/palette.spec.ts pins them here.
+ * only read them, so there is no second hex value to drift. The one file that
+ * cannot read a custom property, the web manifest, carries copies, and
+ * tests/a11y/palette.spec.ts pins it here.
  *
  * Build time rather than CSS `oklch(from ...)`: the target includes real
  * Smart TV browsers, and a constant computed here is deterministic and

@@ -119,7 +119,7 @@ measurement). Run it with `pnpm test:vitals`.
 `pnpm test` covers routes and the `/work` redirect config, smoke, share metadata, scrollbars at four
 widths, axe on `/` and the 404, the remote (arrow keys move focus spatially), the keyboard flip (Enter turns a card, focus moves, the hidden face
 is inert), drag (a mouse moves a card on a wide screen and letting go does not turn it; a short
-press still turns it; a narrow screen does not drag), reduced motion, pigment contrast with the manifest and favicon pinned to the palette,
+press still turns it; a narrow screen does not drag), reduced motion, pigment contrast with the manifest pinned to the palette,
 no third-party origins, the JS budget and the service-worker kill switch. `astro preview` does not
 read `firebase.json`, so redirects are asserted on the config.
 
