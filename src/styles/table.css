@@ -124,7 +124,10 @@ html:not(.js) .still-toggle {
 	vertical-align: top;
 	break-inside: avoid;
 	width: var(--w, 100%);
-	margin: 0 0 64px;
+	/* Headroom above each card: a tilted, nudged card's corner rises up to ~14px, */
+	/* and at a column top WebKit paints what rises above the column at the foot */
+	/* of the column before. The gap between cards stays 64px. */
+	margin: 20px 0 44px;
 	rotate: var(--rot, 0deg);
 	translate: calc(var(--ox, 0px) + var(--dx, 0px)) calc(var(--oy, 0px) + var(--dy, 0px));
 }
@@ -165,7 +168,7 @@ html:not(.js) .still-toggle {
 		--w: 100%;
 		translate: none;
 		rotate: calc(var(--rot, 0deg) * 0.5);
-		margin-bottom: 48px;
+		margin: 0 0 48px;
 	}
 
 	/* In one narrow column a back needs more height to hold its text at a readable size. */

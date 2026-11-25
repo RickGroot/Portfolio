@@ -72,10 +72,14 @@ const reveal = (el: HTMLElement | null | undefined): void => {
 	const shown = fits ? card : el;
 	const r = rect(shown);
 	if (r.top < 0 || r.bottom > innerHeight) {
-		shown.scrollIntoView({
-			block: fits ? 'center' : 'nearest',
-			behavior: reduced() ? 'auto' : 'smooth',
-		});
+		// From rect(), not scrollIntoView: WebKit's own geometry for a card split
+		// at a column top spans the table, and it scrolls to the wrong place.
+		const top = fits
+			? r.top - (innerHeight - r.height) / 2
+			: r.top < 0
+				? r.top
+				: r.bottom - innerHeight;
+		scrollTo({ top: scrollY + top, behavior: reduced() ? 'auto' : 'smooth' });
 	}
 };
 
